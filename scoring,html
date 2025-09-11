@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Pontuação de Grupos – 1 Ano A</title>
+  <style>
+    :root { --gap: 14px; --radius: 14px; }
+    * { box-sizing: border-box; }
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 0; background: #0f172a; color: white; }
+    .wrap { max-width: 950px; margin: 24px auto; padding: 20px; }
+    .card { background: #111827; border: 1px solid #1f2937; border-radius: var(--radius); padding: 18px; box-shadow: 0 10px 30px rgba(0,0,0,.25); }
+    h1 { font-size: 22px; margin: 0 0 10px; }
+    h2 { font-size: 16px; margin: 18px 0 8px; opacity: .9; }
+    label { display:block; font-size: 14px; opacity:.9; margin-bottom: 6px; }
+    input, select { width: 100%; padding: 12px; border-radius: 12px; border: 1px solid #334155; background: #0b1220; color: #e5e7eb; }
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: var(--gap); }
+    .grid4 { display:grid; grid-template-columns: repeat(4,1fr); gap: var(--gap); }
+    .students { display:grid; grid-template-columns: 1fr 120px; gap: 8px 12px; align-items:center; }
+    .badge { background:#0b1220; border:1px solid #334155; padding:8px 10px; border-radius:10px; font-variant-numeric: tabular-nums; }
+    .btn { background:#22c55e; color:#06220f; border:none; padding:12px 16px; border-radius:12px; cursor:pointer; font-weight:700; }
+    .btn:hover { filter: brightness(1.05); }
+    .muted { opacity:.8; font-size:12px; margin-top:8px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h1>🏁 Pontuação de Grupos – <span id="classLabel">1 Ano A</span></h1>
+      <div class="row">
+        <div>
+          <label>Selecione o grupo</label>
+          <select id="group"></select>
+        </div>
+        <div>
+          <label>Seu nome (opcional)</label>
+          <input id="teacher" placeholder="Ex.: Prof. Bruno"/>
+        </div>
+      </div>
+
+      <h2>Quatro categorias</h2>
+      <div class="grid4">
+        <div><label>Visual</label><input type="number" id="c1" min="0" step="0.1" /></div>
+        <div><label>Trilha Sonora</label><input type="number" id="c2" min="0" step="0.1" /></div>
+        <div><label>Proposta</label><input type="number" id="c3" min="0" step="0.1" /></div>
+        <div><label>Vocabulário/Roteiro</label><input type="number" id="c4" min="0" step="0.1" /></div>
+      </div>
+
+      <h2>Apresentação por aluno</h2>
+      <div id="students" class="students"></div>
+
+      <h2>Resumo</h2>
+      <div style="display:flex; gap:12px; flex-wrap:wrap;">
+        <div class="badge">Média 4 categorias: <b id="avgCats">0</b></div>
+        <div class="badge">Média apresentação: <b id="avgPres">0</b></div>
+        <div class="badge">Pontuação da rodada: <b id="finalRound">0</b></div>
+      </div>
+
+      <div style="margin-top:16px; display:flex; gap:12px; align-items:center;">
+        <button class="btn" id="submit">Salvar pontuação</button>
+        <span class="muted">A média de apresentação considera apenas quem tiver nota informada.</span>
+      </div>
+      <div id="msg" class="muted"></div>
+    </div>
+  </div>
+
+<script>
+const API_BASE = 'https://script.google.com/macros/s/AKfycbxEwtRbgvP07VG8ut-eSDsem3i-0ZHPBGkYmD87Xpgjs5pHoZ_g0Yysj-AC3_sBXUFR/exec';
+const CLASS_NAME = new URLSearchParams(location.search).get('class') || '1 Ano A';
+let GROUPS = [];
+
+function jsonp(url){
+  return new Promise((resolve, reject)=>{
+    const cb = 'cb_' + Math.random().toString(36).slice(2);
+    const s = document.createElement('script');
+    window[cb] = (data) => { resolve(data); delete window[cb]; s.remove(); };
+    s.onerror = () => { delete window[cb]; reject(new Error('Falha JSONP')); };
+    s.src = url + (url.includes('?') ? '&' : '?') + 'callback=' + cb;
+    document.body.appendChild(s);
+  });
+}
+function el(id){ return document.getElementById(id); }
+function n(v){ const x = parseFloat(v); return isNaN(x) ? 0 : x; }
+function round2(x){ return Math.round(x*100)/100; }
+
+function compute(){
+  const avgCats = (n(el('c1').value)+n(el('c2').value)+n(el('c3').value)+n(el('c4').value))/4;
+  const presInputs = document.querySelectorAll('[data-pres]');
+  const presVals = Array.from(presInputs).map(i=>n(i.value)).filter(v=>!Number.isNaN(v) && v!==0);
+  const avgPres = presVals.length ? presVals.reduce((a,b)=>a+b,0)/presVals.length : 0;
+  el('avgCats').textContent = round2(avgCats);
+  el('avgPres').textContent = round2(avgPres);
+  el('finalRound').textContent = round2(avgCats + avgPres);
+}
+
+function renderStudents(group){
+  const box = el('students'); box.innerHTML = '';
+  (group.members||[]).forEach(name => {
+    const rowName = document.createElement('div'); rowName.textContent = name;
+    const rowInput = document.createElement('input');
+    rowInput.type = 'number'; rowInput.step = '0.1'; rowInput.min='0';
+    rowInput.dataset.pres='1'; rowInput.placeholder='Apresentação';
+    rowInput.addEventListener('input', compute);
+    box.appendChild(rowName); box.appendChild(rowInput);
+  });
+}
+
+async function load(){
+  try{
+    el('classLabel').textContent = CLASS_NAME;
+    const data = await jsonp(`${API_BASE}?route=groups&class=${encodeURIComponent(CLASS_NAME)}`);
+    GROUPS = data.groups||[];
+    const sel = el('group'); sel.innerHTML='';
+    GROUPS.forEach(g=>{ const o=document.createElement('option'); o.value=g.id; o.textContent=g.name; sel.appendChild(o); });
+    sel.addEventListener('change', ()=>{ const g = GROUPS.find(x=>x.id===sel.value); renderStudents(g||{members:[]}); compute(); });
+    if (GROUPS[0]){ sel.value = GROUPS[0].id; renderStudents(GROUPS[0]); }
+    ['c1','c2','c3','c4'].forEach(id=> el(id).addEventListener('input', compute));
+    const savedName = localStorage.getItem('teacherName'); if (savedName) el('teacher').value = savedName;
+    el('teacher').addEventListener('change', ()=> localStorage.setItem('teacherName', el('teacher').value));
+    compute();
+    el('msg').textContent = '';
+  }catch(err){
+    el('msg').textContent = `Erro ao carregar grupos: ${err.message}`;
+  }
+}
+
+async function submit(){
+  const sel = el('group');
+  const groupId = sel.value;
+  const categories = ['c1','c2','c3','c4'].map(id => n(el(id).value));
+  const presentations = Array.from(document.querySelectorAll('#students input'))
+    .map((inp, idx) => ({ student: el('students').children[idx*2].textContent, score: n(inp.value) }))
+    .filter(p => p.score>0);
+
+  const url = `${API_BASE}?route=submitScore`
+    + `&class=${encodeURIComponent(CLASS_NAME)}`
+    + `&groupId=${encodeURIComponent(groupId)}`
+    + `&c1=${categories[0]}&c2=${categories[1]}&c3=${categories[2]}&c4=${categories[3]}`
+    + `&submittedBy=${encodeURIComponent(el('teacher').value||'')}`
+    + `&presentations=${encodeURIComponent(JSON.stringify(presentations))}`;
+
+  try{
+    const data = await jsonp(url);
+    el('msg').innerHTML =
+      `<span style="color:#22c55e">Salvo! ${CLASS_NAME} — Rodada = ${data.finalRound.toFixed(2)} (4 cat: ${data.avgCategories.toFixed(2)} / apr: ${data.presentationAvg.toFixed(2)})</span>`;
+    document.querySelectorAll('#students input').forEach(i=> i.value='');
+    compute();
+  }catch(err){
+    el('msg').innerHTML = `<span style="color:#ef4444">Falha ao salvar: ${err.message}</span>`;
+  }
+}
+
+el('submit').addEventListener('click', submit);
+load();
+</script>
+</body>
+</html>
