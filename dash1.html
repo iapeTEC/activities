@@ -3,16 +3,16 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Apresentação Games – 1 Ano A</title>
+  <title>Apresentação Games</title>
   <style>
     :root { --radius: 16px; }
     *{ box-sizing: border-box; }
     body{ margin:0; font-family: Inter, system-ui, Arial; background:#0b1220; color:#e5e7eb; }
     .wrap{ max-width: 1100px; margin: 26px auto; padding: 18px; }
     h1{ margin:0 0 8px; font-size: 22px; }
-    .sub{ opacity:.8; margin:0 0 16px; font-size:13px; }
-    .actions{ display:flex; gap:10px; margin: 8px 0 18px; }
-    .btn{ background:#22c55e; color:#06220f; border:none; padding:10px 14px; border-radius:10px; font-weight:700; cursor:pointer; }
+    .row{ display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin:10px 0 16px; }
+    select, .btn{ padding:10px 12px; border-radius:10px; border:1px solid #334155; background:#0b1220; color:#e5e7eb; }
+    .btn{ background:#22c55e; color:#06220f; border:none; font-weight:700; cursor:pointer; }
     .btn.red{ background:#ef4444; color:#160404; }
     .grid{ display:grid; grid-template-columns: repeat(auto-fill, minmax(280px,1fr)); gap:16px; }
     .card{ background:#0f172a; border:1px solid #1f2937; border-radius: var(--radius); padding:14px; box-shadow: 0 8px 24px rgba(0,0,0,.25); }
@@ -28,7 +28,7 @@
     .muted{ opacity:.8; font-size:12px; margin-top:6px; }
     @media print{
       body{ background:white; color:black; }
-      .actions{ display:none; }
+      .row{ display:none; }
       .card{ break-inside: avoid; box-shadow:none; border-color:#ddd; }
       .rank{ background:#0a0; color:white; }
     }
@@ -36,9 +36,9 @@
 </head>
 <body>
   <div class="wrap">
-    <h1 id="title">Apresentação Games – <span id="classLabel">1 Ano A</span></h1>
-    <p class="sub">Mostrando grupos e progresso desta turma.</p>
-    <div class="actions">
+    <h1>Apresentação – <span id="classLabel"></span></h1>
+    <div class="row">
+      <select id="classSelect"></select>
       <button class="btn" id="printBtn">Imprimir / Salvar PDF</button>
       <button class="btn red" id="resetBtn">Resetar Turma</button>
     </div>
@@ -47,8 +47,7 @@
   </div>
 
 <script>
-const API_BASE = 'https://script.google.com/macros/s/AKfycbygpY82xoEfbGRs-JGbLYk0xTupczOZ4YbM6ZKrapiDCN5v4hkrh2VRCAozIVi8jW-5hw/exec';
-const CLASS_NAME = new URLSearchParams(location.search).get('class') || '1 Ano A';
+const API_BASE = 'https://script.google.com/macros/s/AKfycbxnMV0CRwJIjKOsBvDf0-8sz1520myCx9w0LcnfoYRDpHWS1-bJpSIkVW5ZjCulZVQ7vQ/exec';
 
 function jsonp(url){
   return new Promise((resolve, reject)=>{
@@ -61,6 +60,9 @@ function jsonp(url){
   });
 }
 function pct(x){ return Math.max(0, Math.min(100, Math.round(x))); }
+function el(id){ return document.getElementById(id); }
+
+let CURRENT_CLASS = null;
 
 function card(g, idx){
   const p = pct(g.progress);
@@ -83,15 +85,32 @@ function card(g, idx){
   return el;
 }
 
-async function load(){
+async function loadClasses(){
+  el('msg').textContent = 'Carregando turmas...';
+  const data = await jsonp(`${API_BASE}?route=classes`);
+  const classes = data.classes || [];
+  const sel = el('classSelect'); sel.innerHTML = '';
+  classes.forEach(c => {
+    const o = document.createElement('option'); o.value = c; o.textContent = c; sel.appendChild(o);
+  });
+  const urlClass = new URLSearchParams(location.search).get('class');
+  const saved = localStorage.getItem('selectedClass');
+  CURRENT_CLASS = urlClass || saved || data.defaultClass || classes[0] || '1 Ano A';
+  if (classes.includes(CURRENT_CLASS)) sel.value = CURRENT_CLASS;
+  else { sel.value = classes[0]; CURRENT_CLASS = classes[0]; }
+  el('classLabel').textContent = CURRENT_CLASS;
+  el('msg').textContent = '';
+}
+
+async function loadStandings(){
   try{
-    document.getElementById('classLabel').textContent = CLASS_NAME;
-    const data = await jsonp(`${API_BASE}?route=standings&class=${encodeURIComponent(CLASS_NAME)}`);
-    const grid = document.getElementById('grid'); grid.innerHTML='';
+    const data = await jsonp(`${API_BASE}?route=standings&class=${encodeURIComponent(CURRENT_CLASS)}`);
+    const grid = el('grid'); grid.innerHTML='';
     (data.standings||[]).forEach((g, i) => grid.appendChild(card(g, i)));
-    document.getElementById('msg').textContent = '';
+    if ((data.standings||[]).length === 0) el('msg').textContent = 'Sem grupos para esta turma.';
+    else el('msg').textContent = '';
   }catch(err){
-    document.getElementById('msg').textContent = 'Erro ao carregar: '+err.message;
+    el('msg').textContent = 'Erro ao carregar: '+err.message;
   }
 }
 
@@ -99,10 +118,10 @@ async function resetClass(){
   const ok = confirm('Você já salvou em PDF? Ao confirmar, TODOS os grupos, alunos e pontuações desta turma serão apagados.');
   if (!ok) return;
   try{
-    const res = await jsonp(`${API_BASE}?route=resetClass&class=${encodeURIComponent(CLASS_NAME)}&confirm=yes`);
+    const res = await jsonp(`${API_BASE}?route=resetClass&class=${encodeURIComponent(CURRENT_CLASS)}&confirm=yes`);
     if (res && res.ok){
-      alert(`Reset concluído para ${CLASS_NAME}.\nRemovidos: ${res.cleared.groups} grupos, ${res.cleared.members} alunos, ${res.cleared.scores} pontuações.`);
-      load();
+      alert(`Reset concluído para ${CURRENT_CLASS}.\nRemovidos: ${res.cleared.groups} grupos, ${res.cleared.members} alunos, ${res.cleared.scores} pontuações.`);
+      loadStandings();
     } else if (res && res.confirmRequired) {
       alert('Confirmação necessária (&confirm=yes).');
     } else {
@@ -113,11 +132,20 @@ async function resetClass(){
   }
 }
 
-document.getElementById('printBtn').addEventListener('click', () => window.print());
-document.getElementById('resetBtn').addEventListener('click', resetClass);
+el('classSelect').addEventListener('change', ()=>{
+  CURRENT_CLASS = el('classSelect').value;
+  localStorage.setItem('selectedClass', CURRENT_CLASS);
+  el('classLabel').textContent = CURRENT_CLASS;
+  loadStandings();
+});
+el('printBtn').addEventListener('click', () => window.print());
+el('resetBtn').addEventListener('click', resetClass);
 
-load();
-setInterval(load, 15000);
+(async function init(){
+  await loadClasses();
+  await loadStandings();
+  setInterval(loadStandings, 15000);
+})();
 </script>
 </body>
 </html>
