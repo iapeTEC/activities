@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Apresentação Games – 1 Ano A</title>
+  <style>
+    :root { --radius: 16px; }
+    *{ box-sizing: border-box; }
+    body{ margin:0; font-family: Inter, system-ui, Arial; background:#0b1220; color:#e5e7eb; }
+    .wrap{ max-width: 1100px; margin: 26px auto; padding: 18px; }
+    h1{ margin:0 0 8px; font-size: 22px; }
+    .sub{ opacity:.8; margin:0 0 16px; font-size:13px; }
+    .actions{ display:flex; gap:10px; margin: 8px 0 18px; }
+    .btn{ background:#22c55e; color:#06220f; border:none; padding:10px 14px; border-radius:10px; font-weight:700; cursor:pointer; }
+    .btn.red{ background:#ef4444; color:#160404; }
+    .grid{ display:grid; grid-template-columns: repeat(auto-fill, minmax(280px,1fr)); gap:16px; }
+    .card{ background:#0f172a; border:1px solid #1f2937; border-radius: var(--radius); padding:14px; box-shadow: 0 8px 24px rgba(0,0,0,.25); }
+    .head{ display:flex; align-items:center; gap:10px; }
+    .rank{ width:28px; height:28px; border-radius:50%; background:#22c55e; color:#06220f; font-weight:800; display:grid; place-items:center; }
+    .name{ font-weight:700; }
+    .total{ margin-left:auto; opacity:.9; font-variant-numeric: tabular-nums; }
+    .bar{ position:relative; height:18px; background:#111827; border:1px solid #1f2937; border-radius: 999px; overflow:visible; margin-top:10px; }
+    .fill{ position:absolute; inset:0 auto 0 0; width:0; background: linear-gradient(90deg, #22c55e, #86efac); }
+    .runner{ position:absolute; top:50%; transform: translateY(-50%); width:34px; height:34px; border-radius:50%; border:3px solid #22c55e; background:#0b1220; display:grid; place-items:center; box-shadow: 0 6px 16px rgba(34,197,94,.35); }
+    .runner img{ width:28px; height:28px; border-radius:50%; object-fit: cover; }
+    .members{ margin-top:10px; font-size:12px; opacity:.85; }
+    .muted{ opacity:.8; font-size:12px; margin-top:6px; }
+    @media print{
+      body{ background:white; color:black; }
+      .actions{ display:none; }
+      .card{ break-inside: avoid; box-shadow:none; border-color:#ddd; }
+      .rank{ background:#0a0; color:white; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1 id="title">Apresentação Games – <span id="classLabel">1 Ano A</span></h1>
+    <p class="sub">Mostrando grupos e progresso desta turma.</p>
+    <div class="actions">
+      <button class="btn" id="printBtn">Imprimir / Salvar PDF</button>
+      <button class="btn red" id="resetBtn">Resetar Turma</button>
+    </div>
+    <div id="grid" class="grid"></div>
+    <div id="msg" class="muted"></div>
+  </div>
+
+<script>
+const API_BASE = 'https://script.google.com/macros/s/AKfycbxEwtRbgvP07VG8ut-eSDsem3i-0ZHPBGkYmD87Xpgjs5pHoZ_g0Yysj-AC3_sBXUFR/exec';
+const CLASS_NAME = new URLSearchParams(location.search).get('class') || '1 Ano A';
+
+function jsonp(url){
+  return new Promise((resolve, reject)=>{
+    const cb = 'cb_' + Math.random().toString(36).slice(2);
+    const s = document.createElement('script');
+    window[cb] = (data) => { resolve(data); delete window[cb]; s.remove(); };
+    s.onerror = () => { delete window[cb]; reject(new Error('Falha JSONP')); };
+    s.src = url + (url.includes('?') ? '&' : '?') + 'callback=' + cb;
+    document.body.appendChild(s);
+  });
+}
+function pct(x){ return Math.max(0, Math.min(100, Math.round(x))); }
+
+function card(g, idx){
+  const p = pct(g.progress);
+  const img = g.image || 'https://i.imgur.com/8Km9tLL.png';
+  const el = document.createElement('div'); el.className='card';
+  el.innerHTML = `
+    <div class="head">
+      <div class="rank">${idx+1}</div>
+      <div class="name">${g.name}</div>
+      <div class="total">${g.total.toFixed(2)} pts</div>
+    </div>
+    <div class="bar">
+      <div class="fill" style="width:${p}%"></div>
+      <div class="runner" style="left: calc(${p}% - 17px)">
+        <img src="${img}" alt="${g.name}"/>
+      </div>
+    </div>
+    <div class="members">${(g.members||[]).join(', ')}</div>
+  `;
+  return el;
+}
+
+async function load(){
+  try{
+    document.getElementById('classLabel').textContent = CLASS_NAME;
+    const data = await jsonp(`${API_BASE}?route=standings&class=${encodeURIComponent(CLASS_NAME)}`);
+    const grid = document.getElementById('grid'); grid.innerHTML='';
+    (data.standings||[]).forEach((g, i) => grid.appendChild(card(g, i)));
+    document.getElementById('msg').textContent = '';
+  }catch(err){
+    document.getElementById('msg').textContent = 'Erro ao carregar: '+err.message;
+  }
+}
+
+async function resetClass(){
+  const ok = confirm('Você já salvou em PDF? Ao confirmar, TODOS os grupos, alunos e pontuações desta turma serão apagados.');
+  if (!ok) return;
+  try{
+    const res = await jsonp(`${API_BASE}?route=resetClass&class=${encodeURIComponent(CLASS_NAME)}&confirm=yes`);
+    if (res && res.ok){
+      alert(`Reset concluído para ${CLASS_NAME}.\nRemovidos: ${res.cleared.groups} grupos, ${res.cleared.members} alunos, ${res.cleared.scores} pontuações.`);
+      load();
+    } else if (res && res.confirmRequired) {
+      alert('Confirmação necessária (&confirm=yes).');
+    } else {
+      alert('Falha ao resetar.');
+    }
+  }catch(e){
+    alert('Erro: ' + e.message);
+  }
+}
+
+document.getElementById('printBtn').addEventListener('click', () => window.print());
+document.getElementById('resetBtn').addEventListener('click', resetClass);
+
+load();
+setInterval(load, 15000);
+</script>
+</body>
+</html>
