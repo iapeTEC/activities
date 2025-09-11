@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Pontuação de Grupos – 1 Ano A</title>
+  <title>Pontuação de Grupos</title>
   <style>
     :root { --gap: 14px; --radius: 14px; }
     * { box-sizing: border-box; }
@@ -15,6 +15,7 @@
     label { display:block; font-size: 14px; opacity:.9; margin-bottom: 6px; }
     input, select { width: 100%; padding: 12px; border-radius: 12px; border: 1px solid #334155; background: #0b1220; color: #e5e7eb; }
     .row { display: grid; grid-template-columns: 1fr 1fr; gap: var(--gap); }
+    .row2 { display:flex; gap: var(--gap); align-items:center; margin-bottom: 10px; }
     .grid4 { display:grid; grid-template-columns: repeat(4,1fr); gap: var(--gap); }
     .students { display:grid; grid-template-columns: 1fr 120px; gap: 8px 12px; align-items:center; }
     .badge { background:#0b1220; border:1px solid #334155; padding:8px 10px; border-radius:10px; font-variant-numeric: tabular-nums; }
@@ -26,7 +27,11 @@
 <body>
   <div class="wrap">
     <div class="card">
-      <h1>🏁 Pontuação de Grupos – <span id="classLabel">1 Ano A</span></h1>
+      <div class="row2">
+        <h1 style="margin:0;">🏁 Pontuação – <span id="classLabel"></span></h1>
+        <select id="classSelect" style="max-width:280px; margin-left:auto;"></select>
+      </div>
+
       <div class="row">
         <div>
           <label>Selecione o grupo</label>
@@ -58,16 +63,13 @@
 
       <div style="margin-top:16px; display:flex; gap:12px; align-items:center;">
         <button class="btn" id="submit">Salvar pontuação</button>
-        <span class="muted">A média de apresentação considera apenas quem tiver nota informada.</span>
+        <span class="muted" id="msg"></span>
       </div>
-      <div id="msg" class="muted"></div>
     </div>
   </div>
 
 <script>
-const API_BASE = 'https://script.google.com/macros/s/AKfycbygpY82xoEfbGRs-JGbLYk0xTupczOZ4YbM6ZKrapiDCN5v4hkrh2VRCAozIVi8jW-5hw/exec';
-const CLASS_NAME = new URLSearchParams(location.search).get('class') || '1 Ano A';
-let GROUPS = [];
+const API_BASE = 'https://script.google.com/macros/s/AKfycbxnMV0CRwJIjKOsBvDf0-8sz1520myCx9w0LcnfoYRDpHWS1-bJpSIkVW5ZjCulZVQ7vQ/exec';
 
 function jsonp(url){
   return new Promise((resolve, reject)=>{
@@ -83,6 +85,9 @@ function el(id){ return document.getElementById(id); }
 function n(v){ const x = parseFloat(v); return isNaN(x) ? 0 : x; }
 function round2(x){ return Math.round(x*100)/100; }
 
+let CURRENT_CLASS = null;
+let GROUPS = [];
+
 function compute(){
   const avgCats = (n(el('c1').value)+n(el('c2').value)+n(el('c3').value)+n(el('c4').value))/4;
   const presInputs = document.querySelectorAll('[data-pres]');
@@ -95,7 +100,7 @@ function compute(){
 
 function renderStudents(group){
   const box = el('students'); box.innerHTML = '';
-  (group.members||[]).forEach(name => {
+  (group?.members||[]).forEach(name => {
     const rowName = document.createElement('div'); rowName.textContent = name;
     const rowInput = document.createElement('input');
     rowInput.type = 'number'; rowInput.step = '0.1'; rowInput.min='0';
@@ -105,20 +110,34 @@ function renderStudents(group){
   });
 }
 
-async function load(){
+async function loadClasses(){
+  el('msg').textContent = 'Carregando turmas...';
+  const data = await jsonp(`${API_BASE}?route=classes`);
+  const classes = data.classes || [];
+  const sel = el('classSelect'); sel.innerHTML = '';
+  classes.forEach(c => { const o=document.createElement('option'); o.value=c; o.textContent=c; sel.appendChild(o); });
+  const urlClass = new URLSearchParams(location.search).get('class');
+  const saved = localStorage.getItem('selectedClass');
+  CURRENT_CLASS = urlClass || saved || data.defaultClass || classes[0] || '1 Ano A';
+  if (classes.includes(CURRENT_CLASS)) sel.value = CURRENT_CLASS;
+  else { sel.value = classes[0]; CURRENT_CLASS = classes[0]; }
+  el('classLabel').textContent = CURRENT_CLASS;
+  el('msg').textContent = '';
+}
+
+async function loadGroups(){
   try{
-    el('classLabel').textContent = CLASS_NAME;
-    const data = await jsonp(`${API_BASE}?route=groups&class=${encodeURIComponent(CLASS_NAME)}`);
+    const data = await jsonp(`${API_BASE}?route=groups&class=${encodeURIComponent(CURRENT_CLASS)}`);
     GROUPS = data.groups||[];
     const sel = el('group'); sel.innerHTML='';
     GROUPS.forEach(g=>{ const o=document.createElement('option'); o.value=g.id; o.textContent=g.name; sel.appendChild(o); });
-    sel.addEventListener('change', ()=>{ const g = GROUPS.find(x=>x.id===sel.value); renderStudents(g||{members:[]}); compute(); });
-    if (GROUPS[0]){ sel.value = GROUPS[0].id; renderStudents(GROUPS[0]); }
+    sel.onchange = ()=>{ const g = GROUPS.find(x=>x.id===sel.value); renderStudents(g); compute(); };
+    if (GROUPS[0]){ sel.value = GROUPS[0].id; renderStudents(GROUPS[0]); } else { renderStudents({members:[]}); }
     ['c1','c2','c3','c4'].forEach(id=> el(id).addEventListener('input', compute));
     const savedName = localStorage.getItem('teacherName'); if (savedName) el('teacher').value = savedName;
     el('teacher').addEventListener('change', ()=> localStorage.setItem('teacherName', el('teacher').value));
     compute();
-    el('msg').textContent = '';
+    el('msg').textContent = GROUPS.length ? '' : 'Sem grupos para esta turma.';
   }catch(err){
     el('msg').textContent = `Erro ao carregar grupos: ${err.message}`;
   }
@@ -133,7 +152,7 @@ async function submit(){
     .filter(p => p.score>0);
 
   const url = `${API_BASE}?route=submitScore`
-    + `&class=${encodeURIComponent(CLASS_NAME)}`
+    + `&class=${encodeURIComponent(CURRENT_CLASS)}`
     + `&groupId=${encodeURIComponent(groupId)}`
     + `&c1=${categories[0]}&c2=${categories[1]}&c3=${categories[2]}&c4=${categories[3]}`
     + `&submittedBy=${encodeURIComponent(el('teacher').value||'')}`
@@ -142,7 +161,7 @@ async function submit(){
   try{
     const data = await jsonp(url);
     el('msg').innerHTML =
-      `<span style="color:#22c55e">Salvo! ${CLASS_NAME} — Rodada = ${data.finalRound.toFixed(2)} (4 cat: ${data.avgCategories.toFixed(2)} / apr: ${data.presentationAvg.toFixed(2)})</span>`;
+      `<span style="color:#22c55e">Salvo! ${CURRENT_CLASS} — Rodada = ${data.finalRound.toFixed(2)} (4 cat: ${data.avgCategories.toFixed(2)} / apr: ${data.presentationAvg.toFixed(2)})</span>`;
     document.querySelectorAll('#students input').forEach(i=> i.value='');
     compute();
   }catch(err){
@@ -151,7 +170,17 @@ async function submit(){
 }
 
 el('submit').addEventListener('click', submit);
-load();
+el('classSelect').addEventListener('change', async ()=>{
+  CURRENT_CLASS = el('classSelect').value;
+  localStorage.setItem('selectedClass', CURRENT_CLASS);
+  el('classLabel').textContent = CURRENT_CLASS;
+  await loadGroups();
+});
+
+(async function init(){
+  await loadClasses();
+  await loadGroups();
+})();
 </script>
 </body>
 </html>
