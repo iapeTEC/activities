@@ -185,3 +185,41 @@ input:focus-visible, select:focus-visible{
   }
   .rank{ background:#0a0; color:white; }
 }
+
+
+
+/* -- Aumentos de tamanho (idoso-friendly) -- */
+.title-xl{ font-size:26px; margin:0 0 8px; }
+.title-lg{ font-size:18px; margin:14px 0 6px; }
+.label-xl{ font-size:18px; display:block; margin-bottom:6px; }
+.label-lg{ font-size:16px; display:block; margin-bottom:4px; }
+.big-input, .big-select{ font-size:18px; padding:14px; border-radius:14px; }
+.btn-lg{ font-size:18px; padding:14px 18px; border-radius:14px; }
+
+/* -- Wizard em tela cheia -- */
+.wizard-overlay{
+  position:fixed; inset:0; background:rgba(0,0,0,.75);
+  display:flex; align-items:center; justify-content:center; z-index:9998;
+}
+.wizard-box{
+  width:min(720px, 96vw); max-height:90vh; overflow:auto;
+  background:var(--bg-elev); border:1px solid var(--border);
+  border-radius:18px; padding:20px; box-shadow: var(--shadow-lg);
+}
+.wizard-head{ margin-bottom:10px; }
+.wizard-title{ font-size:24px; font-weight:800; }
+.wizard-sub{ color:var(--muted); margin-top:4px; }
+.wiz-step{ margin-top:8px; }
+.hidden{ display:none !important; }
+.field{ margin:10px 0; }
+.wiz-nav{ display:flex; justify-content:space-between; gap:10px; margin-top:8px; }
+
+/* -- FAB (botão flutuante para reabrir) -- */
+.fab{
+  position:fixed; right:18px; bottom:18px;
+  padding:14px 16px; border-radius:999px; border:none; cursor:pointer;
+  box-shadow: 0 8px 20px rgba(0,0,0,.35);
+}
+.fab.blue{ background: var(--blue); color:#f0f9ff; }
+
+/* -- Reaproveita estilos já existentes: mode-grid, modal, progress etc. */
