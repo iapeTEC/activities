@@ -1,124 +1,337 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Apresentação Games</title>
-  <link rel="stylesheet" href="game-scores.css">
+  <title>Leilão de Jogadores — Técnico Bruno</title>
+  <style>
+    :root{
+      --bg:#f7f9fb;      /* tema claro */
+      --card:#ffffff;
+      --ink:#0f172a;      /* azul-ardósia escuro para texto */
+      --muted:#64748b;    /* cinza-azulado */
+      --green:#10b981;    /* verde */
+      --green-ink:#065f46;
+      --blue:#2563eb;     /* azul */
+      --blue-ink:#1e3a8a;
+      --danger:#ef4444;   /* vermelho para avisos */
+      --ring:#93c5fd;     /* foco */
+      --radius:16px;
+      --shadow:0 6px 20px rgba(2,6,23,.08);
+      --maxw:880px;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0; font-family: system-ui,-apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+      color:var(--ink); background:var(--bg);
+      display:flex; flex-direction:column; align-items:center;
+    }
+    header{
+      width:100%; background:linear-gradient(180deg,#eaf2ff,#ffffff);
+      border-bottom:1px solid #e5e9f2;
+    }
+    .wrap{ width:100%; max-width:var(--maxw); margin:0 auto; padding:16px; }
+    .brand{ display:flex; align-items:center; gap:12px; }
+    .brand .logo{ font-size:28px; }
+    .brand h1{ font-size:20px; margin:0; }
+    .subtitle{ color:var(--muted); font-size:13px; margin-top:2px; }
 
+    main{ width:100%; max-width:var(--maxw); padding:16px; display:grid; gap:16px; }
+
+    .card{ background:var(--card); border:1px solid #eef2f7; border-radius:var(--radius); box-shadow:var(--shadow); padding:16px; }
+
+    .grid{ display:grid; gap:12px; }
+
+    /* Indicadores */
+    .stats{ display:grid; grid-template-columns: 1fr 1fr; gap:12px; }
+    .stat{ background:#f8fafc; border:1px solid #edf2f7; border-radius:12px; padding:12px; }
+    .stat h3{ margin:0 0 6px 0; font-size:13px; color:var(--muted); font-weight:600; }
+    .money{ font-variant-numeric: tabular-nums; font-size:22px; font-weight:700; }
+    .money.green{ color:var(--green-ink); }
+    .money.blue{ color:var(--blue-ink); }
+
+    /* Barra de progresso do orçamento */
+    .progress{ height:14px; background:#e5edf9; border-radius:999px; overflow:hidden; border:1px solid #dbe7fb; }
+    .progress > span{ display:block; height:100%; background:linear-gradient(90deg,#34d399,#10b981); width:100%; }
+
+    /* Controles principais */
+    .controls{ display:grid; grid-template-columns: 1fr auto; gap:12px; align-items:center; }
+    .cta{ user-select:none; -webkit-tap-highlight-color: transparent; }
+    .btn{
+      display:inline-flex; justify-content:center; align-items:center; gap:10px;
+      padding:16px; border-radius:18px; border:0; cursor:pointer; font-weight:800; letter-spacing:.3px; font-size:18px;
+      transition: transform .04s ease, box-shadow .2s ease;
+      box-shadow: 0 8px 22px rgba(16,185,129,.25);
+    }
+    .btn:active{ transform: translateY(1px) scale(.995); }
+    .btn.raise{ background:linear-gradient(180deg,#34d399,#10b981); color:#053825; }
+    .btn.raise .big{ font-size:26px; }
+
+    .btn-mini{ padding:12px 14px; font-weight:700; font-size:14px; border-radius:12px; border:0; cursor:pointer; }
+    .btn-refund{ background:linear-gradient(180deg,#93c5fd,#60a5fa); color:#0b2a6b; box-shadow:0 6px 18px rgba(37,99,235,.25); }
+
+    .row{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+    .row .btn-ghost{ background:#fff; border:1px solid #e5eaf3; color:#0f172a; }
+    .row .btn-danger{ background: #fee2e2; color:#991b1b; border:1px solid #fecaca; }
+    .row .btn-blue{ background:#1d4ed8; color:#fff; }
+    .row .btn-outline{ background:#fff; color:#1d4ed8; border:1px solid #bfdbfe; }
+
+    /* Lista de jogadores */
+    .roster{ display:grid; gap:10px; }
+    .player{ display:grid; grid-template-columns: 1fr auto; gap:10px; align-items:center; padding:12px; border:1px solid #e8eef8; border-radius:12px; background:#fafcff; }
+    .player .name{ font-weight:700; }
+    .player .price{ font-variant-numeric: tabular-nums; color:var(--blue-ink); font-weight:800; }
+
+    .muted{ color:var(--muted); font-size:13px; }
+
+    footer{ margin-top:auto; width:100%; border-top:1px solid #e9eff8; background:#f8fbff; }
+    footer .wrap{ display:flex; justify-content:space-between; align-items:center; gap:8px; }
+    footer small{ color:var(--muted); }
+
+    /* Modal (nome do jogador) */
+    .modal-backdrop{ position:fixed; inset:0; background:rgba(2,6,23,.35); display:none; place-items:center; padding:16px; }
+    .modal{ width:100%; max-width:520px; background:#fff; border-radius:18px; box-shadow:0 18px 50px rgba(2,6,23,.25); padding:18px; border:1px solid #e7ecf6; }
+    .modal h2{ margin:0 0 8px 0; }
+    .modal .field{ display:grid; gap:6px; margin:10px 0 16px; }
+    .modal input{ padding:12px 14px; border-radius:12px; border:1px solid #dce5f3; font-size:16px; }
+
+    /* Responsividade Mobile First (já nasce empilhado) */
+    @media (min-width:720px){
+      .controls{ grid-template-columns: 1fr auto auto; }
+      .stats{ grid-template-columns: 1fr 1fr 1fr; }
+    }
+
+    /* Estilo de impressão: somente elenco */
+    @media print{
+      header, .actions, .auction, .progress, footer, .muted { display:none !important; }
+      body{ background:#fff; }
+      .card{ box-shadow:none; border:0; }
+      .print-title{ display:block !important; font-size:22px; font-weight:800; margin-bottom:12px; }
+      .player{ border:1px solid #000; }
+    }
+  </style>
 </head>
 <body>
-  <div class="wrap">
-    <h1>Apresentação – <span id="classLabel"></span></h1>
-    <div class="row">
-      <select id="classSelect"></select>
-      <button class="btn" id="printBtn">Imprimir / Salvar PDF</button>
-      <button class="btn red" id="resetBtn">Resetar Turma</button>
-    </div>
-    <div id="grid" class="grid"></div>
-    <div id="msg" class="muted"></div>
-  </div>
-
-<script>
-const API_BASE = 'https://script.google.com/macros/s/AKfycbxnMV0CRwJIjKOsBvDf0-8sz1520myCx9w0LcnfoYRDpHWS1-bJpSIkVW5ZjCulZVQ7vQ/exec';
-
-function jsonp(url){
-  return new Promise((resolve, reject)=>{
-    const cb = 'cb_' + Math.random().toString(36).slice(2);
-    const s = document.createElement('script');
-    window[cb] = (data) => { resolve(data); delete window[cb]; s.remove(); };
-    s.onerror = () => { delete window[cb]; reject(new Error('Falha JSONP')); };
-    s.src = url + (url.includes('?') ? '&' : '?') + 'callback=' + cb;
-    document.body.appendChild(s);
-  });
-}
-function pct(x){ return Math.max(0, Math.min(100, Math.round(x))); }
-function el(id){ return document.getElementById(id); }
-
-let CURRENT_CLASS = null;
-
-function card(g, idx){
-  const p = pct(g.progress);
-  const img = g.image || 'https://i.imgur.com/8Km9tLL.png';
-  const el = document.createElement('div'); el.className='card';
-  el.innerHTML = `
-    <div class="head">
-      <div class="rank">${idx+1}</div>
-      <div class="name">${g.name}</div>
-      <div class="total">${g.total.toFixed(2)} pts</div>
-    </div>
-    <div class="bar">
-      <div class="fill" style="width:${p}%"></div>
-      <div class="runner" style="left: calc(${p}% - 17px)">
-        <img src="${img}" alt="${g.name}"/>
+  <header>
+    <div class="wrap brand">
+      <div class="logo" aria-hidden="true">💸</div>
+      <div>
+        <h1>Leilão de Jogadores</h1>
+        <div class="subtitle">Técnico Bruno • Orçamento inicial: <strong>R$ 1.000.000</strong></div>
       </div>
     </div>
-    <div class="members">${(g.members||[]).join(', ')}</div>
-  `;
-  return el;
-}
+  </header>
 
-async function loadClasses(){
-  el('msg').textContent = 'Carregando turmas...';
-  const data = await jsonp(`${API_BASE}?route=classes`);
-  const classes = data.classes || [];
-  const sel = el('classSelect'); sel.innerHTML = '';
-  classes.forEach(c => {
-    const o = document.createElement('option'); o.value = c; o.textContent = c; sel.appendChild(o);
-  });
-  const urlClass = new URLSearchParams(location.search).get('class');
-  const saved = localStorage.getItem('selectedClass');
-  CURRENT_CLASS = urlClass || saved || data.defaultClass || classes[0] || '1 Ano A';
-  if (classes.includes(CURRENT_CLASS)) sel.value = CURRENT_CLASS;
-  else { sel.value = classes[0]; CURRENT_CLASS = classes[0]; }
-  el('classLabel').textContent = CURRENT_CLASS;
-  el('msg').textContent = '';
-}
+  <main>
+    <section class="card grid auction" aria-labelledby="sec-ctl">
+      <h2 id="sec-ctl" class="sr-only" style="position:absolute;left:-9999px">Controles do Leilão</h2>
 
-async function loadStandings(){
-  try{
-    const data = await jsonp(`${API_BASE}?route=standings&class=${encodeURIComponent(CURRENT_CLASS)}`);
-    const grid = el('grid'); grid.innerHTML='';
-    (data.standings||[]).forEach((g, i) => grid.appendChild(card(g, i)));
-    if ((data.standings||[]).length === 0) el('msg').textContent = 'Sem grupos para esta turma.';
-    else el('msg').textContent = '';
-  }catch(err){
-    el('msg').textContent = 'Erro ao carregar: '+err.message;
-  }
-}
+      <div class="stats">
+        <div class="stat">
+          <h3>💰 Saldo restante</h3>
+          <div id="saldo" class="money green">R$ 1.000.000</div>
+        </div>
+        <div class="stat">
+          <h3>🖐️ Lance atual (este jogador)</h3>
+          <div id="lanceAtual" class="money blue">R$ 0</div>
+        </div>
+        <div class="stat">
+          <h3>📦 Total comprometido</h3>
+          <div id="comprometido" class="money">R$ 0</div>
+        </div>
+      </div>
 
-async function resetClass(){
-  const ok = confirm('Você já salvou em PDF? Ao confirmar, TODOS os grupos, alunos e pontuações desta turma serão apagados.');
-  if (!ok) return;
-  try{
-    const res = await jsonp(`${API_BASE}?route=resetClass&class=${encodeURIComponent(CURRENT_CLASS)}&confirm=yes`);
-    if (res && res.ok){
-      alert(`Reset concluído para ${CURRENT_CLASS}.\nRemovidos: ${res.cleared.groups} grupos, ${res.cleared.members} alunos, ${res.cleared.scores} pontuações.`);
-      loadStandings();
-    } else if (res && res.confirmRequired) {
-      alert('Confirmação necessária (&confirm=yes).');
-    } else {
-      alert('Falha ao resetar.');
+      <div class="progress" aria-label="Progresso de orçamento">
+        <span id="bar" style="width:100%"></span>
+      </div>
+
+      <div class="controls">
+        <button class="btn raise cta" id="btnLance" aria-label="Levantar a mão — adiciona R$ 10.000 ao lance e desconta do saldo">
+          <span class="big">➕ R$ 10.000</span>
+        </button>
+
+        <button class="btn-mini btn-refund" id="btnDevolver" aria-label="Devolver todo o lance atual ao saldo">Devolver lance</button>
+
+        <div class="row actions">
+          <button class="btn-mini btn-blue" id="btnFinalizar">Finalizar compra</button>
+          <button class="btn-mini btn-outline" id="btnImprimir">Imprimir PDF do elenco</button>
+          <button class="btn-mini btn-ghost" id="btnReset">Resetar tudo</button>
+        </div>
+      </div>
+
+      <p class="muted">Dica: cada toque no botão verde equivale a levantar a mão no leilão (+R$ 10.000). Se desistir, use o botão azul <em>Devolver lance</em>. Ao finalizar, informe o nome do jogador e o valor será definitivamente comprometido.</p>
+    </section>
+
+    <section class="card">
+      <div class="print-title" style="display:none">Elenco comprado — Técnico Bruno</div>
+      <h2 style="margin-top:0">Elenco comprado</h2>
+      <div id="lista" class="roster" aria-live="polite">
+        <div class="muted">Nenhum jogador comprado ainda.</div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap">
+      <small>Técnico: <strong>Bruno</strong></small>
+      <small>criado por <strong>Tecnologias Agostinho</strong></small>
+    </div>
+  </footer>
+
+  <!-- Modal para nome do jogador -->
+  <div class="modal-backdrop" id="modal">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="tModal">
+      <h2 id="tModal">Finalizar compra</h2>
+      <p class="muted" id="infoValor">Valor do lance: R$ 0</p>
+      <div class="field">
+        <label for="nomeJog">Nome do jogador</label>
+        <input id="nomeJog" type="text" placeholder="Ex.: João da Silva" />
+      </div>
+      <div class="row">
+        <button class="btn-mini btn-blue" id="okModal">Confirmar</button>
+        <button class="btn-mini btn-ghost" id="cancelModal">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ===== Utilidades =====
+    const fmt = (n)=> new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL', maximumFractionDigits:0}).format(n);
+    const clamp = (n,min,max)=> Math.min(Math.max(n,min),max);
+
+    // ===== Estado =====
+    const STEP = 10000; // valor por levantamento de mão
+    const INITIAL = 1_000_000;
+
+    const state = {
+      saldo: INITIAL,
+      lanceAtual: 0,
+      comprometido: 0,
+      elenco: [] // {nome, preco}
+    };
+
+    // Persistência
+    const KEY = 'auction.bruno.v1';
+    function save(){ localStorage.setItem(KEY, JSON.stringify(state)); }
+    function load(){ const raw = localStorage.getItem(KEY); if(!raw) return; try{ const s=JSON.parse(raw); Object.assign(state,s); }catch(e){} }
+
+    // ===== UI refs =====
+    const elSaldo = document.getElementById('saldo');
+    const elLance = document.getElementById('lanceAtual');
+    const elComp  = document.getElementById('comprometido');
+    const elBar   = document.getElementById('bar');
+    const elLista = document.getElementById('lista');
+
+    const btnLance = document.getElementById('btnLance');
+    const btnDevolver = document.getElementById('btnDevolver');
+    const btnFinalizar = document.getElementById('btnFinalizar');
+    const btnImprimir = document.getElementById('btnImprimir');
+    const btnReset = document.getElementById('btnReset');
+
+    // Modal
+    const modal = document.getElementById('modal');
+    const infoValor = document.getElementById('infoValor');
+    const nomeJog = document.getElementById('nomeJog');
+    const okModal = document.getElementById('okModal');
+    const cancelModal = document.getElementById('cancelModal');
+
+    function openModal(){ infoValor.textContent = `Valor do lance: ${fmt(state.lanceAtual)}`; modal.style.display='grid'; nomeJog.value=''; nomeJog.focus(); }
+    function closeModal(){ modal.style.display='none'; }
+
+    // ===== Render =====
+    function render(){
+      elSaldo.textContent = fmt(state.saldo);
+      elLance.textContent = fmt(state.lanceAtual);
+      elComp.textContent  = fmt(state.comprometido);
+
+      const pct = clamp(Math.round((state.saldo/INITIAL)*100),0,100);
+      elBar.style.width = pct + '%';
+
+      // Botões habilitados/desabilitados
+      btnLance.disabled = state.saldo < STEP;
+      btnDevolver.disabled = state.lanceAtual === 0;
+      btnFinalizar.disabled = state.lanceAtual === 0;
+
+      // Lista
+      if(state.elenco.length === 0){
+        elLista.innerHTML = '<div class="muted">Nenhum jogador comprado ainda.</div>';
+      }else{
+        elLista.innerHTML = state.elenco.map((p,i)=> `
+          <div class="player" data-i="${i}">
+            <div class="name">${i+1}. ${p.nome}</div>
+            <div class="price">${fmt(p.preco)}</div>
+          </div>`).join('');
+      }
+
+      save();
     }
-  }catch(e){
-    alert('Erro: ' + e.message);
-  }
-}
 
-el('classSelect').addEventListener('change', ()=>{
-  CURRENT_CLASS = el('classSelect').value;
-  localStorage.setItem('selectedClass', CURRENT_CLASS);
-  el('classLabel').textContent = CURRENT_CLASS;
-  loadStandings();
-});
-el('printBtn').addEventListener('click', () => window.print());
-el('resetBtn').addEventListener('click', resetClass);
+    // ===== Ações =====
+    btnLance.addEventListener('click', ()=>{
+      if(state.saldo >= STEP){
+        state.saldo -= STEP;
+        state.lanceAtual += STEP;
+        render();
+      }
+    });
 
-(async function init(){
-  await loadClasses();
-  await loadStandings();
-  setInterval(loadStandings, 15000);
-})();
-</script>
+    btnDevolver.addEventListener('click', ()=>{
+      if(state.lanceAtual>0){
+        state.saldo += state.lanceAtual;
+        state.lanceAtual = 0;
+        render();
+      }
+    });
+
+    btnFinalizar.addEventListener('click', ()=>{
+      if(state.lanceAtual>0){
+        openModal();
+      }
+    });
+
+    okModal.addEventListener('click', ()=>{
+      const nome = (nomeJog.value||'').trim();
+      if(!nome){
+        nomeJog.focus();
+        nomeJog.setAttribute('aria-invalid','true');
+        return;
+      }
+      nomeJog.removeAttribute('aria-invalid');
+      // Compromete definitivamente: o valor já saiu do saldo, agora vai para comprometido e lista
+      state.comprometido += state.lanceAtual;
+      state.elenco.push({nome, preco: state.lanceAtual});
+      state.lanceAtual = 0;
+      closeModal();
+      render();
+    });
+
+    cancelModal.addEventListener('click', ()=> closeModal());
+    modal.addEventListener('click', (e)=>{ if(e.target===modal) closeModal(); });
+
+    btnImprimir.addEventListener('click', ()=>{
+      // força título de impressão visível
+      document.querySelector('.print-title').style.display='block';
+      window.print();
+      setTimeout(()=>{ document.querySelector('.print-title').style.display='none'; }, 500);
+    });
+
+    btnReset.addEventListener('click', ()=>{
+      if(confirm('Tem certeza que deseja resetar tudo?')){
+        state.saldo = INITIAL; state.lanceAtual=0; state.comprometido=0; state.elenco=[]; render();
+      }
+    });
+
+    // Teclado rápido: espaço = lance, Esc = devolver lance, Enter = finalizar
+    window.addEventListener('keydown', (e)=>{
+      if(e.key===' '){ e.preventDefault(); if(!btnLance.disabled) btnLance.click(); }
+      if(e.key==='Escape'){ if(!btnDevolver.disabled) btnDevolver.click(); }
+      if(e.key==='Enter' && modal.style.display!=='grid'){ if(!btnFinalizar.disabled) btnFinalizar.click(); }
+    });
+
+    // Inicializa
+    load();
+    render();
+  </script>
 </body>
 </html>
