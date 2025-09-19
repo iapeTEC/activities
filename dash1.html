@@ -174,21 +174,24 @@
         </div>
       </div>
 
-      <p class="muted">Dica: cada toque no botão verde equivale a levantar a mão no leilão (+R$ 10.000). Se desistir, use o botão azul <em>Devolver lance</em>. Ao finalizar, informe o nome do jogador e selecione uma <strong>vaga do plano</strong>; o valor será comprometido e descontará do orçamento daquela vaga.</p>
+      <p class="muted">Dica: cada toque no botão verde equivale a levantar a mão no leilão (+R$ 10.000). Se desistir, use o botão azul <em>Devolver lance</em>. Ao finalizar, informe o nome do jogador e selecione uma <strong>vaga do plano</strong>; o valor será comprometido e descontará do orçamento daquela vaga. Se você exceder o orçamento de uma vaga, o excedente será automaticamente <strong>descontado do próximo jogador do mesmo setor</strong>.</p>
     </section>
 
     <section class="card plan" id="planCard">
       <h2 style="margin-top:0">Plano de elenco (7 vagas)</h2>
       <div class="slot-group" id="groupA">
         <h3>⚽ Atacantes (2)</h3>
+        <div class="sector-summary" id="sumA"></div>
         <div id="slotsA"></div>
       </div>
       <div class="slot-group" id="groupM">
         <h3>🎯 Meio-campo (3)</h3>
+        <div class="sector-summary" id="sumM"></div>
         <div id="slotsM"></div>
       </div>
       <div class="slot-group" id="groupZ">
         <h3>🛡️ Zagueiros (2)</h3>
+        <div class="sector-summary" id="sumZ"></div>
         <div id="slotsZ"></div>
       </div>
     </section>
@@ -248,7 +251,7 @@
     };
 
     // Persistência (navegador atual)
-    const KEY = 'auction.bruno.v2';
+    const KEY = 'auction.bruno.v3';
     function save(){ localStorage.setItem(KEY, JSON.stringify(state)); }
     function load(){ const raw = localStorage.getItem(KEY); if(!raw) return; try{ const s=JSON.parse(raw); Object.assign(state,s); }catch(e){} }
 
@@ -277,6 +280,9 @@
     const slotsA = document.getElementById('slotsA');
     const slotsM = document.getElementById('slotsM');
     const slotsZ = document.getElementById('slotsZ');
+    const sumA = document.getElementById('sumA');
+    const sumM = document.getElementById('sumM');
+    const sumZ = document.getElementById('sumZ');
 
     const btnLance = document.getElementById('btnLance');
     const btnDevolver = document.getElementById('btnDevolver');
@@ -301,6 +307,51 @@
     }
     function closeModal(){ modal.style.display='none'; }
 
+    // ===== Helpers =====
+    function getSlotById(id){ return state.slots.find(s=>s.id===id); }
+    function getSlotIndex(id){ return state.slots.findIndex(s=>s.id===id); }
+
+    function sectorTotals(pos){
+      const slots = state.slots.filter(s=>s.pos===pos);
+      const budget = slots.reduce((a,b)=> a + b.budget, 0);
+      const spent = state.elenco.reduce((a,p)=>{
+        const s = getSlotById(p.slotId); return s && s.pos===pos ? a + p.preco : a;
+      }, 0);
+      const remaining = budget - spent; // pode ficar negativo => setor estourado
+      return {budget, spent, remaining};
+    }
+
+    // Drena excedente para próximas vagas do mesmo setor (preferência a partir da vaga atual)
+    function drainOverspend(pos, fromIndex, amount){
+      let remaining = amount;
+      let drained = 0;
+      // 1) varre vagas do mesmo setor após a atual
+      for(let i=fromIndex+1; i<state.slots.length && remaining>0; i++){
+        const t = state.slots[i];
+        if(t.pos!==pos || t.name) continue; // somente vagas do mesmo setor e ainda livres
+        const take = Math.min(remaining, t.budget);
+        if(take>0){
+          t.budget -= take;
+          t.remaining = Math.max(0, Math.min(t.remaining, t.budget));
+          remaining -= take;
+          drained += take;
+        }
+      }
+      // 2) se ainda sobrar, varre do início até a vaga atual
+      for(let i=0; i<=fromIndex && remaining>0; i++){
+        const t = state.slots[i];
+        if(t.pos!==pos || t.name) continue;
+        const take = Math.min(remaining, t.budget);
+        if(take>0){
+          t.budget -= take;
+          t.remaining = Math.max(0, Math.min(t.remaining, t.budget));
+          remaining -= take;
+          drained += take;
+        }
+      }
+      return drained; // total drenado de outras vagas
+    }
+
     // ===== Render Helpers =====
     function renderSlotOptions(){
       const options = state.slots.map(s=>{
@@ -312,13 +363,22 @@
       slotSelect.innerHTML = `<option value="" disabled selected>Selecione uma vaga</option>` + options;
     }
 
+    function renderSectorSummary(pos, mount){
+      const {budget, spent, remaining} = sectorTotals(pos);
+      const pct = budget>0 ? clamp(Math.round(((budget - Math.max(remaining,0)) / budget) * 100), 0, 100) : 0;
+      const title = pos==='A'? 'Atacantes' : pos==='M'? 'Meio-campo' : 'Zagueiros';
+      mount.innerHTML = `
+        <div class="slot-meta">Total do setor: <strong>${fmt(budget)}</strong> • Gasto: <strong>${fmt(spent)}</strong> • Disponível: <strong>${fmt(remaining)}</strong></div>
+        <div class="progress" aria-label="Total do setor ${title}"><span style="width:${pct}%"></span></div>
+      `;
+    }
+
     function renderSlots(){
       const byPos = {A:[], M:[], Z:[]};
       state.slots.forEach(s=> byPos[s.pos].push(s));
       function slotHTML(s){
-        const spent = s.budget - s.remaining; // pode ser > budget se overspend
-        const pct = clamp(Math.round((s.remaining/ s.budget)*100), 0, 100);
-        const overs = s.remaining < 0 ? `<span class="slot-overspend">excedido em ${fmt(-s.remaining)}</span>` : '';
+        const pct = s.budget>0 ? clamp(Math.round((Math.max(s.remaining,0)/ s.budget)*100), 0, 100) : 0;
+        const overs = s.remaining < 0 ? `<span class=\"slot-overspend\">excedido em ${fmt(-s.remaining)}</span>` : '';
         return `
           <div class="slot" data-id="${s.id}">
             <div class="slot-head">
@@ -333,6 +393,10 @@
       slotsA.innerHTML = byPos.A.map(slotHTML).join('');
       slotsM.innerHTML = byPos.M.map(slotHTML).join('');
       slotsZ.innerHTML = byPos.Z.map(slotHTML).join('');
+
+      renderSectorSummary('A', sumA);
+      renderSectorSummary('M', sumM);
+      renderSectorSummary('Z', sumZ);
     }
 
     // ===== Render principal =====
@@ -355,17 +419,13 @@
       }else{
         elLista.innerHTML = state.elenco.map((p,i)=> `
           <div class="player" data-i="${i}">
-            <div class="name">${i+1}. ${p.nome} <span class="muted">${p.slotId? '• '+getSlotLabel(p.slotId):''}</span></div>
+            <div class="name">${i+1}. ${p.nome} <span class="muted">${p.slotId? '• '+getSlotById(p.slotId)?.label:''}</span></div>
             <div class="price">${fmt(p.preco)}</div>
           </div>`).join('');
       }
 
       renderSlots();
       save();
-    }
-
-    function getSlotLabel(id){
-      const s = state.slots.find(x=>x.id===id); return s? s.label : '';
     }
 
     // ===== Ações =====
@@ -403,15 +463,29 @@
       if(!nome){ nomeJog.focus(); nomeJog.setAttribute('aria-invalid','true'); return; }
       if(!slotId){ slotSelect.focus(); return; }
 
-      const slot = state.slots.find(s=> s.id===slotId);
+      const slot = getSlotById(slotId);
+      const idx = getSlotIndex(slotId);
       if(!slot || slot.name){ return; }
 
-      // Compromete definitivamente: o valor já saiu do saldo, agora vai para comprometido e atualiza slot
-      state.comprometido += state.lanceAtual;
-      slot.name = nome;
-      slot.remaining -= state.lanceAtual; // pode ficar negativo -> overspend visível
+      const price = state.lanceAtual;
 
-      state.elenco.push({nome, preco: state.lanceAtual, slotId});
+      // Compromete definitivamente: o valor já saiu do saldo, agora vai para comprometido e atualiza slot
+      state.comprometido += price;
+
+      // Calcula excedente em relação ao orçamento da VAGA
+      const overspendCandidate = Math.max(0, price - slot.budget);
+      // Drena do PRÓXIMO( S ) do mesmo setor
+      const drained = overspendCandidate > 0 ? drainOverspend(slot.pos, idx, overspendCandidate) : 0;
+
+      // Atualiza vaga atual
+      slot.name = nome;
+      // remaining = budget - price + drenado (se não cobrir tudo, ficará negativo — visível como excedente)
+      slot.remaining = (slot.budget - price + drained);
+
+      // Adiciona ao elenco
+      state.elenco.push({nome, preco: price, slotId});
+
+      // Zera lance e fecha
       state.lanceAtual = 0;
       closeModal();
       render();
