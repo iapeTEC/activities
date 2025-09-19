@@ -34,14 +34,15 @@
     }
     .hotspot input:focus{border-color:#93c5fd; box-shadow:0 0 0 4px rgba(147,197,253,.30)}
 
-    /* ===== POSIÇÕES FINAIS ===== */
-    .hotspot--5{ left:15.0%; top:65.8%; }   /* 5 — Grandfather (materno)        */
-    .hotspot--6{ left:0.0%;  top:0.0%;  }   /* 6 — Grandmother (materno)        */
-    .hotspot--7t{ left:28.2%; top:40.7%; }  /* 7 (superior) — Mother            */
+    /* ===== POSIÇÕES QUE VOCÊ PASSOU ===== */
+    /* Cole estas regras no seu <style>, substituindo as anteriores */
+    .hotspot--5{ left:0.0%;  top:0.0%;  }  /* 5 — Grandfather (materno)        */
+    .hotspot--6{ left:0.0%;  top:0.0%;  }  /* 6 — Grandmother (materno)        */
+    .hotspot--7t{ left:28.4%; top:41.0%; }  /* 7 (superior) — Mother            */
     .hotspot--7b{ left:0.0%;  top:0.0%;  }  /* 7 (inferior) — Grandmother (pat) */
-    .hotspot--9{ left:72.3%; top:66.1%; }   /* 9 — Grandfather (paterno)        */
-    .hotspot--10{ left:62.6%; top:41.4%; }  /* 10 — Father                       */
-    .hotspot--17{ left:46.2%; top:15.1%; }  /* 17 — Me                           */
+    .hotspot--9{ left:72.0%; top:65.8%; }  /* 9 — Grandfather (paterno)        */
+    .hotspot--10{ left:64.0%; top:41.4%; }  /* 10 — Father                       */
+    .hotspot--17{ left:46.8%; top:14.0%; }  /* 17 — Me                           */
 
     .actions{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-top:16px}
     .btn{border:none;padding:12px 16px;border-radius:12px;cursor:pointer;font-weight:800}
@@ -112,17 +113,55 @@
     const g = id => ($("#"+id).value||"").trim();
     const missing = v => v ? v : '"pessoa que não lembro o nome"';
 
-    function buildStory(){
-      const MGF = missing(g('mgf')); // 5
-      const MGM = missing(g('mgm')); // 6
-      const PGF = missing(g('pgf')); // 9
-      const PGM = missing(g('pgm')); // 7 (inferior)
-      const mother = g('mother') || 'alguém muito querida';
-      const father = g('father') || 'alguém especial';
-      const me = g('me') || 'Você';
+    // 8 historinhas fofas com placeholders
+    const stories = [
+      v => ({
+        pt: `Numa linda tarde, ${v.MGF} e ${v.MGM} recordavam memórias da infância, enquanto ${v.PGF} e ${v.PGM} preparavam um lanche cheio de histórias. Anos depois, ${v.mother} conheceu ${v.father}, eles se apaixonaram e decidiram construir uma família. Foi assim que ${v.me} chegou para iluminar tudo!`,
+        en: `On a lovely afternoon, ${v.MGF} and ${v.MGM} were recalling childhood memories, while ${v.PGF} and ${v.PGM} prepared a snack full of stories. Years later, ${v.mother} met ${v.father}; they fell in love and decided to build a family. That’s how ${v.me} arrived to brighten everything!`
+      }),
+      v => ({
+        pt: `Num piquenique no parque, ${v.MGF} trouxe uma toalha xadrez e ${v.MGM} trouxe frutas docinhas. Do outro lado, ${v.PGF} e ${v.PGM} chegaram com suco geladinho. ${v.mother} e ${v.father} sorriram, e ${v.me} correu para brincar na grama. Foi um dia perfeito para guardar no coração!`,
+        en: `At a picnic in the park, ${v.MGF} brought a checkered blanket and ${v.MGM} brought sweet fruits. Meanwhile, ${v.PGF} and ${v.PGM} arrived with cold juice. ${v.mother} and ${v.father} smiled, and ${v.me} ran to play on the grass. It was a perfect day to keep in the heart!`
+      }),
+      v => ({
+        pt: `Era dia de empinar pipa! ${v.PGF} segurou a linha com cuidado, ${v.PGM} batia palmas, e lá do outro lado ${v.MGF} e ${v.MGM} ensinavam truques do vento. ${v.mother} e ${v.father} riam com ${v.me}, que pulava de alegria. A pipa colorida parecia desenhar sorrisos no céu.`,
+        en: `It was kite-flying day! ${v.PGF} held the line carefully, ${v.PGM} clapped, and on the other side ${v.MGF} and ${v.MGM} taught wind tricks. ${v.mother} and ${v.father} laughed with ${v.me}, who jumped with joy. The colorful kite seemed to draw smiles in the sky.`
+      }),
+      v => ({
+        pt: `No jardim da família, ${v.MGM} plantou flores e ${v.MGF} regou com carinho. ${v.PGM} e ${v.PGF} trouxeram vasinhos pintados. ${v.mother} e ${v.father} mostraram a ${v.me} como cuidar das plantinhas. Logo os botões viraram flores, e o jardim ficou tão bonito quanto um abraço!`,
+        en: `In the family garden, ${v.MGM} planted flowers and ${v.MGF} watered them with care. ${v.PGM} and ${v.PGF} brought painted pots. ${v.mother} and ${v.father} showed ${v.me} how to take care of the little plants. Soon the buds turned into flowers, and the garden looked as beautiful as a hug!`
+      }),
+      v => ({
+        pt: `Na cozinha, ${v.PGM} misturou a massa e ${v.PGF} contou histórias antigas. ${v.MGM} checou o forno, ${v.MGF} arrumou a mesa. ${v.mother} e ${v.father} ajudaram ${v.me} a cortar biscoitos em forma de estrela. Quando ficaram prontos, a casa inteira cheirava a carinho!`,
+        en: `In the kitchen, ${v.PGM} mixed the dough and ${v.PGF} told old stories. ${v.MGM} checked the oven, ${v.MGF} set the table. ${v.mother} and ${v.father} helped ${v.me} cut star-shaped cookies. When they were ready, the whole house smelled like affection!`
+      }),
+      v => ({
+        pt: `Era noite de música! ${v.MGF} batucava na mesa, ${v.MGM} fazia um coral baixinho. ${v.PGF} batia o pé marcando o ritmo, e ${v.PGM} balançava as mãos no ar. ${v.mother} e ${v.father} cantavam com ${v.me}. A sala virou palco e os aplausos viraram chuva de alegria!`,
+        en: `It was music night! ${v.MGF} drummed on the table, ${v.MGM} sang a soft choir. ${v.PGF} tapped a foot to keep the beat, and ${v.PGM} waved hands in the air. ${v.mother} and ${v.father} sang with ${v.me}. The living room became a stage and the applause turned into a shower of joy!`
+      }),
+      v => ({
+        pt: `Na biblioteca do bairro, ${v.PGF} escolheu um livro de aventuras, ${v.PGM} pegou um de poesia. ${v.MGF} encontrou um conto engraçado e ${v.MGM} um livro de bichinhos. ${v.mother} e ${v.father} leram para ${v.me}, que viajou sem sair do lugar. As páginas pareciam janelas para a imaginação!`,
+        en: `At the neighborhood library, ${v.PGF} chose an adventure book, ${v.PGM} picked a poetry one. ${v.MGF} found a funny tale and ${v.MGM} a book about animals. ${v.mother} and ${v.father} read to ${v.me}, who traveled without leaving the spot. The pages felt like windows to imagination!`
+      }),
+      v => ({
+        pt: `Sob o céu estrelado, ${v.MGF} apontou constelações, ${v.MGM} contou uma lenda. ${v.PGF} disse que cada estrela guarda um desejo, e ${v.PGM} ensinou a fazer um pedido. ${v.mother} e ${v.father} abraçaram ${v.me}, que fechou os olhos e desejou mais dias assim: cheios de família e brilho no coração.`,
+        en: `Under the starry sky, ${v.MGF} pointed out constellations, ${v.MGM} told a legend. ${v.PGF} said every star keeps a wish, and ${v.PGM} taught how to make one. ${v.mother} and ${v.father} hugged ${v.me}, who closed their eyes and wished for more days like this: full of family and sparkle in the heart.`
+      })
+    ];
 
-      const pt = `Numa linda tarde, ${MGF} e ${MGM} recordavam memórias da infância, enquanto ${PGF} e ${PGM} preparavam um lanche cheio de histórias. Anos depois, ${mother} conheceu ${father}, eles se apaixonaram e decidiram construir uma família. Foi assim que ${me} chegou para iluminar tudo!`;
-      const en = `On a lovely afternoon, ${MGF} and ${MGM} were recalling childhood memories, while ${PGF} and ${PGM} prepared a snack full of stories. Years later, ${mother} met ${father}; they fell in love and decided to build a family. That’s how ${me} arrived to brighten everything!`;
+    function buildStory(){
+      const v = {
+        MGF: missing(g('mgf')),
+        MGM: missing(g('mgm')),
+        PGF: missing(g('pgf')),
+        PGM: missing(g('pgm')),
+        mother: g('mother') || 'alguém muito querida',
+        father: g('father') || 'alguém especial',
+        me: g('me') || 'Você'
+      };
+
+      const pick = stories[Math.floor(Math.random() * stories.length)];
+      const { pt, en } = pick(v);
 
       $('#ptStory').textContent = pt;
       $('#enStory').textContent = en;
