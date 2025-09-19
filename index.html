@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Árvore Genealógica – Fase 1</title>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --ink:#111827; --muted:#6b7280; --line:#e5e7eb; --accent:#2563eb;
+      --ok:#16a34a; --bad:#ff7a7a; --radius:16px;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:#fff;color:var(--ink);font-family:"Fredoka",system-ui,Segoe UI,Arial,sans-serif}
+    header{padding:18px 20px;border-bottom:1px solid var(--line);text-align:center}
+    h1{margin:0;font-weight:800}
+    .wrap{max-width:980px;margin:0 auto;padding:20px}
+    .note{margin:10px 0 18px;padding:12px 16px;border:1px dashed var(--line);border-radius:var(--radius);color:#374151;background:#f9fafb}
+
+    /* imagem + hotspots */
+    .board{position:relative;max-width:980px;margin:0 auto;border:1px solid var(--line);border-radius:18px;overflow:hidden;background:#e6f3ff}
+    .board img{width:100%;height:auto;display:block}
+
+    .hotspot{
+      position:absolute; transform:translate(-50%,-50%);
+      width:180px; max-width:36vw; background:#fff;
+      border:2px solid var(--line); border-radius:14px; padding:8px 10px;
+      box-shadow:0 8px 24px rgba(2,6,23,.08); text-align:center;
+    }
+    .hotspot label{display:block;font-size:.9rem;color:var(--muted);margin-top:6px}
+    .hotspot input{
+      width:100%; padding:10px 12px; border-radius:10px;
+      border:1px solid var(--line); outline:none; font-size:1rem;
+    }
+    .hotspot input:focus{border-color:#93c5fd; box-shadow:0 0 0 4px rgba(147,197,253,.30)}
+
+    /* POSIÇÕES (calibradas para familytree.png) */
+    .hotspot--5  { left:19%; top:66%; }  /* 5 — Grandfather (materno)        */
+    .hotspot--6  { left:34%; top:66%; }  /* 6 — Grandmother (materno)        */
+    .hotspot--7t { left:31%; top:36%; }  /* 7 (superior) — Mother            */
+    .hotspot--7b { left:53%; top:66%; }  /* 7 (inferior) — Grandmother (pat) */
+    .hotspot--9  { left:79%; top:66%; }  /* 9 — Grandfather (paterno)        */
+    .hotspot--10 { left:69%; top:36%; }  /* 10 — Father                       */
+    .hotspot--17 { left:50%; top:14%; }  /* 17 — Me                           */
+
+    .actions{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-top:16px}
+    .btn{border:none;padding:12px 16px;border-radius:12px;cursor:pointer;font-weight:800}
+    .primary{background:var(--accent);color:#fff}
+    .ghost{background:#fff;border:1px solid var(--line)}
+    .story{margin-top:18px;padding:16px;border:1px solid var(--line);border-radius:16px;background:#fff}
+    .story h3{margin:0 0 8px}
+
+    /* ==== Toolbar de edição ==== */
+    .editor-bar{
+      position: sticky; top: 0; z-index: 50;
+      display:flex; gap:8px; justify-content:center; align-items:center;
+      padding:8px; margin:12px 0; border:1px solid var(--line);
+      background:#fff; border-radius:12px;
+    }
+    .editor-bar .btn-sm{
+      border:1px solid var(--line); background:#fff; padding:8px 12px;
+      border-radius:10px; cursor:pointer; font-weight:700;
+    }
+    .hotspot.editing{ outline:2px dashed #60a5fa; cursor:move; }
+  </style>
+</head>
+<body>
+  <header><h1>Árvore Genealógica — Fase 1</h1></header>
+
+  <div class="wrap">
+    <div class="note"><b>Aviso:</b> Esta fase usa apenas <b>avós</b>, <b>pais</b> e <b>Me</b>. Se faltar nome de avós, a história mostrará <i>“pessoa que não lembro o nome”</i>.</div>
+
+    <figure class="board">
+      <!-- Coloque familytree.png na mesma pasta -->
+      <img src="familytree.png" alt="Mapa da árvore com círculos numerados">
+
+      <!-- hotspots -->
+      <div class="hotspot hotspot--5">
+        <input id="mgf" placeholder="Nome">
+        <label>5 — Grandfather (materno)</label>
+      </div>
+      <div class="hotspot hotspot--6">
+        <input id="mgm" placeholder="Nome">
+        <label>6 — Grandmother (materno)</label>
+      </div>
+      <div class="hotspot hotspot--7t">
+        <input id="mother" placeholder="Nome">
+        <label>7 — Mother</label>
+      </div>
+      <div class="hotspot hotspot--7b">
+        <input id="pgm" placeholder="Nome">
+        <label>7 — Grandmother (paterno)</label>
+      </div>
+      <div class="hotspot hotspot--9">
+        <input id="pgf" placeholder="Nome">
+        <label>9 — Grandfather (paterno)</label>
+      </div>
+      <div class="hotspot hotspot--10">
+        <input id="father" placeholder="Nome">
+        <label>10 — Father</label>
+      </div>
+      <div class="hotspot hotspot--17">
+        <input id="me" placeholder="Seu nome">
+        <label>17 — Me</label>
+      </div>
+    </figure>
+
+    <!-- Toolbar do editor -->
+    <div class="editor-bar" id="editorBar">
+      <button class="btn-sm" id="toggleEdit">Ativar edição (drag)</button>
+      <button class="btn-sm" id="exportCss">Exportar CSS</button>
+      <button class="btn-sm" id="clearLocal">Limpar posições salvas</button>
+      <span id="editHint" style="color:#6b7280">Arraste os cartões para alinhar aos números.</span>
+    </div>
+    <pre id="cssOut" style="white-space:pre-wrap;background:#f9fafb;border:1px solid var(--line);border-radius:10px;padding:10px;display:none"></pre>
+
+    <div class="actions">
+      <button class="btn primary" id="submit">Submeter</button>
+      <button class="btn ghost" id="redo" hidden>Refazer</button>
+      <button class="btn" id="next" hidden onclick="location.href='page2.html'">Ir para Fase 2</button>
+    </div>
+
+    <section id="storyBox" class="story" hidden>
+      <h3>História</h3>
+      <p id="ptStory"></p>
+      <hr style="border:none;border-top:1px solid #e5e7eb;margin:12px 0">
+      <h3>Story (English)</h3>
+      <p id="enStory"></p>
+    </section>
+  </div>
+
+  <script>
+    const $ = s => document.querySelector(s);
+    const g = id => ($("#"+id).value||"").trim();
+    const missing = v => v ? v : '"pessoa que não lembro o nome"';
+
+    function buildStory(){
+      const MGF = missing(g('mgf')); // 5
+      const MGM = missing(g('mgm')); // 6
+      const PGF = missing(g('pgf')); // 9
+      const PGM = missing(g('pgm')); // 7 (inferior)
+      const mother = g('mother') || 'alguém muito querida';
+      const father = g('father') || 'alguém especial';
+      const me = g('me') || 'Você';
+
+      const pt = `Numa linda tarde, ${MGF} e ${MGM} recordavam memórias da infância, enquanto ${PGF} e ${PGM} preparavam um lanche cheio de histórias. Anos depois, ${mother} conheceu ${father}, eles se apaixonaram e decidiram construir uma família. Foi assim que ${me} chegou para iluminar tudo!`;
+      const en = `On a lovely afternoon, ${MGF} and ${MGM} were recalling childhood memories, while ${PGF} and ${PGM} prepared a snack full of stories. Years later, ${mother} met ${father}; they fell in love and decided to build a family. That’s how ${me} arrived to brighten everything!`;
+
+      $('#ptStory').textContent = pt;
+      $('#enStory').textContent = en;
+      $('#storyBox').hidden = false; $('#redo').hidden = false; $('#next').hidden = false;
+      $('#storyBox').scrollIntoView({behavior:'smooth'});
+    }
+
+    $('#submit').addEventListener('click', buildStory);
+    $('#redo').addEventListener('click', ()=>{
+      ['mgf','mgm','pgf','pgm','mother','father','me'].forEach(id=> $("#"+id).value='');
+      $('#storyBox').hidden = true; $('#redo').hidden = true; $('#next').hidden = true;
+      window.scrollTo({top:0,behavior:'smooth'});
+    });
+
+    /* ==== DRAG & DROP HOTSPOTS (percentual + localStorage) ==== */
+    const board = document.querySelector('.board');
+    const hotspotsMeta = [
+      {cls:'hotspot--5'}, {cls:'hotspot--6'}, {cls:'hotspot--7t'},
+      {cls:'hotspot--7b'}, {cls:'hotspot--9'}, {cls:'hotspot--10'},
+      {cls:'hotspot--17'}
+    ];
+    const POS_KEY = 'family_hotspots_v1';
+
+    function loadSavedPositions(){
+      try{
+        const saved = JSON.parse(localStorage.getItem(POS_KEY)||'{}');
+        for(const {cls} of hotspotsMeta){
+          if(saved[cls]){
+            const el = document.querySelector('.'+cls);
+            el.style.left = saved[cls].left + '%';
+            el.style.top  = saved[cls].top  + '%';
+          }
+        }
+      }catch(e){}
+    }
+    function savePositions(){
+      const data = {};
+      for(const {cls} of hotspotsMeta){
+        const el = document.querySelector('.'+cls);
+        const left = parseFloat(el.style.left) || 0;
+        const top  = parseFloat(el.style.top)  || 0;
+        data[cls] = {left, top};
+      }
+      localStorage.setItem(POS_KEY, JSON.stringify(data));
+    }
+    function percentFromEvent(e){
+      const rect = board.getBoundingClientRect();
+      const x = (e.clientX - rect.left) / rect.width  * 100;
+      const y = (e.clientY - rect.top)  / rect.height * 100;
+      return {x: Math.min(98, Math.max(2, x)), y: Math.min(98, Math.max(2, y))};
+    }
+
+    let editing = false, dragging = null;
+
+    function setEditing(on){
+      editing = on;
+      $('#toggleEdit').textContent = on ? 'Finalizar edição' : 'Ativar edição (drag)';
+      document.querySelectorAll('.hotspot').forEach(h=> h.classList.toggle('editing', on));
+    }
+
+    board.addEventListener('pointerdown', (e)=>{
+      if(!editing) return;
+      const target = e.target.closest('.hotspot');
+      if(!target) return;
+      dragging = target;
+      dragging.setPointerCapture(e.pointerId);
+    });
+    board.addEventListener('pointermove', (e)=>{
+      if(!editing || !dragging) return;
+      const {x,y} = percentFromEvent(e);
+      dragging.style.left = x + '%';
+      dragging.style.top  = y + '%';
+    });
+    board.addEventListener('pointerup', (e)=>{
+      if(dragging){
+        dragging.releasePointerCapture(e.pointerId);
+        dragging = null;
+        savePositions();
+      }
+    });
+
+    document.getElementById('toggleEdit').addEventListener('click', ()=>{
+      setEditing(!editing);
+      if(!editing) savePositions();
+    });
+    document.getElementById('clearLocal').addEventListener('click', ()=>{
+      localStorage.removeItem(POS_KEY);
+      loadSavedPositions();
+    });
+    document.getElementById('exportCss').addEventListener('click', ()=>{
+      let css = '/* Cole estas regras no seu <style>, substituindo as anteriores */\n';
+      for(const {cls} of hotspotsMeta){
+        const el = document.querySelector('.'+cls);
+        const L = parseFloat(el.style.left)||0;
+        const T = parseFloat(el.style.top)||0;
+        css += `.${cls}{ left:${L.toFixed(1)}%; top:${T.toFixed(1)}%; }\n`;
+      }
+      const out = document.getElementById('cssOut');
+      out.textContent = css;
+      out.style.display = 'block';
+    });
+
+    loadSavedPositions();
+  </script>
+</body>
+</html>

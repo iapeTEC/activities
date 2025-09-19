@@ -1,0 +1,324 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Relógio Didático — 00/15/30/45</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;600;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    /* ===== THEME TOKENS (matte palette) ===== */
+    :root{ --radius:16px; }
+    [data-theme="dark"]{
+      /* Chumbo escuro (matte) */
+      --bg: #0e1116;          /* fundo base */
+      --card: #151a23;        /* placas/cards */
+      --text: #e9ecf3;        /* texto principal */
+      --muted:#a3acba;        /* texto suave */
+      --border:#273041;       /* linhas/bordas */
+      /* Acentos foscos, dessaturados */
+      --accent:#6f5bd6;       /* violeta fosco */
+      --accent-2:#2b9e8b;     /* teal fosco */
+      --accent-3:#d1a24a;     /* âmbar fosco */
+      --accent-4:#4b8fe2;     /* azul fosco */
+      --btn-bg: linear-gradient(180deg, #242936, #1c2230);
+      --btn-bg-2: linear-gradient(180deg, #223235, #1a2628);
+      --shadow: 0 10px 28px rgba(0,0,0,.35);
+    }
+    [data-theme="light"]{
+      /* Claro, suave e limpo */
+      --bg: #f6f7fb;
+      --card:#ffffff;
+      --text:#111827;
+      --muted:#6b7280;
+      --border:#e5e7eb;
+      --accent:#6a60cf;
+      --accent-2:#2a9c88;
+      --accent-3:#c8963e;
+      --accent-4:#3b82f6;
+      --btn-bg: linear-gradient(180deg, #eef0f7, #e6e9f2);
+      --btn-bg-2: linear-gradient(180deg, #eaf4f2, #e2eeec);
+      --shadow: 0 12px 28px rgba(16,24,40,.08);
+    }
+
+    *{ box-sizing:border-box; }
+    html, body{ height:100%; margin:0; }
+    body{
+      background: var(--bg);
+      color: var(--text);
+      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      transition: background .3s ease, color .3s ease;
+    }
+    .wrap{ max-width: 820px; margin:0 auto; padding:32px 20px 52px; display:flex; flex-direction:column; gap:20px; }
+    header{ display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; }
+    h1{ font: 700 20px Kanit, Inter, sans-serif; letter-spacing:.4px; margin:0; }
+
+    .card{ background: var(--card); border:1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); }
+    .clock{ display:grid; gap:8px; place-items:center; padding:28px; text-align:center; }
+
+    .time{ font: 700 clamp(48px, 8.5vw, 92px) Kanit, Inter, sans-serif; letter-spacing:1px; line-height:.95; }
+    .time.small{ font-size: clamp(24px, 4vw, 36px); opacity:.95; }
+    .sub{ margin-top: 6px; color: var(--muted); font-size: clamp(14px, 2.4vw, 16px); }
+    .phrase{ margin-top: 8px; font-size: clamp(16px, 2.6vw, 20px); font-weight:600; }
+
+    .controls{ display:flex; flex-wrap:wrap; gap:12px; padding:16px; border-top:1px dashed var(--border); align-items:center; justify-content:space-between; }
+    .row{ display:flex; flex-wrap:wrap; gap:12px; align-items:center; }
+
+    /* Modern matte buttons */
+    .btn{ cursor:pointer; border:1px solid var(--border); border-radius: 12px; padding:12px 16px; color:var(--text); font-weight:700; letter-spacing:.2px; background: var(--btn-bg); transition: transform .06s ease, filter .2s ease, box-shadow .2s ease; box-shadow: 0 6px 16px rgba(0,0,0,.1); }
+    .btn:hover{ filter: brightness(1.04); }
+    .btn:active{ transform: translateY(1px); }
+    .btn.alt{ background: var(--btn-bg-2); }
+    .btn.violet{ outline: 2px solid rgba(111,91,214,.25); }
+    .btn.teal{ outline: 2px solid rgba(43,158,139,.25); }
+
+    /* Segmented controls */
+    .seg{ display:inline-flex; gap:6px; background: var(--card); border:1px solid var(--border); padding:6px; border-radius:12px; }
+    .seg button{ border-radius:10px; border:1px solid transparent; padding:8px 10px; background:transparent; color:var(--text); font-weight:600; cursor:pointer; }
+    .seg button[aria-pressed="true"]{ background: rgba(0,0,0,.06); border-color: var(--border); }
+
+    /* Check grid */
+    .grid{ display:grid; gap:12px; grid-template-columns: repeat(4, minmax(60px, 1fr)); border:1px dashed var(--border); border-radius:12px; padding:10px; }
+    .check{ display:flex; gap:8px; align-items:center; justify-content:center; }
+
+    /* Analog clock canvas */
+    canvas#analogCanvas{ width:min(360px, 70vw); height:min(360px, 70vw); aspect-ratio:1 / 1; border-radius: 50%; background: radial-gradient(circle at 50% 40%, rgba(255,255,255,.06), transparent 60%), var(--card); border:1px solid var(--border); }
+
+    .footer{ color: var(--muted); font-size:13px; text-align:center; padding-top:8px; }
+    .hidden{ display:none !important; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>Relógio Didático — tempos em 00 · 15 · 30 · 45</h1>
+      <div class="row">
+        <div class="seg" role="group" aria-label="Tema">
+          <button id="themeLight" aria-pressed="false" title="Tema claro">☀️ Claro</button>
+          <button id="themeDark" aria-pressed="true" title="Tema escuro">🌑 Escuro</button>
+        </div>
+        <div class="seg" role="group" aria-label="Exibição">
+          <button id="modeDigital" aria-pressed="true" title="Mostrar digital">🔢 Digital</button>
+          <button id="modeAnalog" aria-pressed="false" title="Mostrar analógico">🕰️ Analógico</button>
+        </div>
+        <label class="row" style="margin-left:8px"><input type="checkbox" id="toggle24"> <span>24h</span></label>
+        <button id="speak" class="btn alt teal" title="Ouvir em inglês">🔊 Falar</button>
+      </div>
+    </header>
+
+    <section class="card clock" aria-live="polite">
+      <!-- Analog canvas (opcional) -->
+      <canvas id="analogCanvas" class="hidden" width="400" height="400" aria-label="Relógio analógico"></canvas>
+
+      <!-- Digital times (escondidos quando analógico) -->
+      <div class="time" id="time12">--:--</div>
+      <div class="sub" id="time24" aria-hidden="true">--:--</div>
+
+      <!-- Frase em inglês (pode ser ocultada até revelar) -->
+      <div class="phrase" id="phrase">Pressione “Tempo aleatório”</div>
+    </section>
+
+    <section class="card">
+      <div class="controls">
+        <div class="row">
+          <button id="random">⏱️ Tempo aleatório</button>
+          <button id="reset" class="btn-secondary">↺ Resetar</button>
+          <button id="reveal">👁️ Revelar</button>
+        </div>
+        <div class="row alt">
+          <span>Minutos permitidos:</span>
+          <div class="grid" role="group" aria-label="Minutos permitidos">
+            <label class="check"><input type="checkbox" class="mfilter" value="0" checked> :00</label>
+            <label class="check"><input type="checkbox" class="mfilter" value="15" checked> :15</label>
+            <label class="check"><input type="checkbox" class="mfilter" value="30" checked> :30</label>
+            <label class="check"><input type="checkbox" class="mfilter" value="45" checked> :45</label>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="footer">Dica: use o botão “Falar” para treinar a escuta de expressões como <em>quarter past</em>, <em>half past</em> e <em>quarter to</em>.</div>
+  </div>
+
+  <script>
+    // ===== Estado =====
+    const state = { hour12: 12, minute: 0, isPM: false, hidden: true, mode: 'digital', theme: 'dark' };
+
+    // ===== Refs =====
+    const elTime12  = document.getElementById('time12');
+    const elTime24  = document.getElementById('time24');
+    const elPhrase  = document.getElementById('phrase');
+    const btnRandom = document.getElementById('random');
+    const btnReset  = document.getElementById('reset');
+    const btnSpeak  = document.getElementById('speak');
+    const chk24     = document.getElementById('toggle24');
+    const minuteChecks = Array.from(document.querySelectorAll('.mfilter'));
+    const btnReveal = document.getElementById('reveal');
+    const canvas    = document.getElementById('analogCanvas');
+    const ctx       = canvas.getContext('2d');
+
+    const themeLightBtn = document.getElementById('themeLight');
+    const themeDarkBtn  = document.getElementById('themeDark');
+    const modeDigitalBtn= document.getElementById('modeDigital');
+    const modeAnalogBtn = document.getElementById('modeAnalog');
+
+    // ===== Utils =====
+    function pad(n){ return String(n).padStart(2,'0'); }
+    function to24(h12, isPM){ let h = h12 % 12; if(isPM) h += 12; return h; }
+    const NUMWORDS = [null, 'one','two','three','four','five','six','seven','eight','nine','ten','eleven','twelve'];
+    const numword = (n)=>NUMWORDS[n];
+
+    function englishPhrase(h12, minute){
+      switch(minute){
+        case 0:  return `${numword(h12)} o\'clock`;
+        case 15: return `quarter past ${numword(h12)}`;
+        case 30: return `half past ${numword(h12)}`;
+        case 45: return `quarter to ${numword(h12 === 12 ? 1 : h12 + 1)}`;
+        default: return '';
+      }
+    }
+
+    // ===== Analog drawing =====
+    function drawAnalog(){
+      const { hour12, minute } = state;
+      const w = canvas.width, h = canvas.height; const r = Math.min(w,h)/2; const cx=w/2, cy=h/2;
+      ctx.clearRect(0,0,w,h);
+
+      // Face
+      ctx.save();
+      ctx.translate(cx,cy);
+      ctx.beginPath(); ctx.arc(0,0, r-6, 0, Math.PI*2); ctx.fillStyle = getComputedStyle(document.body).getPropertyValue('--card').trim(); ctx.fill();
+      ctx.lineWidth = 2; ctx.strokeStyle = getComputedStyle(document.body).getPropertyValue('--border').trim(); ctx.stroke();
+
+      // ticks
+      const txt = getComputedStyle(document.body);
+      const textColor = txt.getPropertyValue('--text').trim();
+      const muted = txt.getPropertyValue('--muted').trim();
+      ctx.strokeStyle = muted; ctx.lineCap = 'round';
+      for(let i=0;i<60;i++){
+        const ang = i*Math.PI/30;
+        const long = (i%5===0) ? 10 : 4;
+        ctx.lineWidth = (i%5===0) ? 3 : 1.6;
+        ctx.beginPath();
+        ctx.moveTo(Math.cos(ang)*(r-20), Math.sin(ang)*(r-20));
+        ctx.lineTo(Math.cos(ang)*(r-20-long), Math.sin(ang)*(r-20-long));
+        ctx.stroke();
+      }
+      // numerais 12/3/6/9 (minimal)
+      ctx.fillStyle = textColor; ctx.font = `${Math.floor(r*0.16)}px Kanit, sans-serif`; ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText('12', 0, -(r*0.58));
+      ctx.fillText('3',  (r*0.58), 0);
+      ctx.fillText('6',  0, (r*0.58));
+      ctx.fillText('9', -(r*0.58), 0);
+
+      // hands
+      const hourAngle = ((hour12%12) + minute/60) * (Math.PI*2/12) - Math.PI/2;
+      const minAngle  = (minute) * (Math.PI*2/60) - Math.PI/2;
+
+      // hour hand (accent)
+      ctx.strokeStyle = txt.getPropertyValue('--accent').trim();
+      ctx.lineWidth = 6; ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(Math.cos(hourAngle)*(r*0.42), Math.sin(hourAngle)*(r*0.42)); ctx.stroke();
+      // minute hand (accent-4)
+      ctx.strokeStyle = txt.getPropertyValue('--accent-4').trim();
+      ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(Math.cos(minAngle)*(r*0.64), Math.sin(minAngle)*(r*0.64)); ctx.stroke();
+
+      // center cap
+      ctx.fillStyle = textColor; ctx.beginPath(); ctx.arc(0,0,4,0,Math.PI*2); ctx.fill();
+
+      ctx.restore();
+    }
+
+    // ===== Render =====
+    function render(){
+      const { hour12, minute, isPM, hidden, mode, theme } = state;
+      document.body.setAttribute('data-theme', theme);
+
+      // Toggle segmented states
+      themeLightBtn.setAttribute('aria-pressed', String(theme==='light'));
+      themeDarkBtn.setAttribute('aria-pressed',  String(theme==='dark'));
+      modeDigitalBtn.setAttribute('aria-pressed',String(mode==='digital'));
+      modeAnalogBtn.setAttribute('aria-pressed', String(mode==='analog'));
+
+      // Times
+      const h24 = to24(hour12, isPM);
+      const time12 = `${pad(hour12)}:${pad(minute)} ${isPM ? 'PM':'AM'}`;
+      const time24 = `${pad(h24)}:${pad(minute)}`;
+
+      elTime12.textContent = chk24.checked ? time24 : time12;
+      elTime24.textContent = chk24.checked ? time12 : time24;
+
+      // Phrase (hide/show only text)
+      elPhrase.textContent = hidden ? '— frase oculta — clique em “Revelar”' : englishPhrase(hour12, minute);
+
+      // ---- Analog toggle: esconder digital quando analógico ----
+      if (mode === 'analog') {
+        canvas.classList.remove('hidden');      // mostra o analógico
+        elTime12.classList.add('hidden');       // esconde o digital
+        elTime24.classList.add('hidden');       // esconde o digital (24h)
+        elTime24.setAttribute('aria-hidden', 'true');
+        drawAnalog();
+      } else {
+        canvas.classList.add('hidden');         // esconde o analógico
+        elTime12.classList.remove('hidden');    // mostra o digital
+        elTime24.classList.remove('hidden');    // mostra o digital (24h)
+        elTime24.setAttribute('aria-hidden', 'false');
+      }
+
+      // Persist
+      try{
+        localStorage.setItem('clockTheme', theme);
+        localStorage.setItem('clockMode', mode);
+      }catch{}
+    }
+
+    function getAllowedMinutes(){
+      const chosen = minuteChecks.filter(c=>c.checked).map(c=>parseInt(c.value,10));
+      if(chosen.length===0){ const fb = minuteChecks[0]; fb.checked = true; return [parseInt(fb.value,10)]; }
+      return chosen;
+    }
+
+    function randomTime(){
+      const minutes = getAllowedMinutes();
+      const minute = minutes[Math.floor(Math.random()*minutes.length)];
+      const hour12 = Math.floor(Math.random()*12)+1; // 1..12
+      const isPM = Math.random() < 0.5;
+      Object.assign(state, {hour12, minute, isPM, hidden: true});
+      render();
+    }
+
+    function reset(){ Object.assign(state, {hour12:12, minute:0, isPM:false, hidden:true}); render(); }
+
+    function speak(){
+      if(state.hidden) return; // não fala quando a frase estiver oculta
+      const msg = new SpeechSynthesisUtterance(elPhrase.textContent);
+      msg.lang='en-US';
+      window.speechSynthesis.cancel();
+      window.speechSynthesis.speak(msg);
+    }
+    function reveal(){ state.hidden = false; render(); }
+
+    // ===== Events =====
+    btnRandom.addEventListener('click', randomTime);
+    btnReset.addEventListener('click', reset);
+    btnSpeak.addEventListener('click', speak);
+    chk24.addEventListener('change', render);
+    btnReveal.addEventListener('click', reveal);
+
+    // Theme & mode segment handlers
+    themeLightBtn.addEventListener('click', ()=>{ state.theme='light'; render(); });
+    themeDarkBtn .addEventListener('click', ()=>{ state.theme='dark';  render(); });
+    modeDigitalBtn.addEventListener('click',()=>{ state.mode='digital'; render(); });
+    modeAnalogBtn .addEventListener('click', ()=>{ state.mode='analog';  render(); });
+
+    // Restore persisted
+    try{
+      const t = localStorage.getItem('clockTheme'); if(t) state.theme = t;
+      const m = localStorage.getItem('clockMode');  if(m) state.mode  = m;
+    }catch{}
+
+    // Initial render
+    render();
+  </script>
+</body>
+</html>

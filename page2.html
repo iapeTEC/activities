@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Árvore Genealógica – Fase 2</title>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{ --ink:#111827; --muted:#6b7280; --line:#e5e7eb; --ok:#16a34a; --bad:#ff7a7a; --radius:16px; }
+    *{box-sizing:border-box}
+    body{margin:0;background:#fff;color:#111827;font-family:"Fredoka",system-ui,Segoe UI,Arial,sans-serif}
+    header{padding:18px 20px;border-bottom:1px solid var(--line);text-align:center}
+    .wrap{max-width:980px;margin:0 auto;padding:20px}
+
+    .tree{display:grid;gap:12px;margin:10px 0 20px}
+    .level{display:grid;gap:12px}
+    .l1{grid-template-columns:repeat(1,1fr)}
+    .l2{grid-template-columns:repeat(2,1fr)}
+    .l4{grid-template-columns:repeat(4,1fr)}
+    .person{background:#fff;border:1px solid var(--line);border-radius:14px;padding:10px;text-align:center}
+    .person .t{font-size:.9rem;color:var(--muted)}
+
+    .qbox{margin-top:12px;padding:12px;border:1px solid var(--line);border-radius:14px;background:#fff}
+    .qbox label{display:block;margin-bottom:6px}
+    select{width:100%;padding:10px;border:1px solid var(--line);border-radius:10px}
+    .result{font-weight:800;margin-left:8px}
+    .result.ok{color:var(--ok)} .result.bad{color:var(--bad)}
+    .actions{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-top:16px}
+    .btn{border:none;padding:12px 16px;border-radius:12px;cursor:pointer;font-weight:800}
+    .primary{background:#2563eb;color:#fff} .ghost{background:#fff;border:1px solid var(--line)}
+  </style>
+</head>
+<body>
+  <header><h1>Árvore Genealógica — Fase 2</h1></header>
+  <div class="wrap">
+
+    <!-- Árvore fictícia -->
+    <section class="tree">
+      <div class="level l1">
+        <div class="person"><b>Janice</b><div class="t">Me</div></div>
+      </div>
+      <div class="level l2">
+        <div class="person"><b>Robert</b><div class="t">Father</div></div>
+        <div class="person"><b>Susan</b><div class="t">Mother</div></div>
+      </div>
+      <div class="level l2">
+        <div class="person"><b>Tom</b><div class="t">Brother</div></div>
+        <div class="person"><b>Lisa</b><div class="t">Sister</div></div>
+      </div>
+      <div class="level l2">
+        <div class="person"><b>John</b><div class="t">Uncle (father’s brother)</div></div>
+        <div class="person"><b>Mary</b><div class="t">Aunt (mother’s sister)</div></div>
+      </div>
+      <div class="level l4">
+        <div class="person"><b>Henry</b><div class="t">Grandfather (paternal)</div></div>
+        <div class="person"><b>Alice</b><div class="t">Grandmother (paternal)</div></div>
+        <div class="person"><b>George</b><div class="t">Grandfather (maternal)</div></div>
+        <div class="person"><b>Betty</b><div class="t">Grandmother (maternal)</div></div>
+      </div>
+      <div class="level l4">
+        <div class="person"><b>Peter</b><div class="t">Nephew (Tom’s son)</div></div>
+        <div class="person"><b>Ana</b><div class="t">Cousin (Mary’s daughter)</div></div>
+        <div class="person"><b>Mike</b><div class="t">Cousin (John’s son)</div></div>
+        <div class="person"><b>—</b><div class="t"></div></div>
+      </div>
+    </section>
+
+    <!-- 10 Perguntas -->
+    <h2>Perguntas</h2>
+
+    <div class="qbox">
+      <label>1) <b>Janice</b>'s mother's name is:</label>
+      <select id="q1"><option value="">Selecione</option><option>Susan</option><option>Lisa</option><option>Mary</option></select>
+      <span id="r1" class="result"></span>
+    </div>
+    <div class="qbox">
+      <label>2) <b>Janice</b>'s brother's name is:</label>
+      <select id="q2"><option value="">Selecione</option><option>Tom</option><option>Robert</option><option>John</option></select>
+      <span id="r2" class="result"></span>
+    </div>
+    <div class="qbox">
+      <label>3) One of <b>Janice</b>'s grandfathers is:</label>
+      <select id="q3"><option value="">Selecione</option><option>Henry</option><option>Tom</option><option>Peter</option></select>
+      <span id="r3" class="result"></span>
+    </div>
+    <div class="qbox">
+      <label>4) <b>Robert</b>'s mother is:</label>
+      <select id="q4"><option value="">Selecione</option><option>Alice</option><option>Betty</option><option>Mary</option></select>
+      <span id="r4" class="result"></span>
+    </div>
+    <div class="qbox">
+      <label>5) <b>Susan</b>'s father is:</label>
+      <select id="q5"><option value="">Selecione</option><option>George</option><option>Henry</option><option>John</option></select>
+      <span id="r5" class="result"></span>
+    </div>
+    <div class="qbox">
+      <label>6) <b>Robert</b>'s sister is:</label>
+      <select id="q6"><option value="">Selecione</option><option>Mary</option><option>Lisa</option><option>John</option></select>
+      <span id="r6" class="result"></span>
+    </div>
+    <div class="qbox">
+      <label>7) <b>Susan</b>'s brother is:</label>
+      <select id="q7"><option value="">Selecione</option><option>John</option><option>Robert</option><option>George</option></select>
+      <span id="r7" class="result"></span>
+    </div>
+    <div class="qbox">
+      <label>8) <b>Lisa</b>'s nephew is:</label>
+      <select id="q8"><option value="">Selecione</option><option>Peter</option><option>Mike</option><option>Tom</option></select>
+      <span id="r8" class="result"></span>
+    </div>
+    <div class="qbox">
+      <label>9) One of <b>Janice</b>'s cousins is:</label>
+      <select id="q9"><option value="">Selecione</option><option>Ana</option><option>Peter</option><option>Alice</option></select>
+      <span id="r9" class="result"></span>
+    </div>
+    <div class="qbox">
+      <label>10) <b>Mary</b>'s daughter is:</label>
+      <select id="q10"><option value="">Selecione</option><option>Ana</option><option>Lisa</option><option>Betty</option></select>
+      <span id="r10" class="result"></span>
+    </div>
+
+    <div class="actions">
+      <button class="btn primary" id="submit">Submeter</button>
+      <button class="btn ghost" id="redo" hidden>Refazer</button>
+      <button class="btn" id="back" hidden onclick="location.href='index.html'">Voltar para Fase 1</button>
+    </div>
+  </div>
+
+  <script>
+    const answers = { q1:'Susan', q2:'Tom', q3:'Henry', q4:'Alice', q5:'George', q6:'Mary', q7:'John', q8:'Peter', q9:'Ana', q10:'Ana' };
+    const $ = s => document.querySelector(s);
+
+    function grade(){
+      let all = true;
+      for(const id in answers){
+        const sel = $('#'+id), res = $('#r'+id.replace('q',''));
+        if(!sel.value){ all=false; res.textContent=''; res.className='result'; continue; }
+        if(sel.value === answers[id]){ res.textContent='✔'; res.className='result ok'; }
+        else { res.textContent='✖'; res.className='result bad'; }
+      }
+      if(all){ $('#redo').hidden = false; $('#back').hidden = false; }
+    }
+    function reset(){
+      for(const id in answers){
+        $('#'+id).value = '';
+        const r = $('#r'+id.replace('q','')); r.textContent=''; r.className='result';
+      }
+      $('#redo').hidden = true; $('#back').hidden = true;
+      window.scrollTo({top:0,behavior:'smooth'});
+    }
+
+    $('#submit').addEventListener('click', grade);
+    $('#redo').addEventListener('click', reset);
+  </script>
+</body>
+</html>
