@@ -34,14 +34,14 @@
     }
     .hotspot input:focus{border-color:#93c5fd; box-shadow:0 0 0 4px rgba(147,197,253,.30)}
 
-    /* POSIÇÕES (calibradas para familytree.png) */
-    .hotspot--5  { left:19%; top:66%; }  /* 5 — Grandfather (materno)        */
-    .hotspot--6  { left:34%; top:66%; }  /* 6 — Grandmother (materno)        */
-    .hotspot--7t { left:31%; top:36%; }  /* 7 (superior) — Mother            */
-    .hotspot--7b { left:53%; top:66%; }  /* 7 (inferior) — Grandmother (pat) */
-    .hotspot--9  { left:79%; top:66%; }  /* 9 — Grandfather (paterno)        */
-    .hotspot--10 { left:69%; top:36%; }  /* 10 — Father                       */
-    .hotspot--17 { left:50%; top:14%; }  /* 17 — Me                           */
+    /* ===== POSIÇÕES FINAIS ===== */
+    .hotspot--5{ left:15.0%; top:65.8%; }   /* 5 — Grandfather (materno)        */
+    .hotspot--6{ left:0.0%;  top:0.0%;  }   /* 6 — Grandmother (materno)        */
+    .hotspot--7t{ left:28.2%; top:40.7%; }  /* 7 (superior) — Mother            */
+    .hotspot--7b{ left:0.0%;  top:0.0%;  }  /* 7 (inferior) — Grandmother (pat) */
+    .hotspot--9{ left:72.3%; top:66.1%; }   /* 9 — Grandfather (paterno)        */
+    .hotspot--10{ left:62.6%; top:41.4%; }  /* 10 — Father                       */
+    .hotspot--17{ left:46.2%; top:15.1%; }  /* 17 — Me                           */
 
     .actions{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-top:16px}
     .btn{border:none;padding:12px 16px;border-radius:12px;cursor:pointer;font-weight:800}
@@ -49,19 +49,6 @@
     .ghost{background:#fff;border:1px solid var(--line)}
     .story{margin-top:18px;padding:16px;border:1px solid var(--line);border-radius:16px;background:#fff}
     .story h3{margin:0 0 8px}
-
-    /* ==== Toolbar de edição ==== */
-    .editor-bar{
-      position: sticky; top: 0; z-index: 50;
-      display:flex; gap:8px; justify-content:center; align-items:center;
-      padding:8px; margin:12px 0; border:1px solid var(--line);
-      background:#fff; border-radius:12px;
-    }
-    .editor-bar .btn-sm{
-      border:1px solid var(--line); background:#fff; padding:8px 12px;
-      border-radius:10px; cursor:pointer; font-weight:700;
-    }
-    .hotspot.editing{ outline:2px dashed #60a5fa; cursor:move; }
   </style>
 </head>
 <body>
@@ -104,15 +91,6 @@
         <label>17 — Me</label>
       </div>
     </figure>
-
-    <!-- Toolbar do editor -->
-    <div class="editor-bar" id="editorBar">
-      <button class="btn-sm" id="toggleEdit">Ativar edição (drag)</button>
-      <button class="btn-sm" id="exportCss">Exportar CSS</button>
-      <button class="btn-sm" id="clearLocal">Limpar posições salvas</button>
-      <span id="editHint" style="color:#6b7280">Arraste os cartões para alinhar aos números.</span>
-    </div>
-    <pre id="cssOut" style="white-space:pre-wrap;background:#f9fafb;border:1px solid var(--line);border-radius:10px;padding:10px;display:none"></pre>
 
     <div class="actions">
       <button class="btn primary" id="submit">Submeter</button>
@@ -158,96 +136,6 @@
       $('#storyBox').hidden = true; $('#redo').hidden = true; $('#next').hidden = true;
       window.scrollTo({top:0,behavior:'smooth'});
     });
-
-    /* ==== DRAG & DROP HOTSPOTS (percentual + localStorage) ==== */
-    const board = document.querySelector('.board');
-    const hotspotsMeta = [
-      {cls:'hotspot--5'}, {cls:'hotspot--6'}, {cls:'hotspot--7t'},
-      {cls:'hotspot--7b'}, {cls:'hotspot--9'}, {cls:'hotspot--10'},
-      {cls:'hotspot--17'}
-    ];
-    const POS_KEY = 'family_hotspots_v1';
-
-    function loadSavedPositions(){
-      try{
-        const saved = JSON.parse(localStorage.getItem(POS_KEY)||'{}');
-        for(const {cls} of hotspotsMeta){
-          if(saved[cls]){
-            const el = document.querySelector('.'+cls);
-            el.style.left = saved[cls].left + '%';
-            el.style.top  = saved[cls].top  + '%';
-          }
-        }
-      }catch(e){}
-    }
-    function savePositions(){
-      const data = {};
-      for(const {cls} of hotspotsMeta){
-        const el = document.querySelector('.'+cls);
-        const left = parseFloat(el.style.left) || 0;
-        const top  = parseFloat(el.style.top)  || 0;
-        data[cls] = {left, top};
-      }
-      localStorage.setItem(POS_KEY, JSON.stringify(data));
-    }
-    function percentFromEvent(e){
-      const rect = board.getBoundingClientRect();
-      const x = (e.clientX - rect.left) / rect.width  * 100;
-      const y = (e.clientY - rect.top)  / rect.height * 100;
-      return {x: Math.min(98, Math.max(2, x)), y: Math.min(98, Math.max(2, y))};
-    }
-
-    let editing = false, dragging = null;
-
-    function setEditing(on){
-      editing = on;
-      $('#toggleEdit').textContent = on ? 'Finalizar edição' : 'Ativar edição (drag)';
-      document.querySelectorAll('.hotspot').forEach(h=> h.classList.toggle('editing', on));
-    }
-
-    board.addEventListener('pointerdown', (e)=>{
-      if(!editing) return;
-      const target = e.target.closest('.hotspot');
-      if(!target) return;
-      dragging = target;
-      dragging.setPointerCapture(e.pointerId);
-    });
-    board.addEventListener('pointermove', (e)=>{
-      if(!editing || !dragging) return;
-      const {x,y} = percentFromEvent(e);
-      dragging.style.left = x + '%';
-      dragging.style.top  = y + '%';
-    });
-    board.addEventListener('pointerup', (e)=>{
-      if(dragging){
-        dragging.releasePointerCapture(e.pointerId);
-        dragging = null;
-        savePositions();
-      }
-    });
-
-    document.getElementById('toggleEdit').addEventListener('click', ()=>{
-      setEditing(!editing);
-      if(!editing) savePositions();
-    });
-    document.getElementById('clearLocal').addEventListener('click', ()=>{
-      localStorage.removeItem(POS_KEY);
-      loadSavedPositions();
-    });
-    document.getElementById('exportCss').addEventListener('click', ()=>{
-      let css = '/* Cole estas regras no seu <style>, substituindo as anteriores */\n';
-      for(const {cls} of hotspotsMeta){
-        const el = document.querySelector('.'+cls);
-        const L = parseFloat(el.style.left)||0;
-        const T = parseFloat(el.style.top)||0;
-        css += `.${cls}{ left:${L.toFixed(1)}%; top:${T.toFixed(1)}%; }\n`;
-      }
-      const out = document.getElementById('cssOut');
-      out.textContent = css;
-      out.style.display = 'block';
-    });
-
-    loadSavedPositions();
   </script>
 </body>
 </html>
