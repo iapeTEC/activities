@@ -22,49 +22,44 @@
     *{box-sizing:border-box}
     html,body{height:100%}
     body{
-      margin:0; background:var(--bg); color:var(--ink);
-      font-family:ui-rounded, system-ui, -apple-system, Segoe UI, Roboto, Noto Sans, Ubuntu, Cantarell, "Helvetica Neue", Arial, "Apple Color Emoji", "Segoe UI Emoji";
-      display:grid; grid-template-columns: 240px 1fr; grid-template-rows:auto 1fr auto; gap:16px; padding:48px; /* desktop com respiro */
-      -webkit-text-size-adjust:100%;
+      margin:0; background:var(--bg); color:var(--ink); font-family:ui-rounded, system-ui, -apple-system, Segoe UI, Roboto, Noto Sans, Ubuntu, Cantarell, "Helvetica Neue", Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      display:grid; grid-template-columns: 240px 1fr; grid-template-rows:auto 1fr auto; gap:16px; padding:48px; /* Aumentado o padding para deixar mais espaço ao redor para imagens de abelhas, colmeias e mel */
     }
 
     header{
       grid-column:1 / -1; display:flex; align-items:center; gap:12px; flex-wrap:wrap;
       background:var(--card); box-shadow:var(--shadow); border-radius:var(--radius); padding:14px 16px;
-      contain:content; /* ajuda TTI no iOS */
     }
 
     header h1{font-size:20px; margin:0; letter-spacing:.3px}
 
     .pill{
-      display:inline-flex; align-items:center; gap:8px; padding:10px 14px; border-radius:999px; background:var(--accent-3); border:1px solid var(--accent-3); font-size:14px;
-      min-height:44px; /* alvo de toque confortável */
+      display:inline-flex; align-items:center; gap:8px; padding:10px 14px; border-radius:999px; background:#f1f5f9; border:1px solid #e2e8f0; font-size:14px;
     }
     select, button, .btn{
       appearance:none; border:1px solid #e2e8f0; background:white; padding:12px 14px; border-radius:14px; font-size:15px; color:var(--ink);
       box-shadow:var(--shadow); cursor:pointer; transition:.2s transform ease, .2s box-shadow ease;
-      min-height:44px; touch-action:manipulation; -webkit-tap-highlight-color: transparent;
     }
     select:focus, button:focus{outline:3px solid var(--accent); outline-offset:2px}
     button:hover{transform:translateY(-1px)}
 
-    /* Botões mais vibrantes para o público infantil */
-    button:not(.ghost){background:var(--accent-2); border-color:var(--accent-2); color:var(--ink);} /* amarelo */
-    .tag.easy{background:var(--accent-3); color:var(--ink);} 
-    .tag.medium{background:var(--accent); color:var(--ink);} 
-    .tag.hard{background:var(--accent-2); color:var(--ink);} 
-    .board{background:linear-gradient(180deg, #ffffff 0%, var(--bg) 100%);} /* Gradiente suave */
+    /* Adicionando mais cor e vibração para crianças */
+    button:not(.ghost){background:var(--accent-2); border-color:var(--accent-2); color:var(--ink);} /* Botões amarelos vibrantes */
+    .pill{background:var(--accent-3); border-color:var(--accent-3);} /* Pills verdes suaves */
+    .tag.easy{background:var(--accent-3); color:var(--ink);}
+    .tag.medium{background:var(--accent); color:var(--ink);}
+    .tag.hard{background:var(--accent-2); color:var(--ink);}
+    .board{background:linear-gradient(180deg, #ffffff 0%, var(--bg) 100%);} /* Gradiente mais suave integrando com o fundo */
 
     /* Sidebar */
     aside{
       grid-row:2; grid-column:1; background:var(--card); border-radius:var(--radius); box-shadow:var(--shadow); padding:16px;
-      display:flex; flex-direction:column; gap:10px; position:sticky; top:48px; height:fit-content; /* compatível com padding maior */
-      content-visibility:auto; contain-intrinsic-size: 400px; /* melhora TTI */
+      display:flex; flex-direction:column; gap:10px; position:sticky; top:48px; height:fit-content; /* Ajustado top para padding maior */
     }
     .section-title{font-weight:700; font-size:14px; color:var(--muted); text-transform:uppercase; letter-spacing:.08em}
     .difficulty-btn{display:flex; align-items:center; justify-content:space-between; gap:8px}
     .tag{padding:6px 10px; border-radius:999px; font-weight:700; font-size:12px}
-    .difficulty-btn.active{border-color:#60a5fa; background:var(--accent-2);} 
+    .difficulty-btn.active{border-color:#60a5fa; background:var(--accent-2);}
 
     /* Main */
     main{
@@ -73,15 +68,13 @@
 
     .board{
       border-radius:var(--radius); box-shadow:var(--shadow); padding:20px; display:grid; gap:16px;
-      content-visibility:auto; contain-intrinsic-size: 600px 500px; /* iOS Safari: acelera pintura inicial */
     }
 
     .row{display:flex; gap:12px; flex-wrap:wrap; align-items:center}
 
     .bigbox{
       border:2px dashed #cbd5e1; border-radius:18px; background:#f8fafc; display:flex; align-items:center; justify-content:center;
-      min-height:160px; font-weight:900; letter-spacing:2px; color:#334155;
-      font-size: clamp(28px, 7vw, 56px); /* responsivo: ótimo no mobile */
+      min-height:160px; font-size:56px; font-weight:900; letter-spacing:2px; color:#334155;
     }
 
     .badge{display:inline-flex; align-items:center; gap:8px; font-size:13px; padding:8px 12px; border-radius:999px; background:#eef2ff; border:1px solid #e5e7eb}
@@ -95,36 +88,79 @@
 
     footer.small{color:var(--muted); font-size:12px}
 
-    /* Footer com a logo da escola */
+    /* Novo footer para o símbolo da escola no canto inferior direito */
     .global-footer {
-      grid-column:1 / -1; grid-row:3; display:flex; justify-content:flex-end; align-items:center; gap:12px;
+      grid-column:1 / -1; grid-row:3; display:flex; justify-content:flex-end; align-items:center;
       background:var(--card); box-shadow:var(--shadow); border-radius:var(--radius); padding:14px 16px;
       color:var(--muted); font-size:12px;
-      contain:content;
     }
-    .global-footer .school-symbol-placeholder {
-      width:64px; height:64px; border:1px dashed #cbd5e1; border-radius:12px;
-      display:flex; align-items:center; justify-content:center; text-align:center; overflow:hidden;
-      background:#f1f5f9;
+    .school-symbol-placeholder {
+      width:50px; height:50px; background:#f1f5f9; border:1px dashed #cbd5e1; border-radius:12px;
+      display:flex; align-items:center; justify-content:center; text-align:center;
     }
-    .school-symbol-placeholder img {max-width:100%; height:auto; display:block;}
+    .school-symbol-placeholder img {
+      max-width: 100%;
+      height: auto; /* mantém a proporção da imagem */
+      display: block; /* remove espaços extras */
+    }
 
-    /* MOBILE FIRST */
+    /* Mobile */
     @media (max-width: 840px){
-      body{grid-template-columns:1fr; padding:16px; gap:12px;} /* padding menor no mobile */
-      header{flex-direction:column; align-items:stretch; gap:10px}
-      .pill{width:100%; justify-content:space-between}
-      aside{order:2; position:static; top:0; box-shadow:0 6px 16px rgba(15,23,42,.06);} /* sombra mais leve no iPhone */
-      main{order:3}
-      .row{flex-direction:column}
-      .row > button, .controls button, select{width:100%}
-      .bigbox{min-height:24vh}
-      .global-footer{justify-content:center; box-shadow:0 6px 16px rgba(15,23,42,.06);} /* sombra mais leve */
-    }
-
-    /* Reduz animações em iOS antigos para suavizar TTI */
-    @media (prefers-reduced-motion: reduce){
-      *{transition:none !important}
+      body{
+        grid-template-columns:1fr; 
+        grid-template-rows: auto auto 1fr auto; /* Adiciona row para aside acima de main */
+        padding:24px; /* Padding menor em mobile */
+        gap: 12px; /* Menor gap para caber melhor */
+      }
+      header{grid-row:1; grid-column:1;}
+      aside{
+        grid-row:2; 
+        grid-column:1; 
+        position:static; 
+        flex-direction: row; /* Dificuldades em horizontal para mobile */
+        flex-wrap: wrap; 
+        justify-content: center; 
+        gap: 8px; 
+        padding: 12px;
+      }
+      .difficulty-btn{
+        flex: 1 1 auto; /* Cresce para preencher */
+        min-width: 120px; /* Tamanho mínimo para touch */
+        padding: 10px; /* Maior para touch */
+        font-size: 16px; /* Maior texto */
+      }
+      main{grid-row:3; grid-column:1;}
+      .global-footer{
+        grid-row:4; 
+        grid-column:1; 
+        justify-content:center;
+      }
+      /* Ajustes para botões no board */
+      .row{
+        flex-direction: column; /* Stack prev/next verticalmente se necessário, mas wrap permite horizontal se couber */
+        gap: 8px;
+      }
+      .controls{
+        flex-direction: column; /* Stack controles vertical para melhor touch */
+        gap: 8px;
+      }
+      button{
+        padding: 16px; /* Maior padding para touch */
+        font-size: 16px; /* Maior texto */
+      }
+      .bigbox{
+        min-height: 120px; /* Menor para caber em telas pequenas */
+        font-size: 48px; /* Ajuste tamanho */
+      }
+      .pill{
+        font-size: 13px; /* Ajuste para mobile */
+        padding: 8px 12px;
+      }
+      header{
+        flex-direction: column; /* Stack header items se necessário */
+        gap: 8px;
+        align-items: stretch;
+      }
     }
   </style>
 </head>
@@ -195,9 +231,8 @@
   </main>
 
   <footer class="global-footer">
-    <div class="school-symbol-placeholder">
-      <img src="school-logo.png" alt="School logo" loading="lazy" decoding="async" width="64" height="64" />
-    </div>
+    <!-- Espaço para o símbolo da escola no lado direito -->
+    <div class="school-symbol-placeholder">Coloque o símbolo da escola aqui (ex: <img src="school-logo.png">)</div>
   </footer>
 
   <script>
@@ -371,17 +406,14 @@
       if(!('speechSynthesis' in window)) return;
       window.speechSynthesis.cancel();
       const tokens = normalizeForSpelling(word);
-      // Chain utterances to create spacing
-      let i = 0;
-      const sayNext = ()=>{
-        if(i>=tokens.length) return;
-        const u = new SpeechSynthesisUtterance(tokens[i]);
-        u.lang = (state.voice && state.voice.lang) || 'en-US';
-        u.voice = state.voice; u.rate = 0.78; u.pitch = 1.05;
-        u.onend = ()=>{ setTimeout(()=>{ i++; sayNext(); }, 120); };
-        window.speechSynthesis.speak(u);
-      };
-      sayNext();
+      // Para corrigir problema no iOS, falar tudo em uma única utterance com vírgulas para pausas
+      const spellText = tokens.join(', ');
+      const u = new SpeechSynthesisUtterance(spellText);
+      u.lang = (state.voice && state.voice.lang) || 'en-US';
+      u.voice = state.voice;
+      u.rate = 0.78; // Mais lento para clareza
+      u.pitch = 1.05;
+      window.speechSynthesis.speak(u);
     }
 
     function warn(msg){
