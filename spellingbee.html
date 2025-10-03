@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Spelling Bee Trainer — 3rd–5th Grade</title>
+  <meta name="theme-color" content="#93c5fd" />
+  <style>
+    :root{
+      --bg:#fffdf0;           /* fundo amarelinho leve, lembrando abelhas e mel */
+      --card:#ffffff;         /* cartões */
+      --ink:#0f172a;          /* texto principal */
+      --muted:#64748b;        /* texto secundário */
+      --accent:#93c5fd;       /* azul bebê */
+      --accent-2:#fde68a;     /* amarelo suave */
+      --accent-3:#c7f9cc;     /* verde suave */
+      --danger:#ef4444;       /* vermelho para avisos */
+      --shadow:0 10px 30px rgba(15,23,42,.08);
+      --radius:22px;
+    }
+
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0; background:var(--bg); color:var(--ink); font-family:ui-rounded, system-ui, -apple-system, Segoe UI, Roboto, Noto Sans, Ubuntu, Cantarell, "Helvetica Neue", Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      display:grid; grid-template-columns: 240px 1fr; grid-template-rows:auto 1fr auto; gap:16px; padding:48px; /* Aumentado o padding para deixar mais espaço ao redor para imagens de abelhas, colmeias e mel */
+    }
+
+    header{
+      grid-column:1 / -1; display:flex; align-items:center; gap:12px; flex-wrap:wrap;
+      background:var(--card); box-shadow:var(--shadow); border-radius:var(--radius); padding:14px 16px;
+    }
+
+    header h1{font-size:20px; margin:0; letter-spacing:.3px}
+
+    .pill{
+      display:inline-flex; align-items:center; gap:8px; padding:10px 14px; border-radius:999px; background:#f1f5f9; border:1px solid #e2e8f0; font-size:14px;
+    }
+    select, button, .btn{
+      appearance:none; border:1px solid #e2e8f0; background:white; padding:12px 14px; border-radius:14px; font-size:15px; color:var(--ink);
+      box-shadow:var(--shadow); cursor:pointer; transition:.2s transform ease, .2s box-shadow ease;
+    }
+    select:focus, button:focus{outline:3px solid var(--accent); outline-offset:2px}
+    button:hover{transform:translateY(-1px)}
+
+    /* Adicionando mais cor e vibração para crianças */
+    button:not(.ghost){background:var(--accent-2); border-color:var(--accent-2); color:var(--ink);} /* Botões amarelos vibrantes */
+    .pill{background:var(--accent-3); border-color:var(--accent-3);} /* Pills verdes suaves */
+    .tag.easy{background:var(--accent-3); color:var(--ink);}
+    .tag.medium{background:var(--accent); color:var(--ink);}
+    .tag.hard{background:var(--accent-2); color:var(--ink);}
+    .board{background:linear-gradient(180deg, #ffffff 0%, var(--bg) 100%);} /* Gradiente mais suave integrando com o fundo */
+
+    /* Sidebar */
+    aside{
+      grid-row:2; grid-column:1; background:var(--card); border-radius:var(--radius); box-shadow:var(--shadow); padding:16px;
+      display:flex; flex-direction:column; gap:10px; position:sticky; top:48px; height:fit-content; /* Ajustado top para padding maior */
+    }
+    .section-title{font-weight:700; font-size:14px; color:var(--muted); text-transform:uppercase; letter-spacing:.08em}
+    .difficulty-btn{display:flex; align-items:center; justify-content:space-between; gap:8px}
+    .tag{padding:6px 10px; border-radius:999px; font-weight:700; font-size:12px}
+    .difficulty-btn.active{border-color:#60a5fa; background:var(--accent-2);}
+
+    /* Main */
+    main{
+      grid-row:2; grid-column:2; display:grid; gap:16px; align-content:start;
+    }
+
+    .board{
+      border-radius:var(--radius); box-shadow:var(--shadow); padding:20px; display:grid; gap:16px;
+    }
+
+    .row{display:flex; gap:12px; flex-wrap:wrap; align-items:center}
+
+    .bigbox{
+      border:2px dashed #cbd5e1; border-radius:18px; background:#f8fafc; display:flex; align-items:center; justify-content:center;
+      min-height:160px; font-size:56px; font-weight:900; letter-spacing:2px; color:#334155;
+    }
+
+    .badge{display:inline-flex; align-items:center; gap:8px; font-size:13px; padding:8px 12px; border-radius:999px; background:#eef2ff; border:1px solid #e5e7eb}
+
+    .controls button{font-weight:700}
+    .controls .ghost{background:#f8fafc}
+
+    .nav{display:flex; gap:10px}
+
+    .kbd{border:1px solid #e2e8f0; border-bottom-width:3px; padding:2px 8px; border-radius:8px; background:white; font-weight:700; font-size:12px}
+
+    footer.small{color:var(--muted); font-size:12px}
+
+    /* Novo footer para o símbolo da escola no canto inferior direito */
+    .global-footer {
+      grid-column:1 / -1; grid-row:3; display:flex; justify-content:flex-end; align-items:center;
+      background:var(--card); box-shadow:var(--shadow); border-radius:var(--radius); padding:14px 16px;
+      color:var(--muted); font-size:12px;
+    }
+    .global-footer .school-symbol-placeholder {
+      width:100px; height:100px; background:#f1f5f9; border:1px dashed #cbd5e1; border-radius:12px;
+      display:flex; align-items:center; justify-content:center; text-align:center;
+    }
+
+    /* Mobile */
+    @media (max-width: 840px){
+      body{grid-template-columns:1fr; padding:24px;} /* Padding menor em mobile para não exagerar */
+      aside{order:2; position:static; top:0;}
+      main{order:3}
+      .global-footer{justify-content:center;}
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>🐝 Spelling Bee Trainer</h1>
+    <div class="pill">
+      <strong>Classe:</strong>
+      <select id="gradeSelect" aria-label="Escolher classe">
+        <option value="3rd">3rd Grade</option>
+        <option value="4th">4th Grade</option>
+        <option value="5th">5th Grade</option>
+      </select>
+    </div>
+    <div class="pill" id="statusPill" title="Dificuldade atual">
+      <span class="tag easy" id="difficultyTag">easy</span>
+      <span id="progressText">1 / 1</span>
+    </div>
+    <div class="pill" title="Atalhos de teclado">
+      <span class="kbd">←</span> anterior
+      <span style="width:8px"></span>
+      <span class="kbd">→</span> próxima
+      <span style="width:8px"></span>
+      <span class="kbd">R</span> ouvir
+      <span style="width:8px"></span>
+      <span class="kbd">V</span> revelar
+      <span style="width:8px"></span>
+      <span class="kbd">S</span> soletrar
+    </div>
+  </header>
+
+  <aside aria-label="Nível de dificuldade">
+    <div class="section-title">Dificuldade</div>
+    <button class="difficulty-btn" data-diff="easy" id="btnEasy">
+      <span>Easy</span>
+      <span class="tag easy">EASY</span>
+    </button>
+    <button class="difficulty-btn" data-diff="medium" id="btnMedium">
+      <span>Medium</span>
+      <span class="tag medium">MEDIUM</span>
+    </button>
+    <button class="difficulty-btn" data-diff="hard" id="btnHard">
+      <span>Hard</span>
+      <span class="tag hard">HARD</span>
+    </button>
+    <button class="difficulty-btn ghost" data-diff="auto" id="btnAuto" title="Sem seleção: segue Easy → Medium → Hard">
+      <span>Auto (Easy→Medium→Hard)</span>
+    </button>
+  </aside>
+
+  <main>
+    <section class="board" aria-live="polite">
+      <div class="row">
+        <button id="prevBtn" title="Palavra anterior">⬅️ Palavra anterior</button>
+        <button id="nextBtn" title="Próxima palavra">Próxima palavra ➡️</button>
+      </div>
+
+      <div class="bigbox" id="mysteryBox" aria-label="Caixa de palavra">?</div>
+
+      <div class="row controls">
+        <button id="hearBtn" class="ghost">Ouvir novamente a palavra 🔊</button>
+        <button id="revealBtn">Revelar a palavra 👀</button>
+        <button id="spellBtn">Soletrar a palavra 🔡</button>
+      </div>
+
+      <footer class="small" id="infoText">Selecione uma classe e clique em “Próxima palavra”. A palavra será falada em inglês e ficará oculta.</footer>
+    </section>
+  </main>
+
+  <footer class="global-footer">
+    <!-- Espaço para o símbolo da escola no lado direito -->
+    <div class="school-symbol-placeholder">Coloque o símbolo da escola aqui (ex: <img src="school-logo.png">)</div>
+  </footer>
+
+  <script>
+    // =====================
+    // 1) BANCO DE PALAVRAS
+    // =====================
+    const WORDS = {
+      '3rd': {
+        easy: [
+          "alone","angel","bad","base","bear","bed","best","better","calf","cook","cub","cup","daisy","deaf","deer","den","desk","door","drink","dust","egg","face","fast","fight","firm","fun","games","glitter","high","ice","keep","kind","kiwi","koala","lake","law","lunch","make","movie","noon","pain","panda","parts","plan","plate","prize","rest","rug","shop","sink","sofa","sport","storm","stove","sure","tag","think","towel","wake","wash","wave","win","yard","zoo"
+        ],
+        medium: [
+          "adult","after","athlete","barking","bedroom","blanket","bounces","busy","catch","charade","chosen","clay","conquer","cylinder","division","donate","drums","eagle","early","eggshell","exercise","faced","famine","female","finally","fluffy","flow","forgive","gallop","garage","governor","grace","goggles","guitar","hide-and-seek","identify","jealous","jumper","kicks","kilos","kitchen","leader","letters","lifestyle","loam","mammals","marathon","meal","mouth","myself","news","option","ostrich","owl","pillow","planning","poem","pool","powerful","prey","priests","pyramid","quantity","quotient","recite","respect","roof","running","scared","score","seals","several","service","shop","shout","sing","soccer","steps","stream","survive","swimming","table","television","tender","totally","training","trumpet","unique","waiting","winner","wolf","zebra"
+        ],
+        hard: [
+          "adolescent","apostle","appointment","badness","became","blue whale","choices","coldest","comic strip","comfortable","communicate","competition","creatures","decorative","divisor","excellent","expressions","freedom","frequency","furniture","geometric","happening","hardworking","hatching","height","homework","inclusive","independent","integrity","kangaroo","largest","length","lioness","llamas","measure","merchants","newborn","nutrient","pharaoh","possible","preparation","purifies","recognize","refrigerator","research","serves","situation","smallest","sometimes","speaking","tenderness","unfortunately","vacation","vacuum"
+        ]
+      },
+      '4th': {
+        easy: [
+          "back","bell","better","bowl","boy","butter","butterfly","camel","cents","change","chocolate","city","coin(s)","crayons","cry","cup","diet","east","eraser","facts","fall","field","food","fork","fun","get on /","get off","gift","girl","glad","glue","go to","gold","happy","hair","heart","help","joy","knife","laugh","like","man","mall","map","meat","moon","mother","music","others","pan","paper","park","pen","penny","pet store","photo","pizza","poor","race","raise","rich","rug","ruler","salad","seed","short","silver","small","smart","soft","sorry","soup","spoon","stamp","sure","thing","trick","water","west","year"
+        ],
+        medium: [
+          "arrival","athlete","attention","backpack","bakery","bored","brother","buying","cabbage","caring","celebrate","cheer","cheerful","content","collector","definitely","describe","detect","difficult","dishonest","driving","earth","eraser","English book","especially","example","expert","fable","farmer","favorite","finish","flour","fresh","friendly","glasses","grateful","greeting","hobby","helpful","hospital","honey","ingredients","joyful","kind","kindness","kittens","liar","listener","litter","loving","main","marker","neighbor","nutritious","oatmeal","older","patient","position","postcard","prepare","protein","reminder","restaurant","responsible","savory","sheep","shout","teacher","tired","unhappy","uniform","upset","vacation","village","visible","vision","windy","winner","wool"
+        ],
+        hard: [
+          "birthday","calories","carefully","carbohydrates","celebration","chocolate chips","classmates","consumer","countryside","delicious","directly","encouragement","exciting","everything","granddaughter","handwritten","highlighted","ingredients","interrupted","mistakes","occupation","opposite","organization","peripheral","pharmacy","postcard","preaching","preparation","producers","quaternary","remembering","responsible","secondary","sheepfold","shepherd","supermarket","tertiary","tradition","trustworthy","understanding","utensils","vanilla","wheelchair"
+        ]
+      },
+      '5th': {
+        easy: [
+          "add","air","apple","bad","bag","belt","best","body","bush","care","chair","clean","clear","color","cool","cough","cut","dance","deep","drop","dry","end","error","fake","family","fast","fever","felt","filter","fish","friend","found","fun","game","garden","gift","girl","glad","gold","idea","kind","lake","light","lost","made","more","mouth","note","nose","open","pain","real","right","rule","run/ran","same","school","sea","sick","sky","soil","star","stop","storm","sun","teacher","time","trip","try","vomit","warm","wash","waves","wind","wrong","yard"
+        ],
+        medium: [
+          "adventure","afraid","afternoon","amazing","ancient","another","apologize","average","avoid","bacteria","balloon","barley","calculate","captain","closer","clothes","condition","continue","dangerous","diabetes","diarrhea","discover","disease","easier","evening","explorer","faster","faucet","figurative","findings","forgot","forever","gently","habits","harder","harvest","helpful","history","laughter","lifestyle","machine","mystery","necessary","noticed","options","outside","parasites","peaceful","physical","planet","position","powerful","protect","reasons","refreshing","secret","should","someone","station","stretch","sunlight","thorny","thirsty","viruses","worship","worried"
+        ],
+        hard: [
+          "authorities","carded","choked","cholera","circulatory","contaminated","crowd","cultures","dedication","domesticated","electric","expensive","experiment","fruitful","handmade","imaginary","independence","invention","measuring","metaphor","microscope","mineral","multiply","normally","ongoing","overboard","parables","perseverance","phenomenon","potable","running away","scattering","servant","shearing","strategy","terrifying","thought","thousands","throw up","tornadoes","underwater","vomiting","whirlwinds"
+        ]
+      }
+    };
+
+    // ============================
+    // 2) ESTADO + UTILITÁRIOS
+    // ============================
+    const els = {
+      gradeSelect: document.getElementById('gradeSelect'),
+      difficultyTag: document.getElementById('difficultyTag'),
+      progressText: document.getElementById('progressText'),
+      mysteryBox: document.getElementById('mysteryBox'),
+      infoText: document.getElementById('infoText'),
+      next: document.getElementById('nextBtn'),
+      prev: document.getElementById('prevBtn'),
+      hear: document.getElementById('hearBtn'),
+      reveal: document.getElementById('revealBtn'),
+      spell: document.getElementById('spellBtn'),
+      btnEasy: document.getElementById('btnEasy'),
+      btnMedium: document.getElementById('btnMedium'),
+      btnHard: document.getElementById('btnHard'),
+      btnAuto: document.getElementById('btnAuto'),
+      statusPill: document.getElementById('statusPill')
+    };
+
+    const state = {
+      grade: localStorage.getItem('sb.grade') || '3rd',
+      mode: localStorage.getItem('sb.mode') || 'auto', // 'easy' | 'medium' | 'hard' | 'auto'
+      index: 0,
+      revealed: false,
+      voices: [],
+      voice: null
+    };
+
+    function getListForState(){
+      const g = WORDS[state.grade];
+      const order = state.mode==='auto' ? ['easy','medium','hard'] : [state.mode];
+      const list = order.flatMap(key => g[key]);
+      return { list, order, lengths: order.map(key => g[key].length) };
+    }
+
+    function currentWord(){
+      return getListForState().list[state.index] || '';
+    }
+
+    function currentDifficulty(){
+      const {order, lengths} = getListForState();
+      let i = state.index;
+      for(let k=0;k<lengths.length;k++){
+        if(i < lengths[k]) return order[k];
+        i -= lengths[k];
+      }
+      return order[order.length-1] || 'easy';
+    }
+
+    function updateUI(){
+      const { list } = getListForState();
+      const word = currentWord();
+      const diff = currentDifficulty();
+
+      // mystery box
+      els.mysteryBox.textContent = state.revealed ? word : '?';
+
+      // tags
+      els.difficultyTag.textContent = diff;
+      els.difficultyTag.className = `tag ${diff}`;
+
+      // progress
+      els.progressText.textContent = `${Math.min(state.index+1, list.length)} / ${list.length}`;
+
+      // difficulty buttons active
+      [els.btnEasy, els.btnMedium, els.btnHard, els.btnAuto].forEach(b=>b.classList.remove('active'));
+      ({easy:els.btnEasy, medium:els.btnMedium, hard:els.btnHard, auto:els.btnAuto}[state.mode]).classList.add('active');
+
+      // disable nav edges
+      els.prev.disabled = state.index<=0;
+      els.next.disabled = state.index>=list.length-1;
+    }
+
+    // Persist
+    function savePrefs(){
+      localStorage.setItem('sb.grade', state.grade);
+      localStorage.setItem('sb.mode', state.mode);
+    }
+
+    // ============================
+    // 3) VOZ (Web Speech API)
+    // ============================
+    function loadVoices(){
+      state.voices = window.speechSynthesis.getVoices();
+      // Prefer voices en-US/en-GB; try child-friendly Google voices if present
+      const preferred = state.voices.filter(v => v.lang && v.lang.toLowerCase().startsWith('en'));
+      // Try to pick a natural voice
+      state.voice = preferred.find(v=>/Google US English|Microsoft.+(Aria|Guy|Jenny|Ryan)/i.test(v.name))
+                  || preferred.find(v=>/US|GB|English/i.test(v.name))
+                  || preferred[0]
+                  || null;
+    }
+
+    window.speechSynthesis.onvoiceschanged = loadVoices;
+    loadVoices();
+
+    function speak(text, {rate=0.9, pitch=1.0}={}){
+      if(!('speechSynthesis' in window)){
+        warn('Seu navegador não suporta síntese de voz.');
+        return;
+      }
+      window.speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang = (state.voice && state.voice.lang) || 'en-US';
+      u.voice = state.voice;
+      u.rate = rate; u.pitch = pitch; u.volume = 1.0;
+      window.speechSynthesis.speak(u);
+    }
+
+    function normalizeForSpelling(w){
+      // Preserve letters; describe spaces and hyphens; drop parentheses
+      const tokens = [];
+      for(const ch of w){
+        if(/[a-z]/i.test(ch)) tokens.push(ch.toUpperCase());
+        else if(ch===' '){ tokens.push('space'); }
+        else if(ch==='-'){ tokens.push('hyphen'); }
+        else if(ch==='/' ){ tokens.push('slash'); }
+        else if(ch==='\'' ){ tokens.push("apostrophe"); }
+        else if(ch==='"' ){ /* skip */ }
+        else if(ch==='(' || ch===')'){ /* skip */ }
+        else { /* ignore other punctuation */ }
+      }
+      return tokens;
+    }
+
+    function spellOut(word){
+      if(!('speechSynthesis' in window)) return;
+      window.speechSynthesis.cancel();
+      const tokens = normalizeForSpelling(word);
+      // Chain utterances to create spacing
+      let i = 0;
+      const sayNext = ()=>{
+        if(i>=tokens.length) return;
+        const u = new SpeechSynthesisUtterance(tokens[i]);
+        u.lang = (state.voice && state.voice.lang) || 'en-US';
+        u.voice = state.voice; u.rate = 0.78; u.pitch = 1.05;
+        u.onend = ()=>{ setTimeout(()=>{ i++; sayNext(); }, 120); };
+        window.speechSynthesis.speak(u);
+      };
+      sayNext();
+    }
+
+    function warn(msg){
+      els.infoText.textContent = msg;
+      els.infoText.style.color = '#0f766e';
+    }
+
+    // ============================
+    // 4) AÇÕES
+    // ============================
+    function go(delta){
+      const { list } = getListForState();
+      const next = Math.max(0, Math.min(list.length-1, state.index + delta));
+      if(next!==state.index){
+        state.index = next; state.revealed = false; updateUI();
+        // fala automática
+        const w = currentWord();
+        speak(w);
+      }
+    }
+
+    function chooseGrade(g){ state.grade = g; state.index = 0; state.revealed = false; savePrefs(); updateUI(); }
+    function chooseMode(m){ state.mode = m; state.index = 0; state.revealed = false; savePrefs(); updateUI(); }
+
+    // ============================
+    // 5) EVENTOS UI + ATALHOS
+    // ============================
+    els.gradeSelect.addEventListener('change', e=>{ chooseGrade(e.target.value); });
+    els.btnEasy.addEventListener('click', ()=>chooseMode('easy'));
+    els.btnMedium.addEventListener('click', ()=>chooseMode('medium'));
+    els.btnHard.addEventListener('click', ()=>chooseMode('hard'));
+    els.btnAuto.addEventListener('click', ()=>chooseMode('auto'));
+
+    els.next.addEventListener('click', ()=>{ if(state.index===0 && !state.revealed) els.infoText.textContent=''; go(+1); });
+    els.prev.addEventListener('click', ()=>go(-1));
+
+    // Ouvir novamente
+    els.hear.addEventListener('click', ()=>{ speak(currentWord()); });
+
+    // Revelar
+    els.reveal.addEventListener('click', ()=>{ state.revealed = true; updateUI(); });
+
+    // Soletrar
+    els.spell.addEventListener('click', ()=>{ spellOut(currentWord()); });
+
+    // Atalhos
+    window.addEventListener('keydown', (e)=>{
+      if(['INPUT','TEXTAREA','SELECT'].includes(document.activeElement.tagName)) return;
+      if(e.key==='ArrowRight'){ e.preventDefault(); go(+1); }
+      if(e.key==='ArrowLeft'){ e.preventDefault(); go(-1); }
+      if(e.key.toLowerCase()==='r'){ e.preventDefault(); speak(currentWord()); }
+      if(e.key.toLowerCase()==='v'){ e.preventDefault(); state.revealed=true; updateUI(); }
+      if(e.key.toLowerCase()==='s'){ e.preventDefault(); spellOut(currentWord()); }
+    });
+
+    // Primeira carga
+    (function init(){
+      els.gradeSelect.value = state.grade;
+      updateUI();
+      // Ao clicar em Próxima pela 1ª vez: falar automaticamente
+      els.next.addEventListener('click', ()=>{ speak(currentWord()); });
+      warn('Dica: clique em “Próxima palavra” — a palavra será falada e ficará oculta até você revelar.');
+    })();
+  </script>
+</body>
+</html>
