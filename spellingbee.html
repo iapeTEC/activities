@@ -99,6 +99,16 @@
       display:flex; align-items:center; justify-content:center; text-align:center;
     }
 
+    .school-symbol-placeholder {
+width: 50px; /* ou ajuste para o tamanho desejado, ex: 30px para ainda menor */
+height: 50px;
+}
+.school-symbol-placeholder img {
+max-width: 100%;
+height: auto; /* mantém a proporção da imagem /
+display: block; / remove espaços extras */
+}
+
     /* Mobile */
     @media (max-width: 840px){
       body{grid-template-columns:1fr; padding:24px;} /* Padding menor em mobile para não exagerar */
