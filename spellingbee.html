@@ -93,10 +93,10 @@
     /* BOARD principal */
     .board{background:linear-gradient(180deg,#fff 0%,var(--bg) 100%); border-radius:var(--radius); box-shadow:var(--shadow); padding:16px; display:grid; gap:12px}
 
-    .row{display:flex; gap:10px; flex-wrap:wrap}
+    .row{display:flex; gap:10px; flex-wrap:wrap; justify-content:center;}
 
     /* Botões de navegação com PNGs (sem emoji) */
-    .btn-icon{display:flex; align-items:center; justify-content:center; gap:10px}
+    .btn-icon{display:flex; align-items:center; justify-content:center; gap:10px; flex: none; width: 60px; height: 60px; border-radius: 50%;}
     .icon{width:22px; height:22px; display:inline-block}
     /*
       Coloque seus PNGs em /icons e ajuste os src nos <img> abaixo:
@@ -114,13 +114,13 @@
 
     /* Barra de dificuldade (apenas TAGs centralizadas) */
     .difficulty{
-      background:var(--card); border-radius:var(--radius); box-shadow:var(--shadow); padding:12px; display:flex; gap:10px; justify-content:space-between;
+      background:var(--card); border-radius:var(--radius); box-shadow:var(--shadow); padding:12px; display:flex; gap:10px; justify-content:space-around; flex-wrap:wrap;
     }
     .diff-btn{
-      flex:1; display:flex; align-items:center; justify-content:center; padding:8px 10px; border-radius:14px; border:1px solid #e2e8f0; background:#fff;
+      flex:none; display:flex; align-items:center; justify-content:center; width:60px; height:60px; border-radius:50%; border:1px solid #e2e8f0; background:#fff; padding:0;
     }
     .tag{
-      display:inline-flex; align-items:center; justify-content:center; padding:8px 12px; border-radius:999px; font-weight:800; font-size:14px;
+      display:flex; align-items:center; justify-content:center; width:100%; height:100%; border-radius:50%; font-weight:800; font-size:12px;
       overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
     }
     .tag.easy{background:var(--accent-2)}
@@ -135,7 +135,7 @@
     .status .tag{min-width:84px}
 
     /* ===== Pills com imagem preenchendo toda a área ===== */
-    .controls { gap: 10px; }
+    .controls { gap: 10px; display:flex; flex-wrap:wrap; justify-content:space-around; }
     .controls .btn-pill {
       padding: 0;                 /* sem padding: a imagem encosta nas extremidades visuais */
       border-radius: 999px;       /* formato pill */
@@ -144,7 +144,7 @@
       min-height: 56px;           /* altura confortável */
       display: flex; align-items: center; justify-content: center;
       border: 1px solid #e2e8f0;  /* contorno suave igual ao resto */
-      box-shadow: var(--shadow);
+      box-shadow: var(--shadow); flex:1;
     }
     .controls .btn-pill img.pill-img {
       width: 100%;
@@ -153,8 +153,6 @@
       display: block;
       padding: 6px 10px;          /* quase até a borda; ajuste para +/− margem */
     }
-    /* Mantém os três botões alinhados e com tamanhos iguais */
-    .controls .btn-pill { flex: 1 1 0; }
 
     /* Footer com logo da escola (sem container, centralizado) */
     .global-footer{
@@ -169,8 +167,6 @@
     /* Ajustes finos para telas muito pequenas */
     @media (max-width:420px){
       .status{flex-direction:column; align-items:stretch}
-      .difficulty{flex-direction:column; gap: 8px}
-      .diff-btn { width: 100%; }
       .bigbox{min-height:24vh}
       .controls .btn-pill { min-height: 60px; }
     }
@@ -232,7 +228,7 @@
         <div class="bigbox" id="mysteryBox" aria-label="Caixa de palavra">?</div>
 
         <!-- Pills preenchidos por imagens -->
-        <div class="row controls">
+        <div class="controls">
           <!-- Troque os src pelos seus PNGs (arte horizontal) -->
           <button id="hearBtn" class="btn-pill ghost" aria-label="Ouvir novamente a palavra">
             <img class="pill-img" src="ouvir.png" alt="Ouvir novamente a palavra" />
