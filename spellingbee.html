@@ -35,18 +35,29 @@
       --maxw:560px;           /* largura tipo app mobile */
     }
 
+    /* Suporte para safe area do iOS */
+    @supports(padding: max(0px)) {
+      :root {
+        --safe-area-inset-left: env(safe-area-inset-left, 0px);
+        --safe-area-inset-right: env(safe-area-inset-right, 0px);
+      }
+    }
+
     *{box-sizing:border-box}
-    html,body{height:100%}
+    html,body{height:100%; margin:0; padding:0; overflow-x:hidden}
     body{
-      margin:0; background:var(--bg); color:var(--ink);
+      background:var(--bg); color:var(--ink);
       font-family:KidsFont, ui-rounded, system-ui, -apple-system, Segoe UI, Roboto, Noto Sans, Ubuntu, Cantarell, "Helvetica Neue", Arial;
       -webkit-text-size-adjust:100%;
-      display:flex; justify-content:center; /* centra o app */
+      display:flex; justify-content:center;
+      /* Adiciona padding lateral respeitando safe area */
+      padding-left: max(16px, var(--safe-area-inset-left, 16px));
+      padding-right: max(16px, var(--safe-area-inset-right, 16px));
     }
 
     /* Contêiner principal no estilo de aplicativo */
     .app{
-      width:100%; max-width:var(--maxw); padding:16px; display:grid; grid-template-rows:auto auto 1fr auto; gap:12px;
+      width:100%; max-width:var(--maxw); padding:16px 0; display:grid; grid-template-rows:auto auto 1fr auto; gap:12px;
     }
 
     /* HEADER com espaço para PNG centralizado */
@@ -110,7 +121,7 @@
     }
     .tag{display:inline-flex; align-items:center; justify-content:center; padding:8px 12px; border-radius:999px; font-weight:800; font-size:14px}
     .tag.easy{background:var(--accent-2)}
-    .tag.medium{background:var(--accent)}          /* corrigido: usava --accent2 por engano */
+    .tag.medium{background:var(--accent2)}          /* corrigido: usava --accent2 por engano */
     .tag.hard{background:var(--accent-2)}
     .diff-btn.active{outline:3px solid #60a5fa}
 
@@ -232,7 +243,7 @@
           </button>
         </div>
 
-        <footer class="small" id="infoText">Selecione uma classe e toque em “Próxima palavra”. A palavra será falada em inglês e ficará oculta.</footer>
+        <footer class="small" id="infoText">Selecione uma classe e toque em "Próxima palavra". A palavra será falada em inglês e ficará oculta.</footer>
       </section>
     </main>
 
@@ -447,7 +458,7 @@
     // Primeira carga
     (function init(){
       els.gradeSelect.value = state.grade; updateUI();
-      warn('Dica: toque em “Próxima palavra” — a palavra será falada e ficará oculta até você revelar.');
+      warn('Dica: toque em "Próxima palavra" — a palavra será falada e ficará oculta até você revelar.');
     })();
   </script>
 </body>
