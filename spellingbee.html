@@ -6,11 +6,7 @@
   <title>Spelling Bee Trainer</title>
   <meta name="theme-color" content="#93c5fd" />
   
-  <!--
-    ⚠️ FONTE INFANTIL
-    Para usar uma fonte como "KB Zipa Dee Doo Dah", coloque os arquivos em /fonts e ajuste a URL abaixo.
-    Exemplo: .woff2 e .woff. Mantenha o nome 'KidsFont' para funcionar no CSS.
-  -->
+  <!-- Fonte infantil (opcional) -->
   <style>
     @font-face {
       font-family: 'KidsFont';
@@ -42,11 +38,15 @@
       font-family:KidsFont, ui-rounded, system-ui, -apple-system, Segoe UI, Roboto, Noto Sans, Ubuntu, Cantarell, "Helvetica Neue", Arial;
       -webkit-text-size-adjust:100%;
       display:flex; justify-content:center; /* centra o app */
+      overflow-x:hidden; /* evita qualquer “vazamento” lateral */
     }
+
+    img{max-width:100%; height:auto; display:block}
 
     /* Contêiner principal no estilo de aplicativo */
     .app{
       width:100%; max-width:var(--maxw); padding:16px; display:grid; grid-template-rows:auto auto 1fr auto; gap:12px;
+      margin:0 auto;
     }
 
     /* HEADER com espaço para PNG centralizado (sem título em texto) */
@@ -54,11 +54,8 @@
       background:var(--accent-2); box-shadow:var(--shadow); border-radius:var(--radius);
       padding:10px 12px; display:flex; align-items:center; justify-content:center; min-height:72px;
     }
-    /*
-      🔽 Troque o src abaixo pela sua arte PNG (sem emojis).
-      Tamanho recomendado do arquivo: ~600×140px com fundo transparente.
-    */
-    #appLogo{max-width:100%; max-height:48px; height:auto; display:block}
+    /* Troque o src abaixo pela sua arte PNG */
+    #appLogo{max-width:100%; max-height:48px}
 
     /* PILL de seletor de classe + status */
     .pill{
@@ -84,14 +81,9 @@
 
     .row{display:flex; gap:10px; flex-wrap:wrap}
 
-    /* Botões de navegação com PNGs (sem emoji) */
-    .btn-icon{display:flex; align-items:center; justify-content:center; gap:10px}
+    /* Botões de navegação (ícones PNG) */
+    .btn-icon{display:flex; align-items:center; justify-content:center; gap:10px; width:auto}
     .icon{width:22px; height:22px; display:inline-block}
-    /*
-      Coloque seus PNGs em /icons e ajuste os src nos <img> abaixo:
-      esquerda.png | direita.png
-      Sugestão: exportar a 44px -> o CSS reduz para 22px mantendo nitidez.
-    */
 
     .bigbox{
       border:2px dashed #cbd5e1; border-radius:18px; background:#f8fafc; display:flex; align-items:center; justify-content:center;
@@ -120,25 +112,26 @@
     }
     .status .tag{min-width:84px}
 
-    /* ===== Pills com imagem preenchendo toda a área ===== */
+    /* ===== Pills de ação com imagem preenchendo toda a área ===== */
     .controls { gap: 10px; }
     .controls .btn-pill {
-      padding: 0;                 /* sem padding: encosta nas extremidades visuais do pill */
+      padding: 0;                 /* encosta nas extremidades visuais do pill */
       border-radius: 999px;       /* formato pill */
-      overflow: hidden;           /* evita qualquer vazamento da imagem */
+      overflow: hidden;           /* evita vazamento da imagem */
       background: #fff;           /* fundo neutro sob PNG transparente */
-      min-height: 56px;           /* altura confortável; ajuste se quiser mais alto */
+      min-height: 56px;           /* altura confortável */
       display: flex; align-items: center; justify-content: center;
-      border: 1px solid #e2e8f0;  /* contorno suave igual ao resto */
+      border: 1px solid #e2e8f0;  /* contorno suave */
       box-shadow: var(--shadow);
-      flex: 1 1 0;                /* mantém largura igual entre os três */
+      flex: 1 1 0;                /* largura igual entre os três */
     }
     .controls .btn-pill img.pill-img {
       width: 100%;
       height: 100%;
       object-fit: contain;        /* preenche ao máximo, mantendo proporção */
       display: block;
-      padding: 6px 10px;          /* “quase” até a borda; reduza para 4px/0 se quiser ainda mais rente */
+      padding: 6px 10px;          /* quase até a borda; reduza p/ 4px/0 se quiser ainda mais rente */
+      box-sizing: border-box;     /* padding conta dentro do tamanho */
     }
 
     /* Footer com logo da escola (sem container, centralizado) */
@@ -148,10 +141,10 @@
     }
     .global-footer img{width:48px; height:auto; display:block}
 
-    /* Acessibilidade visualmente escondido (para rótulos que não aparecem na UI) */
+    /* Acessibilidade (itens apenas para leitores de tela) */
     .sr-only{position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0}
 
-    /* Ajustes finos para telas muito pequenas */
+    /* Ajustes para telas muito pequenas */
     @media (max-width:380px){
       .status{flex-direction:column; align-items:stretch}
       .difficulty{flex-direction:column}
@@ -163,7 +156,7 @@
 <body>
   <div class="app">
     <header>
-      <!-- PNG DO TÍTULO DO APP: substitua o src pela sua arte (sem emojis) -->
+      <!-- PNG DO TÍTULO DO APP -->
       <img id="appLogo" src="app-title.png" alt="Spelling Bee" />
     </header>
 
@@ -202,7 +195,7 @@
     <main>
       <section class="board" aria-live="polite">
         <div class="row">
-          <!-- Substitua os src pelos seus PNGs de setas -->
+          <!-- Setas PNG -->
           <button id="prevBtn" class="btn-icon" title="Palavra anterior" aria-label="Palavra anterior">
             <img class="icon" src="esquerda.png" alt="Anterior" />
             <span class="sr-only">Palavra anterior</span>
@@ -215,20 +208,17 @@
 
         <div class="bigbox" id="mysteryBox" aria-label="Caixa de palavra">?</div>
 
-        <!-- Pills preenchidos por imagens (arte horizontal) -->
+        <!-- Pills de ação com imagem preenchendo -->
         <div class="row controls">
           <button id="hearBtn" class="btn-pill ghost" aria-label="Ouvir novamente a palavra">
-            <!-- PNG horizontal “Ouvir a palavra” -->
             <img class="pill-img" src="ouvir.png" alt="Ouvir novamente a palavra" />
           </button>
 
           <button id="revealBtn" class="btn-pill" aria-label="Revelar a palavra">
-            <!-- PNG horizontal “Revelar a palavra” -->
             <img class="pill-img" src="revelar.png" alt="Revelar a palavra" />
           </button>
 
           <button id="spellBtn" class="btn-pill" aria-label="Soletrar a palavra">
-            <!-- PNG horizontal “Soletrar a palavra” -->
             <img class="pill-img" src="soletrar.png" alt="Soletrar a palavra" />
           </button>
         </div>
@@ -309,7 +299,8 @@
       index: 0,
       revealed: false,
       voices: [],
-      voice: null
+      voice: null,
+      ttsUnlocked: false
     };
 
     function getListForState(){
@@ -327,7 +318,7 @@
       const {order, lengths} = getListForState();
       let i = state.index;
       for(let k=0;k<lengths.length;k++){
-        if(i <_lengths[k]) return order[k];
+        if(i < lengths[k]) return order[k];   // ✅ corrigido (antes estava i <_lengths[k])
         i -= lengths[k];
       }
       return order[order.length-1] || 'easy';
@@ -348,11 +339,11 @@
       // progress
       els.progressText.textContent = `${Math.min(state.index+1, list.length)} / ${list.length}`;
 
-      // dificuldade ativa (borda/outline)
+      // dificuldade ativa
       [els.btnEasy, els.btnMedium, els.btnHard, els.btnAuto].forEach(b=>b.classList.remove('active'));
       ({easy:els.btnEasy, medium:els.btnMedium, hard:els.btnHard, auto:els.btnAuto}[state.mode]).classList.add('active');
 
-      // desabilitar bordas de navegação
+      // nav edges
       els.prev.disabled = state.index<=0;
       els.next.disabled = state.index>=list.length-1;
     }
@@ -363,28 +354,55 @@
     }
 
     // ============================
-    // 3) VOZ (Web Speech API)
+    // 3) VOZ (Web Speech API) — iOS friendly
     // ============================
     function loadVoices(){
-      state.voices = window.speechSynthesis.getVoices();
+      state.voices = window.speechSynthesis.getVoices() || [];
       const preferred = state.voices.filter(v => v.lang && v.lang.toLowerCase().startsWith('en'));
       state.voice = preferred.find(v=>/Google US English|Microsoft.+(Aria|Guy|Jenny|Ryan)/i.test(v.name))
-                  || preferred.find(v=>/US|GB|English/i.test(v.name))
-                  || preferred[0]
-                  || null;
+               || preferred.find(v=>/US|GB|English/i.test(v.name))
+               || preferred[0]
+               || null;
     }
-    window.speechSynthesis.onvoiceschanged = loadVoices; loadVoices();
+    window.speechSynthesis.onvoiceschanged = () => { loadVoices(); };
 
-    function speak(text, {rate=0.9, pitch=1.0}={}){
-      if(!('speechSynthesis' in window)){
-        warn('Seu navegador não suporta síntese de voz.');
-        return;
-      }
-      window.speechSynthesis.cancel();
-      const u = new SpeechSynthesisUtterance(text);
-      u.lang = (state.voice && state.voice.lang) || 'en-US';
-      u.voice = state.voice; u.rate = rate; u.pitch = pitch; u.volume = 1.0;
-      window.speechSynthesis.speak(u);
+    // Garante que as vozes estejam disponíveis antes de falar
+    function ensureVoicesReady(timeoutMs=1200){
+      return new Promise(resolve=>{
+        const start = Date.now();
+        (function wait(){
+          loadVoices();
+          if(state.voices.length>0 || Date.now()-start>timeoutMs) return resolve();
+          setTimeout(wait, 60);
+        })();
+      });
+    }
+
+    // Desbloqueia TTS no primeiro toque (iOS exige gesto do usuário)
+    async function unlockTTS(){
+      if(state.ttsUnlocked) return;
+      await ensureVoicesReady();
+      try{
+        const u = new SpeechSynthesisUtterance(' ');
+        u.volume = 0; // inaudível
+        u.rate = 1; u.pitch = 1;
+        window.speechSynthesis.speak(u);
+      }catch(e){}
+      state.ttsUnlocked = true;
+    }
+
+    async function speak(text, {rate=0.9, pitch=1.0}={}){
+      if(!('speechSynthesis' in window)) { warn('Seu navegador não suporta síntese de voz.'); return; }
+      await unlockTTS();
+      await ensureVoicesReady();
+      try{
+        window.speechSynthesis.cancel();
+        const u = new SpeechSynthesisUtterance(text);
+        u.lang = (state.voice && state.voice.lang) || 'en-US';
+        u.voice = state.voice || null;
+        u.rate = rate; u.pitch = pitch; u.volume = 1.0;
+        window.speechSynthesis.speak(u);
+      }catch(e){}
     }
 
     function normalizeForSpelling(w){
@@ -399,20 +417,21 @@
       return tokens;
     }
 
-    function spellOut(word){
+    async function spellOut(word){
       if(!('speechSynthesis' in window)) return;
-      window.speechSynthesis.cancel();
-      const tokens = normalizeForSpelling(word);
-      // iOS se comporta melhor com um único utterance longo (pausas por vírgula)
-      const u = new SpeechSynthesisUtterance(tokens.join(', '));
-      u.lang = (state.voice && state.voice.lang) || 'en-US';
-      u.voice = state.voice; u.rate = 0.78; u.pitch = 1.05;
-      window.speechSynthesis.speak(u);
+      await unlockTTS();
+      await ensureVoicesReady();
+      try{
+        window.speechSynthesis.cancel();
+        // iOS se comporta melhor com um único utterance longo (pausas por vírgula)
+        const u = new SpeechSynthesisUtterance(normalizeForSpelling(word).join(', '));
+        u.lang = (state.voice && state.voice.lang) || 'en-US';
+        u.voice = state.voice || null; u.rate = 0.78; u.pitch = 1.05;
+        window.speechSynthesis.speak(u);
+      }catch(e){}
     }
 
-    function warn(msg){
-      document.getElementById('infoText').textContent = msg;
-    }
+    function warn(msg){ document.getElementById('infoText').textContent = msg; }
 
     // ============================
     // 4) AÇÕES
@@ -432,6 +451,11 @@
     // ============================
     // 5) EVENTOS
     // ============================
+    // Desbloqueia TTS no primeiro gesto do usuário
+    ['click','touchend'].forEach(ev=>{
+      document.addEventListener(ev, unlockTTS, { once:true, passive:true });
+    });
+
     els.gradeSelect.addEventListener('change', e=> chooseGrade(e.target.value));
     els.btnEasy.addEventListener('click', ()=>chooseMode('easy'));
     els.btnMedium.addEventListener('click', ()=>chooseMode('medium'));
@@ -447,7 +471,9 @@
 
     // Primeira carga
     (function init(){
-      els.gradeSelect.value = state.grade; updateUI();
+      loadVoices();              // tenta carregar inicial
+      els.gradeSelect.value = state.grade; 
+      updateUI();
       warn('Dica: toque em “Próxima palavra” — a palavra será falada e ficará oculta até você revelar.');
     })();
   </script>
