@@ -318,7 +318,8 @@
       mode: localStorage.getItem('sb.mode') || 'auto', // 'easy' | 'medium' | 'hard' | 'auto'
       index: 0,
       revealed: false,
-      currentAudio: null // Para parar áudio anterior
+      voices: [],
+      voice: null
     };
 
     function getListForState(){
@@ -372,20 +373,56 @@
     }
 
     // ============================
-    // 3) TTS com Google Translate (gratuito, sem chave, cross-platform)
+    // 3) VOZ (Fallback: Google TTS prioritário, Web Speech se falhar)
     // ============================
     let currentAudio = null;
 
+    // Carrega vozes para Web Speech (fallback)
+    function loadVoices(){
+      state.voices = window.speechSynthesis.getVoices();
+      const preferred = state.voices.filter(v => v.lang && v.lang.toLowerCase().startsWith('en'));
+      state.voice = preferred.find(v=>/Google US English|Microsoft.+(Aria|Guy|Jenny|Ryan)/i.test(v.name))
+                  || preferred.find(v=>/US|GB|English/i.test(v.name))
+                  || preferred[0]
+                  || null;
+    }
+    window.speechSynthesis.onvoiceschanged = loadVoices; loadVoices();
+
+    // Funcao TTS com Web Speech (fallback)
+    function speakWebSpeech(text, {rate=0.9, pitch=1.0}={}){
+      if(!('speechSynthesis' in window)){
+        warn('Seu navegador não suporta síntese de voz.');
+        return;
+      }
+      window.speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang = (state.voice && state.voice.lang) || 'en-US';
+      u.voice = state.voice; u.rate = rate; u.pitch = pitch; u.volume = 1.0;
+      window.speechSynthesis.speak(u);
+    }
+
+    function spellOutWebSpeech(word){
+      if(!('speechSynthesis' in window)) return;
+      window.speechSynthesis.cancel();
+      const tokens = normalizeForSpelling(word);
+      const u = new SpeechSynthesisUtterance(tokens.join(', '));
+      u.lang = (state.voice && state.voice.lang) || 'en-US';
+      u.voice = state.voice; u.rate = 0.78; u.pitch = 1.05;
+      window.speechSynthesis.speak(u);
+    }
+
+    // TTS principal com Google (tentativa primeiro)
     function speak(text) {
       if (currentAudio) {
         currentAudio.pause();
         currentAudio = null;
       }
-      const url = `https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=en-US&q=${encodeURIComponent(text)}`;
+      const url = `https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=en-US&q=${encodeURIComponent(text)}&v=${Math.random()}`; // Adiciona ?v=random para evitar cache
       currentAudio = new Audio(url);
       currentAudio.play().catch(error => {
-        console.error('Erro no áudio:', error);
-        warn('Erro ao reproduzir áudio. Verifique permissões de áudio no navegador.');
+        console.error('Erro no Google TTS:', error);
+        warn('Erro ao reproduzir áudio avançado. Usando TTS nativo. Verifique permissões de áudio no navegador.');
+        speakWebSpeech(text); // Fallback para Web Speech
       });
     }
 
@@ -408,11 +445,12 @@
       }
       const tokens = normalizeForSpelling(word);
       const spellingText = tokens.join(', '); // Pausas com vírgulas para melhor soletração
-      const url = `https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=en-US&q=${encodeURIComponent(spellingText)}`;
+      const url = `https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=en-US&q=${encodeURIComponent(spellingText)}&v=${Math.random()}`;
       currentAudio = new Audio(url);
       currentAudio.play().catch(error => {
-        console.error('Erro no áudio:', error);
-        warn('Erro ao soletrar. Verifique permissões de áudio no navegador.');
+        console.error('Erro no Google TTS:', error);
+        warn('Erro ao soletrar com áudio avançado. Usando TTS nativo. Verifique permissões de áudio no navegador.');
+        spellOutWebSpeech(word); // Fallback para Web Speech
       });
     }
 
