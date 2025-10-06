@@ -215,11 +215,11 @@
       <section class="board" aria-live="polite">
         <div class="row">
           <!-- Substitua os src pelos seus PNGs de setas -->
-          <button id="prevBtn" class="btn-pill ghost" title="Palavra anterior" aria-label="Palavra anterior">
+          <button id="prevBtn" class="btn-icon" title="Palavra anterior" aria-label="Palavra anterior">
             <img class="icon" src="esquerda.png" alt="Anterior" />
             <span class="sr-only">Palavra anterior</span>
           </button>
-          <button id="nextBtn" class="btn-pill ghost" title="Próxima palavra" aria-label="Próxima palavra">
+          <button id="nextBtn" class="btn-icon" title="Próxima palavra" aria-label="Próxima palavra">
             <img class="icon" src="direita.png" alt="Próxima" />
             <span class="sr-only">Próxima palavra</span>
           </button>
@@ -373,12 +373,8 @@
     }
 
     // ============================
-    // 3) VOZ (ElevenLabs prioritário, fallback para Web Speech)
+    // 3) VOZ (Web Speech API)
     // ============================
-    const ELEVENLABS_API_KEY = 'sk_ba46f77c908c7536543cfc2d3974e387ef1e26d3862d824d'; // Pegue no elevenlabs.io após cadastro
-    let currentAudio = null;
-
-    // Carrega vozes para Web Speech (fallback)
     function loadVoices(){
       state.voices = window.speechSynthesis.getVoices();
       const preferred = state.voices.filter(v => v.lang && v.lang.toLowerCase().startsWith('en'));
@@ -389,10 +385,9 @@
     }
     window.speechSynthesis.onvoiceschanged = loadVoices; loadVoices();
 
-    // TTS fallback com Web Speech
-    function speakFallback(text, {rate=0.9, pitch=1.0}={}){
+    function speak(text, {rate=0.9, pitch=1.0}={}){
       if(!('speechSynthesis' in window)){
-        warn('Seu navegador não suporta TTS.');
+        warn('Seu navegador não suporta síntese de voz.');
         return;
       }
       window.speechSynthesis.cancel();
@@ -400,58 +395,6 @@
       u.lang = (state.voice && state.voice.lang) || 'en-US';
       u.voice = state.voice; u.rate = rate; u.pitch = pitch; u.volume = 1.0;
       window.speechSynthesis.speak(u);
-    }
-
-    function spellOutFallback(word){
-      if(!('speechSynthesis' in window)) return;
-      window.speechSynthesis.cancel();
-      const tokens = normalizeForSpelling(word);
-      const u = new SpeechSynthesisUtterance(tokens.join(', '));
-      u.lang = (state.voice && state.voice.lang) || 'en-US';
-      u.voice = state.voice; u.rate = 0.78; u.pitch = 1.05;
-      window.speechSynthesis.speak(u);
-    }
-
-    // TTS com ElevenLabs (principal)
-    async function speak(text) {
-      if (currentAudio) {
-        currentAudio.pause();
-        currentAudio = null;
-      }
-
-      try {
-        const response = await fetch('https://api.elevenlabs.io/v1/text-to-speech/21m00Tcm4TlvDq8ikWAM/stream', { // Voz padrão gratuita; mude ID para outra voz free
-          method: 'POST',
-          headers: {
-            'Accept': 'audio/mpeg',
-            'Content-Type': 'application/json',
-            'xi-api-key': ELEVENLABS_API_KEY
-          },
-          body: JSON.stringify({
-            text: text,
-            model_id: 'eleven_monolingual_v1',
-            voice_settings: {
-              stability: 0.5,
-              similarity_boost: 0.5
-            }
-          })
-        });
-
-        if (!response.ok) throw new Error('Erro na API ElevenLabs');
-
-        const audioBlob = await response.blob();
-        const audioUrl = URL.createObjectURL(audioBlob);
-        currentAudio = new Audio(audioUrl);
-        currentAudio.play().catch(error => {
-          console.error('Erro no áudio:', error);
-          warn('Erro no TTS avançado. Usando TTS nativo.');
-          speakFallback(text);
-        });
-      } catch (error) {
-        console.error('Erro ElevenLabs:', error);
-        warn('Erro no TTS avançado (verifique key/limite). Usando TTS nativo.');
-        speakFallback(text);
-      }
     }
 
     function normalizeForSpelling(w){
@@ -466,48 +409,15 @@
       return tokens;
     }
 
-    async function spellOut(word){
-      if (currentAudio) {
-        currentAudio.pause();
-        currentAudio = null;
-      }
-
+    function spellOut(word){
+      if(!('speechSynthesis' in window)) return;
+      window.speechSynthesis.cancel();
       const tokens = normalizeForSpelling(word);
-      const spellingText = tokens.join(', ');
-
-      try {
-        const response = await fetch('https://api.elevenlabs.io/v1/text-to-speech/21m00Tcm4TlvDq8ikWAM/stream', {
-          method: 'POST',
-          headers: {
-            'Accept': 'audio/mpeg',
-            'Content-Type': 'application/json',
-            'xi-api-key': ELEVENLABS_API_KEY
-          },
-          body: JSON.stringify({
-            text: spellingText,
-            model_id: 'eleven_monolingual_v1',
-            voice_settings: {
-              stability: 0.5,
-              similarity_boost: 0.5
-            }
-          })
-        });
-
-        if (!response.ok) throw new Error('Erro na API ElevenLabs');
-
-        const audioBlob = await response.blob();
-        const audioUrl = URL.createObjectURL(audioBlob);
-        currentAudio = new Audio(audioUrl);
-        currentAudio.play().catch(error => {
-          console.error('Erro no áudio:', error);
-          warn('Erro no TTS avançado. Usando TTS nativo.');
-          spellOutFallback(word);
-        });
-      } catch (error) {
-        console.error('Erro ElevenLabs:', error);
-        warn('Erro no TTS avançado (verifique key/limite). Usando TTS nativo.');
-        spellOutFallback(word);
-      }
+      // iOS se comporta melhor com um único utterance longo (pausas por vírgula)
+      const u = new SpeechSynthesisUtterance(tokens.join(', '));
+      u.lang = (state.voice && state.voice.lang) || 'en-US';
+      u.voice = state.voice; u.rate = 0.78; u.pitch = 1.05;
+      window.speechSynthesis.speak(u);
     }
 
     function warn(msg){
