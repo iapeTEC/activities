@@ -49,7 +49,7 @@
       width:100%; max-width:var(--maxw); padding:16px; display:grid; grid-template-rows:auto auto 1fr auto; gap:12px;
     }
 
-    /* HEADER com espaço para PNG centralizado */
+    /* HEADER com espaço para PNG centralizado (sem título em texto) */
     header{
       background:var(--accent-2); box-shadow:var(--shadow); border-radius:var(--radius);
       padding:10px 12px; display:flex; align-items:center; justify-content:center; min-height:72px;
@@ -89,7 +89,7 @@
     .icon{width:22px; height:22px; display:inline-block}
     /*
       Coloque seus PNGs em /icons e ajuste os src nos <img> abaixo:
-      esquerda.png | direita.png | ouvir.png | revelar.png | soletrar.png
+      esquerda.png | direita.png
       Sugestão: exportar a 44px -> o CSS reduz para 22px mantendo nitidez.
     */
 
@@ -110,7 +110,7 @@
     }
     .tag{display:inline-flex; align-items:center; justify-content:center; padding:8px 12px; border-radius:999px; font-weight:800; font-size:14px}
     .tag.easy{background:var(--accent-2)}
-    .tag.medium{background:var(--accent)}          /* corrigido: usava --accent2 por engano */
+    .tag.medium{background:var(--accent)}          /* azul bebê */
     .tag.hard{background:var(--accent-2)}
     .diff-btn.active{outline:3px solid #60a5fa}
 
@@ -123,24 +123,23 @@
     /* ===== Pills com imagem preenchendo toda a área ===== */
     .controls { gap: 10px; }
     .controls .btn-pill {
-      padding: 0;                 /* sem padding: a imagem encosta nas extremidades visuais */
+      padding: 0;                 /* sem padding: encosta nas extremidades visuais do pill */
       border-radius: 999px;       /* formato pill */
       overflow: hidden;           /* evita qualquer vazamento da imagem */
       background: #fff;           /* fundo neutro sob PNG transparente */
-      min-height: 56px;           /* altura confortável */
+      min-height: 56px;           /* altura confortável; ajuste se quiser mais alto */
       display: flex; align-items: center; justify-content: center;
       border: 1px solid #e2e8f0;  /* contorno suave igual ao resto */
       box-shadow: var(--shadow);
+      flex: 1 1 0;                /* mantém largura igual entre os três */
     }
     .controls .btn-pill img.pill-img {
       width: 100%;
       height: 100%;
       object-fit: contain;        /* preenche ao máximo, mantendo proporção */
       display: block;
-      padding: 6px 10px;          /* quase até a borda; ajuste para +/− margem */
+      padding: 6px 10px;          /* “quase” até a borda; reduza para 4px/0 se quiser ainda mais rente */
     }
-    /* Mantém os três botões alinhados e com tamanhos iguais */
-    .controls .btn-pill { flex: 1 1 0; }
 
     /* Footer com logo da escola (sem container, centralizado) */
     .global-footer{
@@ -216,18 +215,20 @@
 
         <div class="bigbox" id="mysteryBox" aria-label="Caixa de palavra">?</div>
 
-        <!-- Pills preenchidos por imagens -->
+        <!-- Pills preenchidos por imagens (arte horizontal) -->
         <div class="row controls">
-          <!-- Troque os src pelos seus PNGs (arte horizontal) -->
           <button id="hearBtn" class="btn-pill ghost" aria-label="Ouvir novamente a palavra">
+            <!-- PNG horizontal “Ouvir a palavra” -->
             <img class="pill-img" src="ouvir.png" alt="Ouvir novamente a palavra" />
           </button>
 
           <button id="revealBtn" class="btn-pill" aria-label="Revelar a palavra">
+            <!-- PNG horizontal “Revelar a palavra” -->
             <img class="pill-img" src="revelar.png" alt="Revelar a palavra" />
           </button>
 
           <button id="spellBtn" class="btn-pill" aria-label="Soletrar a palavra">
+            <!-- PNG horizontal “Soletrar a palavra” -->
             <img class="pill-img" src="soletrar.png" alt="Soletrar a palavra" />
           </button>
         </div>
@@ -326,7 +327,7 @@
       const {order, lengths} = getListForState();
       let i = state.index;
       for(let k=0;k<lengths.length;k++){
-        if(i < lengths[k]) return order[k];
+        if(i <_lengths[k]) return order[k];
         i -= lengths[k];
       }
       return order[order.length-1] || 'easy';
