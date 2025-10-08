@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Spelling Bee — Telão</title>
+<meta name="theme-color" content="#4b0082" />
+<style>
+  :root{
+    --bg:#4b0082;
+    --correct:#28a745;
+    --wrong:#dc3545;
+    --text:#ffffff;
+    --cursor:#ffffff;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%; margin:0; padding:0; overflow:hidden}
+  body{
+    background:var(--bg); color:var(--text); font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;
+    display:flex; flex-direction:column; align-items:center; justify-content:flex-start;
+  }
+  header{
+    width:100%; padding:10px; display:flex; justify-content:center; align-items:center;
+    background:rgba(255,255,255,.1);
+  }
+  #appLogo{max-width:80%; max-height:80px}
+  .stage{
+    flex:1; display:flex; align-items:center; justify-content:center; width:100%;
+    padding:20px; text-align:center;
+  }
+  .word{
+    font-size: clamp(6vw, 12vh, 160px);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    white-space: pre-wrap;
+    line-height: 1.1;
+    font-weight: 900;
+  }
+  .letter{ display:inline-block; }
+  .dash{
+    display:inline-block; width:.6em; height:.1em; background:rgba(255,255,255,.9);
+    margin:.08em; border-radius:6px; animation:blink 1s steps(1) infinite;
+  }
+  @keyframes blink { 50%{ opacity:.25 } }
+
+  /* Confete simples */
+  .confetti{
+    position:fixed; top:-10px; width:10px; height:14px; z-index:9999; opacity:0.9;
+    animation: fall linear forwards;
+  }
+  @keyframes fall{
+    to{ transform: translateY(110vh) rotate(720deg); opacity:1;}
+  }
+</style>
+</head>
+<body>
+  <header>
+    <img id="appLogo" src="skylogo2.png" alt="Spelling Bee" />
+  </header>
+
+  <div class="stage">
+    <div id="display" class="word" aria-live="polite"></div>
+  </div>
+
+<script>
+const channel = new BroadcastChannel('bee-sync-v1');
+
+let correctWord = ''; // vinda do apresentador (UPPERCASE)
+let typed = '';       // vindo do apresentador (UPPERCASE)
+let confettiTimer = null;
+
+// desenha traços piscando do tamanho da palavra (ou traços longos se ainda não veio palavra)
+function renderWaitingDashes(len=10){
+  const display = document.getElementById('display');
+  display.innerHTML = '';
+  for(let i=0;i<len;i++){
+    const d = document.createElement('span');
+    d.className = 'dash';
+    display.appendChild(d);
+  }
+}
+
+// desenha letras coloridas
+function renderLetters(){
+  const display = document.getElementById('display');
+  display.innerHTML = '';
+  const N = Math.max(correctWord.length, typed.length);
+  for(let i=0;i<N;i++){
+    const span = document.createElement('span');
+    span.className = 'letter';
+    const tc = typed[i] || '';
+    const cc = correctWord[i] || '';
+    span.textContent = tc ? tc : '_';
+    if(tc){
+      span.style.color = (tc === cc) ? 'var(--correct)' : 'var(--wrong)';
+    }else{
+      span.style.opacity = .35;
+    }
+    display.appendChild(span);
+  }
+
+  // confete quando completou certinho
+  if(typed.length === correctWord.length && typed === correctWord && correctWord.length>0){
+    burstConfetti();
+  }
+}
+
+// confete: cria N pedacinhos que caem
+function burstConfetti(){
+  // evita loop infinito de confete
+  if(confettiTimer){ return; }
+  const colors = ['#ffd166','#ef476f','#06d6a0','#118ab2','#e9ff70','#b5179e'];
+  const N = 100;
+  for(let i=0;i<N;i++){
+    const c = document.createElement('div');
+    c.className = 'confetti';
+    c.style.left = Math.random()*100 + 'vw';
+    c.style.background = colors[i % colors.length];
+    c.style.animationDuration = (1.5 + Math.random()*1.5) + 's';
+    c.style.transform = `rotate(${Math.random()*360}deg)`;
+    document.body.appendChild(c);
+    // limpa depois que cai
+    setTimeout(()=> c.remove(), 3200);
+  }
+  // janela pra permitir novo confete
+  confettiTimer = setTimeout(()=>{ confettiTimer = null; }, 3500);
+}
+
+/* ==========================
+   Mensagens do apresentador
+   ========================== */
+channel.onmessage = (ev)=>{
+  const msg = ev.data || {};
+  if(msg.type === 'word'){
+    correctWord = (msg.word || '').toUpperCase();
+    typed = '';
+    // desenha traços do tamanho da palavra (ou 10 por fallback)
+    renderWaitingDashes(Math.max(correctWord.length, 10));
+  }
+  if(msg.type === 'typed'){
+    typed = (msg.typed || '').toUpperCase();
+    // se não tem nada digitado ainda, mostra traços; quando começar, mostra letras
+    if(typed.length===0){
+      renderWaitingDashes(Math.max(correctWord.length, 10));
+    }else{
+      renderLetters();
+    }
+  }
+  if(msg.type === 'reset'){
+    typed = '';
+    renderWaitingDashes(Math.max(correctWord.length, 10));
+  }
+};
+
+// estado inicial
+renderWaitingDashes(12);
+</script>
+</body>
+</html>

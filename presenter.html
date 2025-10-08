@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Spelling Bee — Apresentador</title>
+<meta name="theme-color" content="#0b3d91" />
+<style>
+  :root{
+    --bg:#0b3d91;        /* azul escuro */
+    --card:#ffffff;
+    --ink:#0f172a;
+    --muted:#64748b;
+    --accent:#ffd166;    /* amarelo */
+    --accent2:#a7c957;   /* verde suave */
+    --danger:#e63946;    /* vermelho */
+    --radius:18px;
+    --shadow:0 10px 30px rgba(0,0,0,.15);
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%;margin:0}
+  body{
+    background:linear-gradient(180deg,#0d47a1 0%,#082a5e 100%);
+    color:#fff; font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial; 
+    display:flex; justify-content:center; padding:16px;
+  }
+  .app{width:100%; max-width:920px; display:grid; gap:16px}
+  header{
+    background:rgba(255,255,255,.1); border-radius:var(--radius); padding:12px; 
+    display:flex; align-items:center; justify-content:center; box-shadow:var(--shadow)
+  }
+  #logo{max-height:56px}
+  .row{display:flex; gap:10px; flex-wrap:wrap}
+  .card{
+    background:var(--card); color:var(--ink); border-radius:var(--radius); padding:16px; box-shadow:var(--shadow)
+  }
+  .btn{
+    background:var(--accent); border:none; color:#222; padding:12px 16px; border-radius:12px; 
+    font-weight:700; cursor:pointer; transition:.2s transform ease; min-width:120px
+  }
+  .btn:hover{transform:translateY(-1px)}
+  .btn.secondary{background:#fff; border:1px solid #e2e8f0}
+  .btn.danger{background:var(--danger); color:#fff}
+  .btn.success{background:var(--accent2)}
+  .group{display:flex; gap:10px; flex-wrap:wrap}
+  label{font-weight:700; color:#1f2937}
+  input[type="text"]{
+    width:100%; padding:14px; border:1px solid #d1d5db; border-radius:12px; font-size:18px;
+  }
+  .status{display:flex; gap:12px; align-items:center; flex-wrap:wrap; color:#1f2937}
+  .pill{
+    background:#eef2ff; border:1px solid #e5e7eb; border-radius:999px; padding:8px 12px; font-size:14px; font-weight:700
+  }
+  .bigword{
+    font-size:clamp(24px, 4vw, 48px); font-weight:900; letter-spacing:.06em; color:#111; text-transform:uppercase
+  }
+</style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <!-- PNG opcional do evento -->
+      <img id="logo" src="skylogo2.png" alt="Spelling Bee Presenter" />
+    </header>
+
+    <section class="card">
+      <div class="group">
+        <button class="btn" id="grade3">3rd Grade</button>
+        <button class="btn" id="grade4">4th Grade</button>
+        <button class="btn" id="grade5">5th Grade</button>
+      </div>
+      <div class="status" style="margin-top:12px">
+        <span class="pill" id="pillGrade">Grade: 3rd</span>
+        <span class="pill" id="pillIndex">Progresso: 1 / 1</span>
+      </div>
+    </section>
+
+    <section class="card">
+      <div style="display:grid; gap:10px">
+        <div>
+          <label>Palavra atual</label>
+          <div id="currentWord" class="bigword">—</div>
+        </div>
+        <div class="row">
+          <button class="btn secondary" id="prevBtn">Palavra anterior</button>
+          <button class="btn success" id="nextBtn">Próxima palavra</button>
+          <button class="btn danger" id="resetTyped">Reiniciar digitado</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <label for="typeBox">Digite as letras conforme o aluno soletrar</label>
+      <input id="typeBox" type="text" inputmode="latin" autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false" placeholder="Foque este campo e digite as letras…" />
+      <small style="color:var(--muted)">As letras aparecerão instantaneamente no telão, com verde/vermelho por acerto/erro.</small>
+    </section>
+  </div>
+
+<script>
+/* ==========================
+   1) Banco de palavras
+   ========================== */
+const WORDS = {
+  '3rd': {
+    easy: [ "alone","angel","bad","base","bear","bed","best","better","calf","cook","cub","cup","daisy","deaf","deer","den","desk","door","drink","dust","egg","face","fast","fight","firm","fun","games","glitter","high","ice","keep","kind","kiwi","koala","lake","law","lunch","make","movie","noon","pain","panda","parts","plan","plate","prize","rest","rug","shop","sink","sofa","sport","storm","stove","sure","tag","think","towel","wake","wash","wave","win","yard","zoo"
+        ], // …cole o restante aqui
+    medium:["adult","after","athlete","barking","bedroom","blanket","bounces","busy","catch","charade","chosen","clay","conquer","cylinder","division","donate","drums","eagle","early","eggshell","exercise","faced","famine","female","finally","fluffy","flow","forgive","gallop","garage","governor","grace","goggles","guitar","hide-and-seek","identify","jealous","jumper","kicks","kilos","kitchen","leader","letters","lifestyle","loam","mammals","marathon","meal","mouth","myself","news","option","ostrich","owl","pillow","planning","poem","pool","powerful","prey","priests","pyramid","quantity","quotient","recite","respect","roof","running","scared","score","seals","several","service","shop","shout","sing","soccer","steps","stream","survive","swimming","table","television","tender","totally","training","trumpet","unique","waiting","winner","wolf","zebra"
+        ], // …
+    hard:  ["adolescent","apostle","appointment","badness","became","blue whale","choices","coldest","comic strip","comfortable","communicate","competition","creatures","decorative","divisor","excellent","expressions","freedom","frequency","furniture","geometric","happening","hardworking","hatching","height","homework","inclusive","independent","integrity","kangaroo","largest","length","lioness","llamas","measure","merchants","newborn","nutrient","pharaoh","possible","preparation","purifies","recognize","refrigerator","research","serves","situation","smallest","sometimes","speaking","tenderness","unfortunately","vacation","vacuum"
+        ] // …
+  },
+  '4th': {
+    easy:  ["back","bell","better","bowl","boy","butter","butterfly","camel","cents","change","chocolate","city","coin(s)","crayons","cry","cup","diet","east","eraser","facts","fall","field","food","fork","fun","get on /","get off","gift","girl","glad","glue","go to","gold","happy","hair","heart","help","joy","knife","laugh","like","man","mall","map","meat","moon","mother","music","others","pan","paper","park","pen","penny","pet store","photo","pizza","poor","race","raise","rich","rug","ruler","salad","seed","short","silver","small","smart","soft","sorry","soup","spoon","stamp","sure","thing","trick","water","west","year"
+        ], // …
+    medium:["arrival","athlete","attention","backpack","bakery","bored","brother","buying","cabbage","caring","celebrate","cheer","cheerful","content","collector","definitely","describe","detect","difficult","dishonest","driving","earth","eraser","English book","especially","example","expert","fable","farmer","favorite","finish","flour","fresh","friendly","glasses","grateful","greeting","hobby","helpful","hospital","honey","ingredients","joyful","kind","kindness","kittens","liar","listener","litter","loving","main","marker","neighbor","nutritious","oatmeal","older","patient","position","postcard","prepare","protein","reminder","restaurant","responsible","savory","sheep","shout","teacher","tired","unhappy","uniform","upset","vacation","village","visible","vision","windy","winner","wool"
+        ], // …
+    hard:  ["birthday","calories","carefully","carbohydrates","celebration","chocolate chips","classmates","consumer","countryside","delicious","directly","encouragement","exciting","everything","granddaughter","handwritten","highlighted","ingredients","interrupted","mistakes","occupation","opposite","organization","peripheral","pharmacy","postcard","preaching","preparation","producers","quaternary","remembering","responsible","secondary","sheepfold","shepherd","supermarket","tertiary","tradition","trustworthy","understanding","utensils","vanilla","wheelchair"
+        ] // …
+  },
+  '5th': {
+    easy:  ["add","air","apple","bad","bag","belt","best","body","bush","care","chair","clean","clear","color","cool","cough","cut","dance","deep","drop","dry","end","error","fake","family","fast","fever","felt","filter","fish","friend","found","fun","game","garden","gift","girl","glad","gold","idea","kind","lake","light","lost","made","more","mouth","note","nose","open","pain","real","right","rule","run/ran","same","school","sea","sick","sky","soil","star","stop","storm","sun","teacher","time","trip","try","vomit","warm","wash","waves","wind","wrong","yard"
+        ], // …
+    medium:["adventure","afraid","afternoon","amazing","ancient","another","apologize","average","avoid","bacteria","balloon","barley","calculate","captain","closer","clothes","condition","continue","dangerous","diabetes","diarrhea","discover","disease","easier","evening","explorer","faster","faucet","figurative","findings","forgot","forever","gently","habits","harder","harvest","helpful","history","laughter","lifestyle","machine","mystery","necessary","noticed","options","outside","parasites","peaceful","physical","planet","position","powerful","protect","reasons","refreshing","secret","should","someone","station","stretch","sunlight","thorny","thirsty","viruses","worship","worried"
+        ], // …
+    hard:  ["authorities","carded","choked","cholera","circulatory","contaminated","crowd","cultures","dedication","domesticated","electric","expensive","experiment","fruitful","handmade","imaginary","independence","invention","measuring","metaphor","microscope","mineral","multiply","normally","ongoing","overboard","parables","perseverance","phenomenon","potable","running away","scattering","servant","shearing","strategy","terrifying","thought","thousands","throw up","tornadoes","underwater","vomiting","whirlwinds"
+        ]
+    }
+};
+
+// util: lista concatenada por dificuldade (Auto = easy→medium→hard)
+function flatListForGrade(grade){
+  const g = WORDS[grade];
+  return [...g.easy, ...g.medium, ...g.hard];
+}
+
+/* ==========================
+   2) Estado e persistência
+   ========================== */
+const channel = new BroadcastChannel('bee-sync-v1');
+
+const state = {
+  grade: localStorage.getItem('bee.grade') || '3rd',
+  // índices por grade (salvos)
+  indexByGrade: JSON.parse(localStorage.getItem('bee.idx') || '{"3rd":0,"4th":0,"5th":0}'),
+  typed: ''
+};
+
+function save(){
+  localStorage.setItem('bee.grade', state.grade);
+  localStorage.setItem('bee.idx', JSON.stringify(state.indexByGrade));
+}
+
+function currentList(){ return flatListForGrade(state.grade); }
+function currentIndex(){ 
+  const list = currentList();
+  const idx = Math.max(0, Math.min(list.length-1, state.indexByGrade[state.grade] || 0));
+  state.indexByGrade[state.grade] = idx;
+  return idx;
+}
+function currentWord(){
+  const list = currentList();
+  if(!list.length) return '';
+  return list[currentIndex()];
+}
+
+/* ==========================
+   3) UI refs
+   ========================== */
+const els = {
+  grade3: document.getElementById('grade3'),
+  grade4: document.getElementById('grade4'),
+  grade5: document.getElementById('grade5'),
+  pillGrade: document.getElementById('pillGrade'),
+  pillIndex: document.getElementById('pillIndex'),
+  currentWord: document.getElementById('currentWord'),
+  prevBtn: document.getElementById('prevBtn'),
+  nextBtn: document.getElementById('nextBtn'),
+  typeBox: document.getElementById('typeBox'),
+  resetTyped: document.getElementById('resetTyped'),
+};
+
+function setGrade(g){
+  state.grade = g; save();
+  state.typed = '';
+  updateUI();
+  sendWord();
+  sendTyped(); // limpa digitado no telão
+}
+
+function nextWord(){
+  const list = currentList();
+  if(!list.length) return;
+  let idx = currentIndex();
+  if(idx < list.length - 1){
+    idx++;
+    state.indexByGrade[state.grade] = idx;
+    save();
+  }
+  state.typed = '';
+  updateUI();
+  sendWord();
+  sendTyped();
+}
+
+function prevWord(){
+  const list = currentList();
+  if(!list.length) return;
+  let idx = currentIndex();
+  if(idx > 0){
+    idx--;
+    state.indexByGrade[state.grade] = idx;
+    save();
+  }
+  state.typed = '';
+  updateUI();
+  sendWord();
+  sendTyped();
+}
+
+/* ==========================
+   4) Envio para o telão
+   ========================== */
+function sendWord(){
+  const word = (currentWord() || '').toUpperCase();
+  channel.postMessage({ type:'word', word });
+}
+function sendTyped(){
+  channel.postMessage({ type:'typed', typed: (state.typed || '').toUpperCase() });
+}
+function resetDisplay(){
+  channel.postMessage({ type:'reset' }); // faz o telão voltar a traços
+}
+
+/* ==========================
+   5) Atualização da UI
+   ========================== */
+function updateUI(){
+  const list = currentList();
+  const idx = currentIndex();
+  els.pillGrade.textContent = `Grade: ${state.grade}`;
+  els.pillIndex.textContent = `Progresso: ${Math.min(idx+1, list.length)} / ${list.length || 1}`;
+  els.currentWord.textContent = (currentWord() || '—').toUpperCase();
+
+  // habilitar/desabilitar navegação
+  els.prevBtn.disabled = idx <= 0;
+  els.nextBtn.disabled = idx >= Math.max(0, list.length-1);
+}
+
+/* ==========================
+   6) Eventos
+   ========================== */
+els.grade3.addEventListener('click', ()=> setGrade('3rd'));
+els.grade4.addEventListener('click', ()=> setGrade('4th'));
+els.grade5.addEventListener('click', ()=> setGrade('5th'));
+
+els.nextBtn.addEventListener('click', nextWord);
+els.prevBtn.addEventListener('click', prevWord);
+
+els.resetTyped.addEventListener('click', ()=>{
+  state.typed = '';
+  els.typeBox.value = '';
+  sendTyped();
+});
+
+els.typeBox.addEventListener('input', (e)=>{
+  // mantém apenas A-Z (ignora espaços/acentos)
+  state.typed = (e.target.value || '')
+      .toUpperCase()
+      .replace(/[^A-Z]/g,'');
+  sendTyped();
+});
+
+// atalhos úteis (opcional): seta esquerda/direita para navegar
+window.addEventListener('keydown', (e)=>{
+  if(e.key === 'ArrowRight'){ e.preventDefault(); els.nextBtn.click(); }
+  if(e.key === 'ArrowLeft'){ e.preventDefault(); els.prevBtn.click(); }
+});
+
+/* ==========================
+   7) Inicialização
+   ========================== */
+(function init(){
+  updateUI();
+  sendWord();  // envia a palavra ao abrir
+  resetDisplay();
+  // foca o input para digitar direto
+  setTimeout(()=> els.typeBox.focus(), 200);
+})();
+</script>
+</body>
+</html>
