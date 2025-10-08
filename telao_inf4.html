@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Spelling Bee — Telão (com Infantil 4)</title>
+<meta name="theme-color" content="#4b0082" />
+<style>
+  :root{
+    --bg:#4b0082;
+    --correct:#28a745;
+    --wrong:#dc3545;
+    --text:#ffffff;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%; margin:0; padding:0; overflow:hidden}
+  body{
+    background:var(--bg); color:var(--text); font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;
+    display:flex; flex-direction:column; align-items:center; justify-content:flex-start;
+  }
+  header{
+    width:100%; padding:10px; display:flex; justify-content:center; align-items:center;
+    background:rgba(255,255,255,.1);
+  }
+  #appLogo{max-width:80%; max-height:80px}
+  .stage{
+    flex:1; display:flex; align-items:center; justify-content:center; width:100%;
+    padding:20px; text-align:center;
+  }
+  .word{
+    font-size: clamp(6vw, 12vh, 160px);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    white-space: pre-wrap;
+    line-height: 1.1;
+    font-weight: 900;
+  }
+  .letter{ display:inline-block; }
+  .dash{
+    display:inline-block; width:.6em; height:.1em; background:rgba(255,255,255,.9);
+    margin:.08em; border-radius:6px; animation:blink 1s steps(1) infinite;
+  }
+  @keyframes blink { 50%{ opacity:.25 } }
+
+  /* Flashcard layout */
+  .flash-wrap{ display:flex; flex-direction:column; align-items:center; gap:24px; width:100%; }
+  .flash-img{
+    max-width: min(92vw, 1100px);
+    max-height: min(70vh, 820px);
+    width:auto; height:auto;
+    border-radius:18px; background:#fff; padding:10px;
+    box-shadow: 0 20px 60px rgba(0,0,0,.35);
+  }
+  .result-zone{ min-height:96px; display:flex; align-items:center; justify-content:center }
+  .badge{
+    display:inline-flex; align-items:center; justify-content:center;
+    padding:14px 22px; border-radius:999px; font-size: clamp(18px, 4vw, 38px); font-weight:900;
+  }
+  .badge.ok{ background:#1db954; color:#fff }
+  .badge.no{ background:#e11d48; color:#fff }
+  .badge img{ max-height:74px; width:auto; margin-right:14px }
+  .result-icon{ max-height:92px; }
+
+  /* Confete simples (reuso) */
+  .confetti{
+    position:fixed; top:-10px; width:10px; height:14px; z-index:9999; opacity:0.9;
+    animation: fall linear forwards;
+  }
+  @keyframes fall{
+    to{ transform: translateY(110vh) rotate(720deg); opacity:1;}
+  }
+</style>
+</head>
+<body>
+  <header>
+    <img id="appLogo" src="skylogo2.png" alt="Spelling Bee" />
+  </header>
+
+  <div class="stage">
+    <div id="display" class="word" aria-live="polite"></div>
+  </div>
+
+<script>
+const channel = new BroadcastChannel('bee-sync-v1');
+
+let mode = 'spelling';   // 'spelling' | 'inf4'
+let correctWord = '';
+let typed = '';
+
+let flashFile = '';
+let flashLabel = '';
+let currentResult = null; // true | false | null
+let confettiTimer = null;
+
+function clearDisplay(){
+  const display = document.getElementById('display');
+  display.innerHTML = '';
+}
+
+function renderWaitingDashes(len=10){
+  mode = 'spelling';
+  const display = document.getElementById('display');
+  display.className = 'word';
+  display.innerHTML = '';
+  for(let i=0;i<len;i++){
+    const d = document.createElement('span');
+    d.className = 'dash';
+    display.appendChild(d);
+  }
+}
+
+function renderLetters(){
+  const display = document.getElementById('display');
+  display.className = 'word';
+  display.innerHTML = '';
+  const N = Math.max(correctWord.length, typed.length);
+  for(let i=0;i<N;i++){
+    const span = document.createElement('span');
+    span.className = 'letter';
+    const tc = typed[i] || '';
+    const cc = correctWord[i] || '';
+    span.textContent = tc ? tc : '_';
+    span.style.color = tc ? ((tc === cc) ? 'var(--correct)' : 'var(--wrong)') : 'rgba(255,255,255,.35)';
+    display.appendChild(span);
+  }
+  if(typed.length === correctWord.length && typed === correctWord && correctWord.length>0){
+    burstConfetti();
+  }
+}
+
+/* ---------- FLASHCARDS (Infantil 4) ---------- */
+function renderFlashcard(){
+  mode = 'inf4';
+  const display = document.getElementById('display');
+  display.className = '';
+  display.innerHTML = '';
+
+  const wrap = document.createElement('div');
+  wrap.className = 'flash-wrap';
+
+  const img = document.createElement('img');
+  img.className = 'flash-img';
+  img.alt = flashLabel || 'Flashcard';
+  img.src = flashFile || '';
+  wrap.appendChild(img);
+
+  const zone = document.createElement('div');
+  zone.className = 'result-zone';
+  if(currentResult === true){
+    zone.appendChild(makeBadge(true));
+  }else if(currentResult === false){
+    zone.appendChild(makeBadge(false));
+  } // null => vazio
+  wrap.appendChild(zone);
+
+  display.appendChild(wrap);
+}
+
+function makeBadge(ok){
+  const badge = document.createElement('div');
+  badge.className = 'badge ' + (ok ? 'ok' : 'no');
+
+  const icon = document.createElement('img');
+  icon.className = 'result-icon';
+  const fallback = ok ? 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 24 24" fill="%23fff"><path d="M9 16.2l-3.5-3.5L4 14.2l5 5 11-11-1.5-1.5z"/></svg>'
+                      : 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 24 24" fill="%23fff"><path d="M18.3 5.71L12 12.01 5.7 5.7 4.29 7.11l6.3 6.3-6.3 6.3 1.41 1.41 6.3-6.3 6.29 6.29 1.41-1.41-6.29-6.29 6.29-6.29z"/></svg>';
+  icon.src = (ok ? lastOkIcon : lastNoIcon) || fallback;
+  icon.alt = ok ? 'Acertou' : 'Errou';
+  badge.appendChild(icon);
+
+  const text = document.createElement('span');
+  text.textContent = ok ? 'ACERTOU!' : 'ERROU';
+  badge.appendChild(text);
+
+  return badge;
+}
+
+let lastOkIcon = '';
+let lastNoIcon = '';
+
+function burstConfetti(){
+  if(confettiTimer){ return; }
+  const colors = ['#ffd166','#ef476f','#06d6a0','#118ab2','#e9ff70','#b5179e'];
+  const N = 100;
+  for(let i=0;i<N;i++){
+    const c = document.createElement('div');
+    c.className = 'confetti';
+    c.style.left = Math.random()*100 + 'vw';
+    c.style.background = colors[i % colors.length];
+    c.style.animationDuration = (1.5 + Math.random()*1.5) + 's';
+    c.style.transform = `rotate(${Math.random()*360}deg)`;
+    document.body.appendChild(c);
+    setTimeout(()=> c.remove(), 3200);
+  }
+  confettiTimer = setTimeout(()=>{ confettiTimer = null; }, 3500);
+}
+
+/* ---------- Mensagens ---------- */
+channel.onmessage = (ev)=>{
+  const msg = ev.data || {};
+  if(msg.type === 'word'){
+    // modo spelling
+    correctWord = (msg.word || '').toUpperCase();
+    typed = '';
+    renderWaitingDashes(Math.max(correctWord.length, 10));
+  }
+  if(msg.type === 'typed'){
+    typed = (msg.typed || '').toUpperCase();
+    if(typed.length===0){
+      renderWaitingDashes(Math.max(correctWord.length, 10));
+    }else{
+      renderLetters();
+    }
+  }
+  if(msg.type === 'reset'){
+    typed = '';
+    renderWaitingDashes(Math.max(correctWord.length, 10));
+  }
+
+  if(msg.type === 'flashcard'){
+    // entrar em modo flashcard e exibir imagem
+    flashFile = msg.file || '';
+    flashLabel = msg.label || '';
+    currentResult = null;
+    renderFlashcard();
+  }
+  if(msg.type === 'flash-result'){
+    // result: true, false ou null
+    currentResult = (msg.result === true) ? true : (msg.result === false ? false : null);
+    lastOkIcon = msg.okIcon || lastOkIcon || '';
+    lastNoIcon = msg.noIcon || lastNoIcon || '';
+    if(mode !== 'inf4'){
+      // se vier resultado mas ainda não recebemos o flashcard nesta "rodada", apenas ignora
+      return;
+    }
+    renderFlashcard();
+    // confete também para acerto de flashcard
+    if(currentResult === true){ burstConfetti(); }
+  }
+};
+
+// estado inicial: espera spelling
+renderWaitingDashes(12);
+</script>
+</body>
+</html>

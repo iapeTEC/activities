@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Spelling Bee — Apresentador (com Infantil 4)</title>
+<meta name="theme-color" content="#0b3d91" />
+<style>
+  :root{
+    --bg:#0d47a1;
+    --card:#ffffff;
+    --ink:#0f172a;
+    --muted:#64748b;
+    --accent:#ffd166;
+    --accent2:#a7c957;
+    --danger:#e63946;
+    --radius:18px;
+    --shadow:0 10px 30px rgba(0,0,0,.15);
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%;margin:0}
+  body{
+    background:linear-gradient(180deg,#0d47a1 0%,#082a5e 100%);
+    color:#fff; font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;
+    display:flex; justify-content:center; padding:16px;
+  }
+  .app{width:100%; max-width:980px; display:grid; gap:16px}
+  header{
+    background:rgba(255,255,255,.1); border-radius:var(--radius); padding:12px;
+    display:flex; align-items:center; justify-content:center; box-shadow:var(--shadow)
+  }
+  #logo{max-height:56px}
+  .row{display:flex; gap:10px; flex-wrap:wrap}
+  .card{
+    background:var(--card); color:var(--ink); border-radius:var(--radius); padding:16px; box-shadow:var(--shadow)
+  }
+  .btn{
+    background:var(--accent); border:none; color:#222; padding:12px 16px; border-radius:12px;
+    font-weight:700; cursor:pointer; transition:.2s transform ease; min-width:120px
+  }
+  .btn:hover{transform:translateY(-1px)}
+  .btn.secondary{background:#fff; border:1px solid #e2e8f0}
+  .btn.danger{background:var(--danger); color:#fff}
+  .btn.success{background:var(--accent2)}
+  .group{display:flex; gap:10px; flex-wrap:wrap}
+  label{font-weight:700; color:#1f2937}
+  input[type="text"], input[type="url"]{
+    width:100%; padding:14px; border:1px solid #d1d5db; border-radius:12px; font-size:18px;
+  }
+  .status{display:flex; gap:12px; align-items:center; flex-wrap:wrap; color:#1f2937}
+  .pill{
+    background:#eef2ff; border:1px solid #e5e7eb; border-radius:999px; padding:8px 12px; font-size:14px; font-weight:700
+  }
+  .bigword{
+    font-size:clamp(24px, 4vw, 48px); font-weight:900; letter-spacing:.06em; color:#111; text-transform:uppercase
+  }
+  .muted{ color: var(--muted); font-size: 12px;}
+  .grid2{ display:grid; grid-template-columns:1fr 1fr; gap:12px }
+  .grid2 > div{ display:flex; flex-direction:column; gap:8px }
+</style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <img id="logo" src="skylogo2.png" alt="Spelling Bee Presenter" />
+    </header>
+
+    <section class="card">
+      <div class="group">
+        <button class="btn" id="grade3">3rd Grade</button>
+        <button class="btn" id="grade4">4th Grade</button>
+        <button class="btn" id="grade5">5th Grade</button>
+        <button class="btn" id="inf4">Infantil 4</button>
+      </div>
+      <div class="status" style="margin-top:12px">
+        <span class="pill" id="pillMode">Modo: Spelling</span>
+        <span class="pill" id="pillGrade">Grade: 3rd</span>
+        <span class="pill" id="pillIndex">Progresso: 1 / 1</span>
+      </div>
+    </section>
+
+    <!-- BLOCO: Spelling (3rd/4th/5th) -->
+    <section id="spellingBlock" class="card">
+      <div style="display:grid; gap:10px">
+        <div>
+          <label>Palavra atual</label>
+          <div id="currentWord" class="bigword">—</div>
+        </div>
+        <div class="row">
+          <button class="btn secondary" id="prevBtn">Anterior</button>
+          <button class="btn success" id="nextBtn">Próxima</button>
+          <button class="btn danger" id="resetTyped">Reiniciar digitado</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="typingBlock" class="card">
+      <label for="typeBox">Digite as letras conforme o aluno soletrar</label>
+      <input id="typeBox" type="text" inputmode="latin" autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false" placeholder="Foque este campo e digite as letras…" />
+      <small class="muted">As letras aparecerão no telão, com verde/vermelho por acerto/erro.</small>
+    </section>
+
+    <!-- BLOCO: Infantil 4 (Flashcards) -->
+    <section id="inf4Block" class="card" style="display:none">
+      <div class="grid2">
+        <div>
+          <label>Imagem atual (flashcard)</label>
+          <div style="display:flex; align-items:center; gap:8px">
+            <img id="previewImg" src="" alt="Prévia" style="max-height:120px; border-radius:10px; border:1px solid #e2e8f0; background:#f8fafc; padding:6px">
+            <div>
+              <div class="muted">Arquivo:</div>
+              <div id="previewName" style="font-weight:700">—</div>
+              <div class="muted" id="previewLabel">Label: —</div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <label>Ícones de resultado (opcional)</label>
+          <input id="okIcon" type="url" placeholder="URL/local do check verde (ex.: ok.png)" />
+          <input id="noIcon" type="url" placeholder="URL/local do X vermelho (ex.: x.png)" />
+          <small class="muted">Se vazio, o telão usará estilos nativos (círculo verde / X vermelho).</small>
+        </div>
+      </div>
+
+      <div class="row" style="margin-top:12px">
+        <button class="btn secondary" id="prevCard">Anterior</button>
+        <button class="btn success" id="nextCard">Próximo</button>
+        <button class="btn" id="markOk">✅ Acertou</button>
+        <button class="btn danger" id="markNo">✖️ Errou</button>
+        <button class="btn secondary" id="clearMark">Limpar resultado</button>
+      </div>
+    </section>
+  </div>
+
+<script>
+/* ==========================
+   1) Banco de palavras (Spelling)
+   ========================== */
+const WORDS = {
+  '3rd': { easy: [ "alone","angel","bad","base","bear","bed","best","better","calf","cook","cub","cup","daisy","deaf","deer","den","desk","door","drink","dust","egg","face","fast","fight","firm","fun","games","glitter","high","ice","keep","kind","kiwi","koala","lake","law","lunch","make","movie","noon","pain","panda","parts","plan","plate","prize","rest","rug","shop","sink","sofa","sport","storm","stove","sure","tag","think","towel","wake","wash","wave","win","yard","zoo"
+        ], // …cole o restante aqui
+    medium:["adult","after","athlete","barking","bedroom","blanket","bounces","busy","catch","charade","chosen","clay","conquer","cylinder","division","donate","drums","eagle","early","eggshell","exercise","faced","famine","female","finally","fluffy","flow","forgive","gallop","garage","governor","grace","goggles","guitar","hide-and-seek","identify","jealous","jumper","kicks","kilos","kitchen","leader","letters","lifestyle","loam","mammals","marathon","meal","mouth","myself","news","option","ostrich","owl","pillow","planning","poem","pool","powerful","prey","priests","pyramid","quantity","quotient","recite","respect","roof","running","scared","score","seals","several","service","shop","shout","sing","soccer","steps","stream","survive","swimming","table","television","tender","totally","training","trumpet","unique","waiting","winner","wolf","zebra"
+        ], // …
+    hard:  ["adolescent","apostle","appointment","badness","became","blue whale","choices","coldest","comic strip","comfortable","communicate","competition","creatures","decorative","divisor","excellent","expressions","freedom","frequency","furniture","geometric","happening","hardworking","hatching","height","homework","inclusive","independent","integrity","kangaroo","largest","length","lioness","llamas","measure","merchants","newborn","nutrient","pharaoh","possible","preparation","purifies","recognize","refrigerator","research","serves","situation","smallest","sometimes","speaking","tenderness","unfortunately","vacation","vacuum"
+        ] },
+  '4th': { easy: ["back","bell","better","bowl","boy","butter","butterfly","camel","cents","change","chocolate","city","coin(s)","crayons","cry","cup","diet","east","eraser","facts","fall","field","food","fork","fun","get on /","get off","gift","girl","glad","glue","go to","gold","happy","hair","heart","help","joy","knife","laugh","like","man","mall","map","meat","moon","mother","music","others","pan","paper","park","pen","penny","pet store","photo","pizza","poor","race","raise","rich","rug","ruler","salad","seed","short","silver","small","smart","soft","sorry","soup","spoon","stamp","sure","thing","trick","water","west","year"
+        ], // …
+    medium:["arrival","athlete","attention","backpack","bakery","bored","brother","buying","cabbage","caring","celebrate","cheer","cheerful","content","collector","definitely","describe","detect","difficult","dishonest","driving","earth","eraser","English book","especially","example","expert","fable","farmer","favorite","finish","flour","fresh","friendly","glasses","grateful","greeting","hobby","helpful","hospital","honey","ingredients","joyful","kind","kindness","kittens","liar","listener","litter","loving","main","marker","neighbor","nutritious","oatmeal","older","patient","position","postcard","prepare","protein","reminder","restaurant","responsible","savory","sheep","shout","teacher","tired","unhappy","uniform","upset","vacation","village","visible","vision","windy","winner","wool"
+        ], // …
+    hard:  ["birthday","calories","carefully","carbohydrates","celebration","chocolate chips","classmates","consumer","countryside","delicious","directly","encouragement","exciting","everything","granddaughter","handwritten","highlighted","ingredients","interrupted","mistakes","occupation","opposite","organization","peripheral","pharmacy","postcard","preaching","preparation","producers","quaternary","remembering","responsible","secondary","sheepfold","shepherd","supermarket","tertiary","tradition","trustworthy","understanding","utensils","vanilla","wheelchair"
+        ]  },
+  '5th': { easy:  ["add","air","apple","bad","bag","belt","best","body","bush","care","chair","clean","clear","color","cool","cough","cut","dance","deep","drop","dry","end","error","fake","family","fast","fever","felt","filter","fish","friend","found","fun","game","garden","gift","girl","glad","gold","idea","kind","lake","light","lost","made","more","mouth","note","nose","open","pain","real","right","rule","run/ran","same","school","sea","sick","sky","soil","star","stop","storm","sun","teacher","time","trip","try","vomit","warm","wash","waves","wind","wrong","yard"
+        ], // …
+    medium:["adventure","afraid","afternoon","amazing","ancient","another","apologize","average","avoid","bacteria","balloon","barley","calculate","captain","closer","clothes","condition","continue","dangerous","diabetes","diarrhea","discover","disease","easier","evening","explorer","faster","faucet","figurative","findings","forgot","forever","gently","habits","harder","harvest","helpful","history","laughter","lifestyle","machine","mystery","necessary","noticed","options","outside","parasites","peaceful","physical","planet","position","powerful","protect","reasons","refreshing","secret","should","someone","station","stretch","sunlight","thorny","thirsty","viruses","worship","worried"
+        ], // …
+    hard:  ["authorities","carded","choked","cholera","circulatory","contaminated","crowd","cultures","dedication","domesticated","electric","expensive","experiment","fruitful","handmade","imaginary","independence","invention","measuring","metaphor","microscope","mineral","multiply","normally","ongoing","overboard","parables","perseverance","phenomenon","potable","running away","scattering","servant","shearing","strategy","terrifying","thought","thousands","throw up","tornadoes","underwater","vomiting","whirlwinds"
+        ] }
+};
+
+function flatListForGrade(grade){
+  const g = WORDS[grade];
+  return [...(g?.easy||[]), ...(g?.medium||[]), ...(g?.hard||[])];
+}
+
+/* ==========================
+   2) Banco de FLASHCARDS (Infantil 4)
+   Preencha esta lista com seus arquivos reais (nome da imagem e rótulo opcional).
+   Você pode gerar automaticamente a partir do seu mapa pag-XXX.jpg -> LABEL.
+   Exemplo com 5 itens; substitua/expanda à vontade.
+   ========================== */
+const FLASHCARDS = [
+  
+  { file:"pag-002.jpg", label:"BOY" },
+  { file:"pag-003.jpg", label:"GIRL" },
+  { file:"pag-004.jpg", label:"SUNNY" },
+  { file:"pag-005.jpg", label:"CLOUDY" },
+  { file:"pag-006.jpg", label:"RAINY" },
+  { file:"pag-007.jpg", label:"SNOWY" },
+  { file:"pag-008.jpg", label:"MOMMY" },
+  { file:"pag-009.jpg", label:"DADDY" },
+  { file:"pag-010.jpg", label:"BABY" },
+  { file:"pag-011.jpg", label:"GRANDPA" },
+  { file:"pag-012.jpg", label:"GRANDMA" },
+  { file:"pag-013.jpg", label:"JESUS" },
+  { file:"pag-014.jpg", label:"FAMILY" },
+  { file:"pag-015.jpg", label:"HAPPY" },
+  { file:"pag-016.jpg", label:"HAPPY" },
+  { file:"pag-017.jpg", label:"HAPPY" },
+  { file:"pag-018.jpg", label:"HAPPY" },
+  { file:"pag-019.jpg", label:"HAPPY" },
+  { file:"pag-020.jpg", label:"HAPPY" },
+  { file:"pag-021.jpg", label:"BLOCKS" },
+  { file:"pag-022.jpg", label:"BALL" },
+  { file:"pag-023.jpg", label:"CAR" },
+  { file:"pag-024.jpg", label:"HOUSE" },
+  { file:"pag-025.jpg", label:"APARTMENT" },
+  { file:"pag-026.jpg", label:"DOG" },
+  { file:"pag-027.jpg", label:"BIRD" },
+  { file:"pag-028.jpg", label:"CAT" },
+  { file:"pag-029.jpg", label:"FISH" },
+  { file:"pag-030.jpg", label:"SCHOOL" },
+  { file:"pag-031.jpg", label:"TV" },
+  { file:"pag-032.jpg", label:"BATHROOM" },
+  { file:"pag-033.jpg", label:"BEDROOM" },
+  { file:"pag-034.jpg", label:"KITCHEN" },
+  { file:"pag-035.jpg", label:"YELLOW" },
+  { file:"pag-036.jpg", label:"PINK" },
+  { file:"pag-037.jpg", label:"GREEN" },
+  { file:"pag-038.jpg", label:"BLUE" },
+  { file:"pag-039.jpg", label:"RED" },
+  { file:"pag-040.jpg", label:"TEDDY BEAR" },
+  { file:"pag-041.jpg", label:"BANANA" },
+  { file:"pag-042.jpg", label:"TOMATO" },
+  { file:"pag-043.jpg", label:"APPLE" },
+  { file:"pag-044.jpg", label:"STRAWBERRY" },
+  { file:"pag-045.jpg", label:"GRAPES" },
+  { file:"pag-046.jpg", label:"ORANGE" },
+  { file:"pag-047.jpg", label:"SHOWER" },
+  { file:"pag-048.jpg", label:"SOAP" },
+  { file:"pag-049.jpg", label:"TOWEL" },
+  { file:"pag-050.jpg", label:"HAPPY" },
+  { file:"pag-051.jpg", label:"HAPPY" },
+  { file:"pag-052.jpg", label:"HAPPY" },
+  { file:"pag-053.jpg", label:"HOT" },
+  { file:"pag-054.jpg", label:"COLD" },
+  { file:"pag-055.jpg", label:"SHAMPOO" },
+  { file:"pag-056.jpg", label:"WASHING MACHINE" },
+  { file:"pag-057.jpg", label:"BROOM" },
+  { file:"pag-058.jpg", label:"T-SHIRT" },
+  { file:"pag-059.jpg", label:"DRESS" },
+  { file:"pag-060.jpg", label:"PANTS" },
+  { file:"pag-061.jpg", label:"SHORTS" }
+];
+
+
+/* ==========================
+   3) Estado e persistência
+   ========================== */
+const channel = new BroadcastChannel('bee-sync-v1');
+const state = {
+  mode: localStorage.getItem('bee.mode') || 'spelling', // 'spelling' | 'inf4'
+  grade: localStorage.getItem('bee.grade') || '3rd',
+  indexByGrade: JSON.parse(localStorage.getItem('bee.idx') || '{"3rd":0,"4th":0,"5th":0}'),
+  idxInf4: parseInt(localStorage.getItem('bee.inf4idx') || '0', 10),
+  typed: '',
+  okIcon: localStorage.getItem('bee.okIcon') || '',
+  noIcon: localStorage.getItem('bee.noIcon') || ''
+};
+
+function save(){
+  localStorage.setItem('bee.mode', state.mode);
+  localStorage.setItem('bee.grade', state.grade);
+  localStorage.setItem('bee.idx', JSON.stringify(state.indexByGrade));
+  localStorage.setItem('bee.inf4idx', String(state.idxInf4));
+  localStorage.setItem('bee.okIcon', state.okIcon || '');
+  localStorage.setItem('bee.noIcon', state.noIcon || '');
+}
+
+function currentList(){ return flatListForGrade(state.grade); }
+function currentIndex(){
+  const list = currentList();
+  const idx = Math.max(0, Math.min(list.length-1, state.indexByGrade[state.grade] || 0));
+  state.indexByGrade[state.grade] = idx;
+  return idx;
+}
+function currentWord(){
+  const list = currentList();
+  if(!list.length) return '';
+  return list[currentIndex()];
+}
+function currentCard(){
+  const idx = Math.max(0, Math.min(FLASHCARDS.length-1, state.idxInf4));
+  state.idxInf4 = idx;
+  return FLASHCARDS[idx] || null;
+}
+
+/* ==========================
+   4) UI refs
+   ========================== */
+const els = {
+  grade3: document.getElementById('grade3'),
+  grade4: document.getElementById('grade4'),
+  grade5: document.getElementById('grade5'),
+  inf4:   document.getElementById('inf4'),
+  pillMode: document.getElementById('pillMode'),
+  pillGrade: document.getElementById('pillGrade'),
+  pillIndex: document.getElementById('pillIndex'),
+
+  // spelling
+  spellingBlock: document.getElementById('spellingBlock'),
+  typingBlock:   document.getElementById('typingBlock'),
+  currentWord: document.getElementById('currentWord'),
+  prevBtn: document.getElementById('prevBtn'),
+  nextBtn: document.getElementById('nextBtn'),
+  typeBox: document.getElementById('typeBox'),
+  resetTyped: document.getElementById('resetTyped'),
+
+  // inf4
+  inf4Block: document.getElementById('inf4Block'),
+  previewImg: document.getElementById('previewImg'),
+  previewName: document.getElementById('previewName'),
+  previewLabel: document.getElementById('previewLabel'),
+  prevCard: document.getElementById('prevCard'),
+  nextCard: document.getElementById('nextCard'),
+  markOk: document.getElementById('markOk'),
+  markNo: document.getElementById('markNo'),
+  clearMark: document.getElementById('clearMark'),
+  okIcon: document.getElementById('okIcon'),
+  noIcon: document.getElementById('noIcon')
+};
+
+/* ==========================
+   5) Troca de modo/grade
+   ========================== */
+function setMode(mode){
+  state.mode = mode; save();
+  if(mode === 'spelling'){
+    els.spellingBlock.style.display = '';
+    els.typingBlock.style.display = '';
+    els.inf4Block.style.display = 'none';
+    setGrade(state.grade); // atualiza palavra e envia ao telão
+  }else{
+    els.spellingBlock.style.display = 'none';
+    els.typingBlock.style.display = 'none';
+    els.inf4Block.style.display = '';
+    sendFlashcard(); // exibe o flashcard atual no telão
+  }
+  updateUI();
+}
+
+function setGrade(g){
+  state.grade = g; save();
+  state.typed = '';
+  updateUI();
+  sendWord();
+  sendTyped();
+}
+
+function nextWord(){
+  const list = currentList();
+  if(!list.length) return;
+  let idx = currentIndex();
+  if(idx < list.length - 1){
+    idx++;
+    state.indexByGrade[state.grade] = idx;
+    save();
+  }
+  state.typed = '';
+  updateUI();
+  sendWord();
+  sendTyped();
+}
+
+function prevWord(){
+  const list = currentList();
+  if(!list.length) return;
+  let idx = currentIndex();
+  if(idx > 0){
+    idx--;
+    state.indexByGrade[state.grade] = idx;
+    save();
+  }
+  state.typed = '';
+  updateUI();
+  sendWord();
+  sendTyped();
+}
+
+/* ==========================
+   6) Infantil 4 (flashcards): navegação e envio
+   ========================== */
+function updateFlashPreview(){
+  const c = currentCard();
+  if(!c){ els.previewImg.src=''; els.previewName.textContent='—'; els.previewLabel.textContent='Label: —'; return; }
+  els.previewImg.src = c.file;
+  els.previewName.textContent = c.file;
+  els.previewLabel.textContent = 'Label: ' + (c.label || '—');
+}
+function nextCard(){
+  if(state.idxInf4 < FLASHCARDS.length - 1){
+    state.idxInf4++;
+    save();
+  }
+  updateUI();
+  sendFlashcard();
+}
+function prevCard(){
+  if(state.idxInf4 > 0){
+    state.idxInf4--;
+    save();
+  }
+  updateUI();
+  sendFlashcard();
+}
+function sendFlashcard(){
+  const c = currentCard();
+  channel.postMessage({ type:'flashcard', file: c?.file || '', label: c?.label || '' });
+  // limpa resultado anterior
+  channel.postMessage({ type:'flash-result', result: null });
+}
+
+/* ==========================
+   7) Envio para o telão (spelling)
+   ========================== */
+function sendWord(){
+  const word = (currentWord() || '').toUpperCase();
+  channel.postMessage({ type:'word', word });
+}
+function sendTyped(){
+  channel.postMessage({ type:'typed', typed: (state.typed || '').toUpperCase() });
+}
+
+/* ==========================
+   8) UI refresh
+   ========================== */
+function updateUI(){
+  // modo + progresso
+  els.pillMode.textContent = 'Modo: ' + (state.mode==='spelling'?'Spelling':'Infantil 4');
+  if(state.mode==='spelling'){
+    const list = currentList();
+    const idx = currentIndex();
+    els.pillGrade.textContent = `Grade: ${state.grade}`;
+    els.pillIndex.textContent = `Progresso: ${Math.min(idx+1, list.length)} / ${list.length || 1}`;
+    els.currentWord.textContent = (currentWord() || '—').toUpperCase();
+    els.prevBtn.disabled = idx <= 0;
+    els.nextBtn.disabled = idx >= Math.max(0, (currentList().length-1));
+  }else{
+    els.pillGrade.textContent = `Grade: Infantil 4`;
+    els.pillIndex.textContent = `Progresso: ${Math.min(state.idxInf4+1, FLASHCARDS.length)} / ${FLASHCARDS.length || 1}`;
+    updateFlashPreview();
+    els.prevCard.disabled = state.idxInf4 <= 0;
+    els.nextCard.disabled = state.idxInf4 >= Math.max(0, FLASHCARDS.length-1);
+  }
+  // persistir ícones
+  els.okIcon.value = state.okIcon || '';
+  els.noIcon.value = state.noIcon || '';
+}
+
+/* ==========================
+   9) Eventos
+   ========================== */
+// seleção de modo/grade
+els.grade3.addEventListener('click', ()=>{ setMode('spelling'); setGrade('3rd'); });
+els.grade4.addEventListener('click', ()=>{ setMode('spelling'); setGrade('4th'); });
+els.grade5.addEventListener('click', ()=>{ setMode('spelling'); setGrade('5th'); });
+els.inf4  .addEventListener('click', ()=> setMode('inf4'));
+
+// navegação spelling
+els.nextBtn.addEventListener('click', nextWord);
+els.prevBtn.addEventListener('click', prevWord);
+
+// digitado spelling
+els.resetTyped.addEventListener('click', ()=>{ state.typed = ''; els.typeBox.value = ''; sendTyped(); });
+els.typeBox.addEventListener('input', (e)=>{
+  state.typed = (e.target.value || '')
+      .toUpperCase()
+      .replace(/[^A-Z]/g,'');
+  sendTyped();
+});
+
+// atalhos teclado (spelling)
+window.addEventListener('keydown', (e)=>{
+  if(state.mode==='spelling'){
+    if(e.key === 'ArrowRight'){ e.preventDefault(); els.nextBtn.click(); }
+    if(e.key === 'ArrowLeft'){ e.preventDefault(); els.prevBtn.click(); }
+  }else{
+    if(e.key === 'ArrowRight'){ e.preventDefault(); els.nextCard.click(); }
+    if(e.key === 'ArrowLeft'){ e.preventDefault(); els.prevCard.click(); }
+    if(e.key === '1'){ e.preventDefault(); els.markOk.click(); }
+    if(e.key === '2'){ e.preventDefault(); els.markNo.click(); }
+  }
+});
+
+// infantil 4: botões
+els.nextCard.addEventListener('click', nextCard);
+els.prevCard.addEventListener('click', prevCard);
+els.clearMark.addEventListener('click', ()=> channel.postMessage({ type:'flash-result', result: null }));
+els.markOk  .addEventListener('click', ()=> channel.postMessage({ type:'flash-result', result: true,  okIcon: state.okIcon || els.okIcon.value || '', noIcon: state.noIcon || els.noIcon.value || '' }));
+els.markNo  .addEventListener('click', ()=> channel.postMessage({ type:'flash-result', result: false, okIcon: state.okIcon || els.okIcon.value || '', noIcon: state.noIcon || els.noIcon.value || '' }));
+
+// salvar caminhos dos ícones quando usuário editar
+els.okIcon.addEventListener('change', (e)=>{ state.okIcon = e.target.value.trim(); save(); });
+els.noIcon.addEventListener('change', (e)=>{ state.noIcon = e.target.value.trim(); save(); });
+
+/* ==========================
+   10) Inicialização
+   ========================== */
+(function init(){
+  updateUI();
+  if(state.mode==='spelling'){
+    setMode('spelling');
+    setGrade(state.grade);
+    setTimeout(()=> els.typeBox.focus(), 200);
+  }else{
+    setMode('inf4');
+  }
+})();
+</script>
+</body>
+</html>
