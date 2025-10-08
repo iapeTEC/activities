@@ -2,182 +2,256 @@
 <html lang="pt-BR">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Spelling Bee Trainer — 3rd–5th Grade</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Spelling Bee Trainer</title>
   <meta name="theme-color" content="#93c5fd" />
+  
+  <!--
+    ⚠️ FONTE INFANTIL
+    Para usar uma fonte como "KB Zipa Dee Doo Dah", coloque os arquivos em /fonts e ajuste a URL abaixo.
+    Exemplo: .woff2 e .woff. Mantenha o nome 'KidsFont' para funcionar no CSS.
+  -->
+  <style>
+    @font-face {
+      font-family: 'KidsFont';
+      src: url('fonts/kidsfont.woff2') format('woff2'),
+           url('fonts/kidsfont.woff') format('woff');
+      font-display: swap;
+    }
+  </style>
+
   <style>
     :root{
-      --bg:#fffdf0;           /* fundo amarelinho leve, lembrando abelhas e mel */
+      --bg:#fffdf0;           /* fundo amarelinho leve */
       --card:#ffffff;         /* cartões */
       --ink:#0f172a;          /* texto principal */
       --muted:#64748b;        /* texto secundário */
       --accent:#93c5fd;       /* azul bebê */
       --accent-2:#fde68a;     /* amarelo suave */
-      --accent-3:#c7f9cc;     /* verde suave */
-      --danger:#ef4444;       /* vermelho para avisos */
+      --accent-3:#a89391;     /* marrom claro (vibe giz) */
       --shadow:0 10px 30px rgba(15,23,42,.08);
       --radius:22px;
+      --tap:48px;             /* alvo mínimo de toque */
+      --maxw:560px;           /* largura tipo app mobile */
+    }
+
+    /* Suporte para safe area do iOS */
+    @supports(padding: max(0px)) {
+      :root {
+        --safe-area-inset-left: env(safe-area-inset-left, 0px);
+        --safe-area-inset-right: env(safe-area-inset-right, 0px);
+      }
     }
 
     *{box-sizing:border-box}
-    html,body{height:100%}
+    html,body{height:100%; margin:0; padding:0; overflow-x:hidden}
     body{
-      margin:0; background:var(--bg); color:var(--ink); font-family:ui-rounded, system-ui, -apple-system, Segoe UI, Roboto, Noto Sans, Ubuntu, Cantarell, "Helvetica Neue", Arial, "Apple Color Emoji", "Segoe UI Emoji";
-      display:grid; grid-template-columns: 240px 1fr; grid-template-rows:auto 1fr auto; gap:16px; padding:48px; /* Aumentado o padding para deixar mais espaço ao redor para imagens de abelhas, colmeias e mel */
+      background:var(--bg); color:var(--ink);
+      font-family:KidsFont, ui-rounded, system-ui, -apple-system, Segoe UI, Roboto, Noto Sans, Ubuntu, Cantarell, "Helvetica Neue", Arial;
+      -webkit-text-size-adjust:100%;
+      display:flex; justify-content:center;
+      /* Adiciona padding lateral respeitando safe area */
+      padding-left: max(16px, var(--safe-area-inset-left, 16px));
+      padding-right: max(16px, var(--safe-area-inset-right, 16px));
     }
 
+    /* Contêiner principal no estilo de aplicativo */
+    .app{
+      width:100%; max-width:var(--maxw); padding:16px 0; display:grid; grid-template-rows:auto auto 1fr auto; gap:12px;
+    }
+
+    /* HEADER com espaço para PNG centralizado */
     header{
-      grid-column:1 / -1; display:flex; align-items:center; gap:12px; flex-wrap:wrap;
-      background:var(--card); box-shadow:var(--shadow); border-radius:var(--radius); padding:14px 16px;
+      background:var(--accent-2); box-shadow:var(--shadow); border-radius:var(--radius);
+      padding:10px 12px; display:flex; align-items:center; justify-content:center; min-height:72px;
     }
+    /*
+      🔽 Troque o src abaixo pela sua arte PNG (sem emojis).
+      Tamanho recomendado do arquivo: ~600×140px com fundo transparente.
+    */
+    #appLogo{max-width:100%; max-height:48px; height:auto; display:block}
 
-    header h1{font-size:20px; margin:0; letter-spacing:.3px}
-
+    /* PILL de seletor de classe + status */
     .pill{
-      display:inline-flex; align-items:center; gap:8px; padding:10px 14px; border-radius:999px; background:#f1f5f9; border:1px solid #e2e8f0; font-size:14px;
+      background:var(--accent-3); border:1px solid var(--accent-3); border-radius:999px; padding:10px 12px;
+      display:flex; align-items:center; gap:8px; justify-content:space-between;
     }
-    select, button, .btn{
-      appearance:none; border:1px solid #e2e8f0; background:white; padding:12px 14px; border-radius:14px; font-size:15px; color:var(--ink);
+
+    /* Grade + status ficam em um card separado logo abaixo do header */
+    .toolbar{display:grid; gap:10px}
+
+    select, button{
+      appearance:none; border:1px solid #e2e8f0; background:white; padding:12px 14px; border-radius:14px; font-size:16px; color:var(--ink);
       box-shadow:var(--shadow); cursor:pointer; transition:.2s transform ease, .2s box-shadow ease;
+      min-height:var(--tap); touch-action:manipulation; -webkit-tap-highlight-color: transparent;
+      width:100%;
     }
     select:focus, button:focus{outline:3px solid var(--accent); outline-offset:2px}
     button:hover{transform:translateY(-1px)}
+    button:not(.ghost){background:var(--accent-2); border-color:var(--accent-2)}
 
-    /* Adicionando mais cor e vibração para crianças */
-    button:not(.ghost){background:var(--accent-2); border-color:var(--accent-2); color:var(--ink);} /* Botões amarelos vibrantes */
-    .pill{background:var(--accent-3); border-color:var(--accent-3);} /* Pills verdes suaves */
-    .tag.easy{background:var(--accent-3); color:var(--ink);}
-    .tag.medium{background:var(--accent); color:var(--ink);}
-    .tag.hard{background:var(--accent-2); color:var(--ink);}
-    .board{background:linear-gradient(180deg, #ffffff 0%, var(--bg) 100%);} /* Gradiente mais suave integrando com o fundo */
+    /* BOARD principal */
+    .board{background:linear-gradient(180deg,#fff 0%,var(--bg) 100%); border-radius:var(--radius); box-shadow:var(--shadow); padding:16px; display:grid; gap:12px}
 
-    /* Sidebar */
-    aside{
-      grid-row:2; grid-column:1; background:var(--card); border-radius:var(--radius); box-shadow:var(--shadow); padding:16px;
-      display:flex; flex-direction:column; gap:10px; position:sticky; top:48px; height:fit-content; /* Ajustado top para padding maior */
-    }
-    .section-title{font-weight:700; font-size:14px; color:var(--muted); text-transform:uppercase; letter-spacing:.08em}
-    .difficulty-btn{display:flex; align-items:center; justify-content:space-between; gap:8px}
-    .tag{padding:6px 10px; border-radius:999px; font-weight:700; font-size:12px}
-    .difficulty-btn.active{border-color:#60a5fa; background:var(--accent-2);}
+    .row{display:flex; gap:10px; flex-wrap:wrap; justify-content:center;}
 
-    /* Main */
-    main{
-      grid-row:2; grid-column:2; display:grid; gap:16px; align-content:start;
-    }
-
-    .board{
-      border-radius:var(--radius); box-shadow:var(--shadow); padding:20px; display:grid; gap:16px;
-    }
-
-    .row{display:flex; gap:12px; flex-wrap:wrap; align-items:center}
+    /* Botões de navegação com PNGs (sem emoji) */
+    .btn-icon{display:flex; align-items:center; justify-content:center; gap:10px; flex: none; width: 60px; height: 60px; border-radius: 50%;}
+    .icon{width:22px; height:22px; display:inline-block}
+    /*
+      Coloque seus PNGs em /icons e ajuste os src nos <img> abaixo:
+      esquerda.png | direita.png | ouvir.png | revelar.png | soletrar.png
+      Sugestão: exportar a 44px -> o CSS reduz para 22px mantendo nitidez.
+    */
 
     .bigbox{
       border:2px dashed #cbd5e1; border-radius:18px; background:#f8fafc; display:flex; align-items:center; justify-content:center;
-      min-height:160px; font-size:56px; font-weight:900; letter-spacing:2px; color:#334155;
+      min-height:28vh; font-weight:900; letter-spacing:2px; color:#334155;
+      font-size:clamp(28px, 9vw, 64px);
     }
 
-    .badge{display:inline-flex; align-items:center; gap:8px; font-size:13px; padding:8px 12px; border-radius:999px; background:#eef2ff; border:1px solid #e5e7eb}
+    footer.small{color:var(--muted); font-size:13px}
 
-    .controls button{font-weight:700}
-    .controls .ghost{background:#f8fafc}
-
-    .nav{display:flex; gap:10px}
-
-    .kbd{border:1px solid #e2e8f0; border-bottom-width:3px; padding:2px 8px; border-radius:8px; background:white; font-weight:700; font-size:12px}
-
-    footer.small{color:var(--muted); font-size:12px}
-
-    /* Novo footer para o símbolo da escola no canto inferior direito */
-    .global-footer {
-      grid-column:1 / -1; grid-row:3; display:flex; justify-content:flex-end; align-items:center;
-      background:var(--card); box-shadow:var(--shadow); border-radius:var(--radius); padding:14px 16px;
-      color:var(--muted); font-size:12px;
+    /* Barra de dificuldade (apenas TAGs centralizadas) */
+    .difficulty{
+      background:var(--card); border-radius:var(--radius); box-shadow:var(--shadow); padding:12px; display:flex; gap:10px; justify-content:space-around; flex-wrap:wrap;
     }
-    .global-footer .school-symbol-placeholder {
-      width:100px; height:100px; background:#f1f5f9; border:1px dashed #cbd5e1; border-radius:12px;
-      display:flex; align-items:center; justify-content:center; text-align:center;
+    .diff-btn{
+      flex:none; display:flex; align-items:center; justify-content:center; width:60px; height:60px; border-radius:50%; border:1px solid #e2e8f0; background:#fff; padding:0;
+    }
+    .tag{
+      display:flex; align-items:center; justify-content:center; width:100%; height:100%; border-radius:50%; font-weight:800; font-size:12px;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .tag.easy{background:var(--accent-2)}
+    .tag.medium{background:var(--accent-2)}          /* corrigido: usava --accent2 por engano */
+    .tag.hard{background:var(--accent-2)}
+    .diff-btn.active{outline:3px solid #60a5fa}
+
+    /* Status (dificuldade atual + progresso) */
+    .status{
+      display:flex; gap:10px; align-items:center; justify-content:space-between;
+    }
+    .status .tag{min-width:84px}
+
+    /* ===== Pills com imagem preenchendo toda a área ===== */
+    .controls { gap: 10px; display:flex; flex-wrap:wrap; justify-content:space-around; }
+    .controls .btn-pill {
+      padding: 0;                 /* sem padding: a imagem encosta nas extremidades visuais */
+      border-radius: 999px;       /* formato pill */
+      overflow: hidden;           /* evita qualquer vazamento da imagem */
+      background: #fff;           /* fundo neutro sob PNG transparente */
+      min-height: 56px;           /* altura confortável */
+      display: flex; align-items: center; justify-content: center;
+      border: 1px solid #e2e8f0;  /* contorno suave igual ao resto */
+      box-shadow: var(--shadow); flex:1;
+    }
+    .controls .btn-pill img.pill-img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;        /* preenche ao máximo, mantendo proporção */
+      display: block;
+      padding: 6px 10px;          /* quase até a borda; ajuste para +/− margem */
     }
 
-    /* Mobile */
-    @media (max-width: 840px){
-      body{grid-template-columns:1fr; padding:24px;} /* Padding menor em mobile para não exagerar */
-      aside{order:2; position:static; top:0;}
-      main{order:3}
-      .global-footer{justify-content:center;}
+    /* Footer com logo da escola (sem container, centralizado) */
+    .global-footer{
+      background:var(--card); box-shadow:var(--shadow); border-radius:var(--radius);
+      padding:12px; display:flex; justify-content:center; align-items:center
+    }
+    .global-footer img{width:48px; height:auto; display:block}
+
+    /* Acessibilidade visualmente escondido (para rótulos que não aparecem na UI) */
+    .sr-only{position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0}
+
+    /* Ajustes finos para telas muito pequenas */
+    @media (max-width:420px){
+      .status{flex-direction:column; align-items:stretch}
+      .bigbox{min-height:24vh}
+      .controls .btn-pill { min-height: 60px; }
     }
   </style>
 </head>
 <body>
-  <header>
-    <h1>🐝 Spelling Bee Trainer</h1>
-    <div class="pill">
-      <strong>Classe:</strong>
-      <select id="gradeSelect" aria-label="Escolher classe">
-        <option value="3rd">3rd Grade</option>
-        <option value="4th">4th Grade</option>
-        <option value="5th">5th Grade</option>
-      </select>
-    </div>
-    <div class="pill" id="statusPill" title="Dificuldade atual">
-      <span class="tag easy" id="difficultyTag">easy</span>
-      <span id="progressText">1 / 1</span>
-    </div>
-    <div class="pill" title="Atalhos de teclado">
-      <span class="kbd">←</span> anterior
-      <span style="width:8px"></span>
-      <span class="kbd">→</span> próxima
-      <span style="width:8px"></span>
-      <span class="kbd">R</span> ouvir
-      <span style="width:8px"></span>
-      <span class="kbd">V</span> revelar
-      <span style="width:8px"></span>
-      <span class="kbd">S</span> soletrar
-    </div>
-  </header>
+  <div class="app">
+    <header>
+      <!-- PNG DO TÍTULO DO APP: substitua o src pela sua arte (sem emojis) -->
+      <img id="appLogo" src="app-title.png" alt="Spelling Bee" />
+    </header>
 
-  <aside aria-label="Nível de dificuldade">
-    <div class="section-title">Dificuldade</div>
-    <button class="difficulty-btn" data-diff="easy" id="btnEasy">
-      <span>Easy</span>
-      <span class="tag easy">EASY</span>
-    </button>
-    <button class="difficulty-btn" data-diff="medium" id="btnMedium">
-      <span>Medium</span>
-      <span class="tag medium">MEDIUM</span>
-    </button>
-    <button class="difficulty-btn" data-diff="hard" id="btnHard">
-      <span>Hard</span>
-      <span class="tag hard">HARD</span>
-    </button>
-    <button class="difficulty-btn ghost" data-diff="auto" id="btnAuto" title="Sem seleção: segue Easy → Medium → Hard">
-      <span>Auto (Easy→Medium→Hard)</span>
-    </button>
-  </aside>
-
-  <main>
-    <section class="board" aria-live="polite">
-      <div class="row">
-        <button id="prevBtn" title="Palavra anterior">⬅️ Palavra anterior</button>
-        <button id="nextBtn" title="Próxima palavra">Próxima palavra ➡️</button>
+    <section class="toolbar">
+      <div class="pill">
+        <label for="gradeSelect"><strong>Classe:</strong></label>
+        <select id="gradeSelect" aria-label="Escolher classe">
+          <option value="3rd">3rd Grade</option>
+          <option value="4th">4th Grade</option>
+          <option value="5th">5th Grade</option>
+        </select>
       </div>
 
-      <div class="bigbox" id="mysteryBox" aria-label="Caixa de palavra">?</div>
-
-      <div class="row controls">
-        <button id="hearBtn" class="ghost">Ouvir novamente a palavra 🔊</button>
-        <button id="revealBtn">Revelar a palavra 👀</button>
-        <button id="spellBtn">Soletrar a palavra 🔡</button>
+      <div class="status">
+        <span class="tag easy" id="difficultyTag">easy</span>
+        <span id="progressText">1 / 1</span>
       </div>
-
-      <footer class="small" id="infoText">Selecione uma classe e clique em “Próxima palavra”. A palavra será falada em inglês e ficará oculta.</footer>
     </section>
-  </main>
 
-  <footer class="global-footer">
-    <!-- Espaço para o símbolo da escola no lado direito -->
-    <div class="school-symbol-placeholder">Coloque o símbolo da escola aqui (ex: <img src="school-logo.png">)</div>
-  </footer>
+    <!-- DIFICULDADE: apenas TAG centralizada (sem texto duplicado) -->
+    <nav class="difficulty" aria-label="Nível de dificuldade">
+      <button class="diff-btn" data-diff="easy" id="btnEasy" aria-label="Easy">
+        <span class="tag easy">EASY</span>
+      </button>
+      <button class="diff-btn" data-diff="medium" id="btnMedium" aria-label="Medium">
+        <span class="tag medium">MEDIUM</span>
+      </button>
+      <button class="diff-btn" data-diff="hard" id="btnHard" aria-label="Hard">
+        <span class="tag hard">HARD</span>
+      </button>
+      <button class="diff-btn" data-diff="auto" id="btnAuto" aria-label="Automático">
+        <span class="tag">AUTO</span>
+      </button>
+    </nav>
+
+    <main>
+      <section class="board" aria-live="polite">
+        <div class="row">
+          <!-- Substitua os src pelos seus PNGs de setas -->
+          <button id="prevBtn" class="btn-icon" title="Palavra anterior" aria-label="Palavra anterior">
+            <img class="icon" src="esquerda.png" alt="Anterior" />
+            <span class="sr-only">Palavra anterior</span>
+          </button>
+          <button id="nextBtn" class="btn-icon" title="Próxima palavra" aria-label="Próxima palavra">
+            <img class="icon" src="direita.png" alt="Próxima" />
+            <span class="sr-only">Próxima palavra</span>
+          </button>
+        </div>
+
+        <div class="bigbox" id="mysteryBox" aria-label="Caixa de palavra">?</div>
+
+        <!-- Pills preenchidos por imagens -->
+        <div class="controls">
+          <!-- Troque os src pelos seus PNGs (arte horizontal) -->
+          <button id="hearBtn" class="btn-pill ghost" aria-label="Ouvir novamente a palavra">
+            <img class="pill-img" src="ouvir.png" alt="Ouvir novamente a palavra" />
+          </button>
+
+          <button id="revealBtn" class="btn-pill" aria-label="Revelar a palavra">
+            <img class="pill-img" src="revelar.png" alt="Revelar a palavra" />
+          </button>
+
+          <button id="spellBtn" class="btn-pill" aria-label="Soletrar a palavra">
+            <img class="pill-img" src="soletrar.png" alt="Soletrar a palavra" />
+          </button>
+        </div>
+
+        <footer class="small" id="infoText">Selecione uma classe e toque em "Próxima palavra". A palavra será falada em inglês e ficará oculta.</footer>
+      </section>
+    </main>
+
+    <footer class="global-footer">
+      <!-- LOGO DA ESCOLA (sem container, centralizada) -->
+      <img src="school-logo.png" alt="School logo" loading="lazy" decoding="async" width="48" height="48" />
+    </footer>
+  </div>
 
   <script>
     // =====================
@@ -236,8 +310,7 @@
       btnEasy: document.getElementById('btnEasy'),
       btnMedium: document.getElementById('btnMedium'),
       btnHard: document.getElementById('btnHard'),
-      btnAuto: document.getElementById('btnAuto'),
-      statusPill: document.getElementById('statusPill')
+      btnAuto: document.getElementById('btnAuto')
     };
 
     const state = {
@@ -285,16 +358,15 @@
       // progress
       els.progressText.textContent = `${Math.min(state.index+1, list.length)} / ${list.length}`;
 
-      // difficulty buttons active
+      // dificuldade ativa (borda/outline)
       [els.btnEasy, els.btnMedium, els.btnHard, els.btnAuto].forEach(b=>b.classList.remove('active'));
       ({easy:els.btnEasy, medium:els.btnMedium, hard:els.btnHard, auto:els.btnAuto}[state.mode]).classList.add('active');
 
-      // disable nav edges
+      // desabilitar bordas de navegação
       els.prev.disabled = state.index<=0;
       els.next.disabled = state.index>=list.length-1;
     }
 
-    // Persist
     function savePrefs(){
       localStorage.setItem('sb.grade', state.grade);
       localStorage.setItem('sb.mode', state.mode);
@@ -305,17 +377,13 @@
     // ============================
     function loadVoices(){
       state.voices = window.speechSynthesis.getVoices();
-      // Prefer voices en-US/en-GB; try child-friendly Google voices if present
       const preferred = state.voices.filter(v => v.lang && v.lang.toLowerCase().startsWith('en'));
-      // Try to pick a natural voice
       state.voice = preferred.find(v=>/Google US English|Microsoft.+(Aria|Guy|Jenny|Ryan)/i.test(v.name))
                   || preferred.find(v=>/US|GB|English/i.test(v.name))
                   || preferred[0]
                   || null;
     }
-
-    window.speechSynthesis.onvoiceschanged = loadVoices;
-    loadVoices();
+    window.speechSynthesis.onvoiceschanged = loadVoices; loadVoices();
 
     function speak(text, {rate=0.9, pitch=1.0}={}){
       if(!('speechSynthesis' in window)){
@@ -325,23 +393,18 @@
       window.speechSynthesis.cancel();
       const u = new SpeechSynthesisUtterance(text);
       u.lang = (state.voice && state.voice.lang) || 'en-US';
-      u.voice = state.voice;
-      u.rate = rate; u.pitch = pitch; u.volume = 1.0;
+      u.voice = state.voice; u.rate = rate; u.pitch = pitch; u.volume = 1.0;
       window.speechSynthesis.speak(u);
     }
 
     function normalizeForSpelling(w){
-      // Preserve letters; describe spaces and hyphens; drop parentheses
       const tokens = [];
       for(const ch of w){
         if(/[a-z]/i.test(ch)) tokens.push(ch.toUpperCase());
-        else if(ch===' '){ tokens.push('space'); }
-        else if(ch==='-'){ tokens.push('hyphen'); }
-        else if(ch==='/' ){ tokens.push('slash'); }
-        else if(ch==='\'' ){ tokens.push("apostrophe"); }
-        else if(ch==='"' ){ /* skip */ }
-        else if(ch==='(' || ch===')'){ /* skip */ }
-        else { /* ignore other punctuation */ }
+        else if(ch===' ') tokens.push('space');
+        else if(ch==='-') tokens.push('hyphen');
+        else if(ch==='/') tokens.push('slash');
+        else if(ch==='\'') tokens.push('apostrophe');
       }
       return tokens;
     }
@@ -350,22 +413,15 @@
       if(!('speechSynthesis' in window)) return;
       window.speechSynthesis.cancel();
       const tokens = normalizeForSpelling(word);
-      // Chain utterances to create spacing
-      let i = 0;
-      const sayNext = ()=>{
-        if(i>=tokens.length) return;
-        const u = new SpeechSynthesisUtterance(tokens[i]);
-        u.lang = (state.voice && state.voice.lang) || 'en-US';
-        u.voice = state.voice; u.rate = 0.78; u.pitch = 1.05;
-        u.onend = ()=>{ setTimeout(()=>{ i++; sayNext(); }, 120); };
-        window.speechSynthesis.speak(u);
-      };
-      sayNext();
+      // iOS se comporta melhor com um único utterance longo (pausas por vírgula)
+      const u = new SpeechSynthesisUtterance(tokens.join(', '));
+      u.lang = (state.voice && state.voice.lang) || 'en-US';
+      u.voice = state.voice; u.rate = 0.78; u.pitch = 1.05;
+      window.speechSynthesis.speak(u);
     }
 
     function warn(msg){
-      els.infoText.textContent = msg;
-      els.infoText.style.color = '#0f766e';
+      document.getElementById('infoText').textContent = msg;
     }
 
     // ============================
@@ -376,9 +432,7 @@
       const next = Math.max(0, Math.min(list.length-1, state.index + delta));
       if(next!==state.index){
         state.index = next; state.revealed = false; updateUI();
-        // fala automática
-        const w = currentWord();
-        speak(w);
+        speak(currentWord());
       }
     }
 
@@ -386,43 +440,25 @@
     function chooseMode(m){ state.mode = m; state.index = 0; state.revealed = false; savePrefs(); updateUI(); }
 
     // ============================
-    // 5) EVENTOS UI + ATALHOS
+    // 5) EVENTOS
     // ============================
-    els.gradeSelect.addEventListener('change', e=>{ chooseGrade(e.target.value); });
+    els.gradeSelect.addEventListener('change', e=> chooseGrade(e.target.value));
     els.btnEasy.addEventListener('click', ()=>chooseMode('easy'));
     els.btnMedium.addEventListener('click', ()=>chooseMode('medium'));
     els.btnHard.addEventListener('click', ()=>chooseMode('hard'));
     els.btnAuto.addEventListener('click', ()=>chooseMode('auto'));
 
-    els.next.addEventListener('click', ()=>{ if(state.index===0 && !state.revealed) els.infoText.textContent=''; go(+1); });
-    els.prev.addEventListener('click', ()=>go(-1));
+    document.getElementById('nextBtn').addEventListener('click', ()=>{ go(+1); });
+    document.getElementById('prevBtn').addEventListener('click', ()=>{ go(-1); });
 
-    // Ouvir novamente
-    els.hear.addEventListener('click', ()=>{ speak(currentWord()); });
-
-    // Revelar
-    els.reveal.addEventListener('click', ()=>{ state.revealed = true; updateUI(); });
-
-    // Soletrar
-    els.spell.addEventListener('click', ()=>{ spellOut(currentWord()); });
-
-    // Atalhos
-    window.addEventListener('keydown', (e)=>{
-      if(['INPUT','TEXTAREA','SELECT'].includes(document.activeElement.tagName)) return;
-      if(e.key==='ArrowRight'){ e.preventDefault(); go(+1); }
-      if(e.key==='ArrowLeft'){ e.preventDefault(); go(-1); }
-      if(e.key.toLowerCase()==='r'){ e.preventDefault(); speak(currentWord()); }
-      if(e.key.toLowerCase()==='v'){ e.preventDefault(); state.revealed=true; updateUI(); }
-      if(e.key.toLowerCase()==='s'){ e.preventDefault(); spellOut(currentWord()); }
-    });
+    document.getElementById('hearBtn').addEventListener('click', ()=> speak(currentWord()));
+    document.getElementById('revealBtn').addEventListener('click', ()=>{ state.revealed = true; updateUI(); });
+    document.getElementById('spellBtn').addEventListener('click', ()=> spellOut(currentWord()));
 
     // Primeira carga
     (function init(){
-      els.gradeSelect.value = state.grade;
-      updateUI();
-      // Ao clicar em Próxima pela 1ª vez: falar automaticamente
-      els.next.addEventListener('click', ()=>{ speak(currentWord()); });
-      warn('Dica: clique em “Próxima palavra” — a palavra será falada e ficará oculta até você revelar.');
+      els.gradeSelect.value = state.grade; updateUI();
+      warn('Dica: toque em "Próxima palavra" — a palavra será falada e ficará oculta até você revelar.');
     })();
   </script>
 </body>
