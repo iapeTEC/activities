@@ -122,7 +122,7 @@
     });
   })();
 
-  // ====== Dados (lista em parênteses exactamente) ======
+  // ====== Dados (lista exatamente com parênteses) ======
   const QUESTIONS = [
     { name:"Ana Carla", prompt:"(Ana Carla) When was the first electric light invented?", suggested:9 },
     { name:"Quézia", prompt:"(Quézia) Who created the first power station?", suggested:10 },
@@ -148,14 +148,14 @@
     { name:"Geovana Torres", prompt:"(Geovana Torres) What did Sir Charles invent?", suggested:7 },
     { name:"Geicielly Alves", prompt:"(Geicielly Alves) Who invented the first commercially successful light bulb?", suggested:9 },
     { name:"Maria Luiza", prompt:"(Maria Luiza) What happened to electricity use during World War II?", suggested:8 },
-    { name:"Marcio", prompt:"(Marcio) Who was the first person to describe electricity?", suggested:8 },
-    { name:"Teacher Bruno", prompt:"(Teacher Bruno) — (incomplete sentence)", suggested:0 },
+    { name:"Marcio", prompt:"(Marcio) Who was the first person to observe and record an electrical phenomenon (static electricity)?", suggested:8 },
     { name:"João Marcos", prompt:"(João Marcos) What are the advantages and disadvantages of solar energy?", suggested:10 },
   ];
 
   // ====== Config ======
   const DEFAULT_MINUTES=30;
-  const ENDPOINT='https://script.google.com/macros/s/REPLACE_WITH_YOUR_DEPLOY_ID/exec'; // troque pelo seu
+  // SEU ENDPOINT ANTIGO (usado anteriormente)
+  const ENDPOINT='https://script.google.com/macros/s/AKfycbzWovrGHidKrd0HCXmH5BgGn-7_D-T_-VhWQ1IKXh68W1cvp4Q1s9d8WVLckKvy5fn96g/exec';
 
   // ====== Estado ======
   let started=false, ended=false;
@@ -188,7 +188,7 @@
   function lockForm(disabled=true){ [...form.elements].forEach(el=>el.disabled=disabled) }
   lockForm(true);
 
-  // ====== Render dinámico dos cartões ======
+  // ====== Render dos cartões ======
   function renderCards(){
     const frag=document.createDocumentFragment();
     QUESTIONS.forEach((q,i)=>{
@@ -261,53 +261,97 @@
       return { name:q.name, prompt:q.prompt, answer:ans.trim(), score };
     });
   }
-  function gradeSummary(data){
-    // aqui “nota” é manual; ainda calculo apenas média e itens preenchidos
-    const filled=data.filter(d=>d.answer.length>0).length;
-    const avg = data.length? (data.reduce((a,c)=>a+(Number(c.score)||0),0)/data.length) : 0;
-    return { filled, total:data.length, avg };
-  }
+
+  // >>> Payload compatível com o script antigo <<<
   function collectPayload(reason='manual'){
-    const rows=collectAnswersOnly();
-    const sum=gradeSummary(rows);
-    const now=new Date();
-    const studentNameSafe=(nameInput.value||'').trim()||'(no name)';
+    const rows = collectAnswersOnly(); // {name, prompt, answer, score}
+    const now = new Date();
+    const studentNameSafe = (nameInput.value || '').trim() || '(no name)';
+
+    const answers = {}; // sem múltipla escolha aqui
+    const writing = {};
+    rows.forEach((r, idx) => {
+      const key = 'q' + (idx + 1);
+      writing[key] = { prompt: r.prompt, answer: r.answer, score: r.score };
+    });
+
+    const total = rows.length;
+    const sumScore = rows.reduce((a,c)=> a + (Number(c.score)||0), 0);
+    const avgScore = total ? (sumScore/total) : 0;
+
     return {
-      testId:(testIdInput.value.trim()||'Perguntas-Electricidade-v1'),
-      studentName:studentNameSafe,
-      startISO:startTime?.toISOString()||null,
-      endISO:now.toISOString(),
-      durationSec:startTime?Math.round((now-startTime)/1000):null,
+      testId: (testIdInput.value.trim() || 'Perguntas-Electricidade-v1'),
+      studentName: studentNameSafe,
+      startISO: startTime?.toISOString() || null,
+      endISO: now.toISOString(),
+      durationSec: startTime ? Math.round((now - startTime)/1000) : null,
       reason,
-      score:{ filled:sum.filled, total:sum.total, average:sum.avg },
-      items: rows,
-      focus:{ tabSwitches, blurCount, totalBlurMs, copyCount, pasteCount, findCount }
+      score: {
+        totalCorrect: 0,
+        totalPossible: 0,
+        byDifficulty: { easy:0, medium:0, hard:0 },
+        possibleByDifficulty: { easy:0, medium:0, hard:0 },
+        filled: rows.filter(r=>r.answer.length>0).length,
+        average: avgScore
+      },
+      answers,   // objeto (compatível)
+      writing,   // respostas abertas
+      focus: { tabSwitches, blurCount, totalBlurMs, copyCount, pasteCount, findCount }
     };
   }
+
+  // >>> CSV compatível com o original <<<
   function toCSV(payload){
-    const header=['timestamp','testId','studentName','startISO','endISO','durationSec','filled','total','average','tabSwitches','blurCount','totalBlurMs','copyCount','pasteCount','findCount'];
-    const row=[new Date().toISOString(), payload.testId, JSON.stringify(payload.studentName), payload.startISO, payload.endISO, payload.durationSec, payload.score.filled, payload.score.total, payload.score.average, payload.focus.tabSwitches, payload.focus.blurCount, payload.focus.totalBlurMs, payload.focus.copyCount, payload.focus.pasteCount, payload.focus.findCount];
-    // linhas itemizadas
-    const itemHeader=['name','prompt','score','answer'];
-    const itemsCsv = payload.items.map(it=>[it.name, JSON.stringify(it.prompt), it.score, JSON.stringify(it.answer)].join(',')).join('\n');
-    return header.join(',')+'\n'+row.join(',')+'\n\n'+'name,prompt,score,answer\n'+itemsCsv;
+    const header = [
+      'timestamp','testId','studentName','startISO','endISO','durationSec',
+      'correct','possible','easyCorrect','mediumCorrect','hardCorrect',
+      'tabSwitches','blurCount','totalBlurMs','copyCount','pasteCount','findCount',
+      'answers','writing'
+    ];
+    const row = [
+      new Date().toISOString(),
+      payload.testId,
+      JSON.stringify(payload.studentName),
+      payload.startISO,
+      payload.endISO,
+      payload.durationSec,
+      payload.score.totalCorrect,
+      payload.score.totalPossible,
+      payload.score.byDifficulty.easy,
+      payload.score.byDifficulty.medium,
+      payload.score.byDifficulty.hard,
+      payload.focus.tabSwitches,
+      payload.focus.blurCount,
+      payload.focus.totalBlurMs,
+      payload.focus.copyCount,
+      payload.focus.pasteCount,
+      payload.focus.findCount,
+      JSON.stringify(payload.answers),
+      JSON.stringify(payload.writing)
+    ];
+    return header.join(',') + '\n' + row.join(',');
   }
+
   async function sendResults(payload){
     try{
       const res=await fetch(ENDPOINT,{ method:'POST', headers:{'Content-Type':'text/plain'}, body:JSON.stringify(payload) });
       return { posted:res.ok, status:res.status };
     }catch(err){ console.warn('POST failed',err); return { posted:false, error:String(err) } }
   }
+
   function downloadCSV(name, csv){
     const blob=new Blob([csv],{type:'text/csv'});
     const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
     a.download=`${(name||'anonymous').replace(/\s+/g,'_')}_Perguntas_Electricidade.csv`; document.body.appendChild(a); a.click(); a.remove();
   }
+
+  function lockForm(disabled=true){ [...form.elements].forEach(el=>el.disabled=disabled) }
   function lockTest(){
     lockForm(true); submitBtn.disabled=true; downloadCsvBtn.disabled=false;
     document.getElementById('notes').textContent='Locked. Respostas registradas.';
     document.querySelectorAll('section.card').forEach(sec=>sec.classList.add('strike'));
   }
+
   async function finalize(reason){
     if(ended) return; ended=true; endTime=new Date(); clearInterval(timerInterval);
     const payload=collectPayload(reason);
@@ -328,7 +372,7 @@
   });
   resetBtn.addEventListener('click', ()=>{ localStorage.removeItem(DRAFT_KEY); location.reload(); });
 
-  // ====== Início da prova ======
+  // ====== Início ======
   function startTest(){
     started=true; startTime=new Date();
     nameInput.disabled=true; testIdInput.disabled=true;
@@ -344,8 +388,8 @@
       if(k==='f11'){ e.preventDefault(); showToast('F11 bloqueado.'); }
     },{capture:true});
     document.addEventListener('contextmenu',(e)=> e.preventDefault());
-    document.addEventListener('fullscreenchange',()=>{ /* não re-força para evitar popups */ });
-    loadDraft(); // carrega rascunho salvo (se existir)
+    document.addEventListener('fullscreenchange',()=>{ /* não re-força */ });
+    loadDraft();
   }
 
   // ====== Anti-cheat ======
@@ -379,6 +423,7 @@
   });
 
   // ====== Modal ======
+  function isValidFullName(n){ const t=(n||'').trim().replace(/\s+/g,' '); const parts=t.split(' ').filter(p=>p.length>=2); return parts.length>=2 }
   modalName.addEventListener('input', ()=>{ acceptBtnEl.disabled=!isValidFullName(modalName.value) });
   document.getElementById('acceptBtn').addEventListener('click', async ()=>{
     const fullName=(modalName.value||'').trim().replace(/\s+/g,' ');
@@ -389,14 +434,12 @@
   });
   document.getElementById('declineBtn').addEventListener('click', ()=>{ window.location.href='about:blank' });
 
-  // Bloqueios enquanto modal aberto
+  // bloqueio enquanto modal existe
   document.addEventListener('keydown',(e)=>{
     if(document.getElementById('consentBackdrop')){
       const k=e.key.toLowerCase(); if((e.ctrlKey||e.metaKey)&&(k==='w'||k==='r'||k==='p'||k==='s'||k==='f')) e.preventDefault(); if(k==='f11') e.preventDefault();
     }
   });
-
-  // bloqueio global do menu de contexto
   document.addEventListener('contextmenu',(e)=> e.preventDefault());
   </script>
 </body>
