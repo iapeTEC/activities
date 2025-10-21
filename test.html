@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="light">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Recepção de Perguntas — História da Eletricidade</title>
+  <meta name="description" content="Formulário com anti-cola, timer e registro para recepção e monitoramento das perguntas." />
+  <style>
+    :root{--bg:#fff;--card:#fff;--text:#0b1220;--muted:#6b7280;--accent:#1f6feb;--ok:#16a34a;--ok-weak:#dcfce7;--warn:#b45309;--bad:#dc2626;--border:rgba(0,0,0,.12);--shadow:rgba(0,0,0,.08)}
+    html[data-theme="dark"]{--bg:#000;--card:#0b0b0f;--text:#f5f7ff;--muted:#a3a7b7;--accent:#7c9bff;--ok:#22c55e;--ok-weak:#062b14;--warn:#ffb02e;--bad:#ff6b6b;--border:rgba(255,255,255,.14);--shadow:rgba(0,0,0,.55)}
+    *{box-sizing:border-box} body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Arial,sans-serif;background:var(--bg);color:var(--text)}
+    a{color:var(--accent);text-decoration:none}
+    header{position:sticky;top:0;z-index:10;background:rgba(255,255,255,.75);backdrop-filter:saturate(1.1) blur(8px);border-bottom:1px solid var(--border)}
+    html[data-theme="dark"] header{background:rgba(0,0,0,.7)}
+    .wrap{max-width:1000px;margin:0 auto;padding:16px}
+    h1{margin:0 0 6px;font-size:clamp(22px,2.6vw,32px)} .sub{color:var(--muted)}
+    .bar{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;margin-top:10px}
+    input[type=text]{background:transparent;border:1px solid var(--border);color:var(--text);padding:10px 12px;border-radius:10px;min-width:220px;outline:none}
+    input[type=text]::placeholder{color:var(--muted)} button{background:var(--accent);border:none;color:#fff;padding:10px 14px;border-radius:12px;font-weight:700;cursor:pointer;box-shadow:0 6px 20px var(--shadow)}
+    button[disabled]{opacity:.5;cursor:not-allowed} .icon-btn{background:transparent;color:var(--text);border:1px solid var(--border);box-shadow:none}
+    .pill{display:inline-flex;gap:8px;align-items:center;border:1px solid var(--border);padding:8px 12px;border-radius:999px}
+    .grid{display:grid;gap:16px;grid-template-columns:1fr} @media(min-width:880px){.grid{grid-template-columns:1fr 1fr}}
+    .card{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:16px;box-shadow:0 8px 30px var(--shadow)}
+    .card h3{margin:0 0 6px;font-size:18px} .muted{color:var(--muted)}
+    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+    .badge{padding:4px 10px;border-radius:999px;border:1px solid var(--border);background:transparent;font-size:12px}
+    .small{font-size:12px}
+    .writing{min-height:110px;width:100%;resize:vertical;background:transparent;border:1px solid var(--border);color:var(--text);padding:10px;border-radius:10px}
+    .range{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;margin-top:8px}
+    .strike{opacity:.6;filter:grayscale(.3)} footer{border-top:1px solid var(--border);margin-top:24px;padding:20px;color:var(--muted)}
+    .notice{border:1px dashed var(--border);padding:10px;border-radius:10px;color:var(--muted)}
+    .hidden{display:none!important} .timer{font-weight:800;letter-spacing:.5px}
+    .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:16px;background:#111827;color:#fff;padding:10px 14px;border-radius:12px;font-size:14px;box-shadow:0 8px 30px rgba(0,0,0,.35);z-index:9998;display:none}
+    .toast.show{display:block}
+    /* Modal */
+    .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.85);display:flex;align-items:center;justify-content:center;z-index:9999}
+    .modal{background:var(--card);color:var(--text);width:min(680px,92vw);border:1px solid var(--border);border-radius:16px;padding:18px;box-shadow:0 20px 60px var(--shadow)}
+    .modal h2{margin:0 0 8px} .modal .rules{background:rgba(0,0,0,.03);border:1px dashed var(--border);padding:12px;border-radius:12px;margin-top:10px}
+    .modal footer{display:flex;gap:10px;justify-content:flex-end;border:0;padding:0;margin-top:14px}
+    .btn-ghost{background:transparent;color:var(--text);border:1px solid var(--border);box-shadow:none}
+  </style>
+</head>
+<body>
+  <!-- Modal -->
+  <div id="consentBackdrop" class="modal-backdrop" aria-modal="true" role="dialog">
+    <div class="modal">
+      <h2>Recepção de Perguntas</h2>
+      <div class="muted">Digite seu <b>nome completo</b> e clique em “Aceitar e começar”. O cronômetro iniciará.</div>
+      <label for="modalName" class="muted" style="display:block;margin:10px 0 6px">Nome completo</label>
+      <input id="modalName" type="text" placeholder="Ex.: Maria Fernanda Silva" autocomplete="name" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:10px;background:transparent;color:var(--text)" />
+      <div class="rules">
+        <ul>
+          <li>Ativaremos <b>tela cheia</b> (se o navegador permitir).</li>
+          <li>Trocas de aba/janela são <b>registradas</b>.</li>
+          <li><b>Copiar/colar/recortar</b> e <b>Ctrl/Cmd+F</b> são bloqueados.</li>
+          <li>Envie ao terminar; caso contrário, o envio é automático ao fim do tempo.</li>
+        </ul>
+      </div>
+      <footer>
+        <button id="declineBtn" class="btn-ghost">Sair</button>
+        <button id="acceptBtn" disabled>Aceitar e começar</button>
+      </footer>
+    </div>
+  </div>
+
+  <div id="toast" class="toast" aria-live="polite">Ação registrada.</div>
+
+  <header>
+    <div class="wrap">
+      <div class="row" style="justify-content:space-between;align-items:center">
+        <div>
+          <h1>História da Eletricidade — Recepção de Perguntas</h1>
+          <div class="sub">Monitoramento + Anti-cola + CSV</div>
+        </div>
+        <button id="themeToggle" class="icon-btn">🌓 Tema</button>
+      </div>
+      <div class="bar">
+        <div class="row">
+          <input id="studentName" type="text" placeholder="Nome (preenche ao aceitar)" autocomplete="name" />
+          <span class="pill"><strong>Tempo:</strong> <span id="timer" class="timer">30:00</span></span>
+          <span id="focusFlag" class="badge">Foco OK</span>
+          <span id="tabCount" class="badge">Abas: 0</span>
+        </div>
+        <div class="row">
+          <input id="testId" type="text" value="Perguntas-Electricidade-v1" />
+          <button id="startBtn" class="hidden">Iniciar</button>
+          <button id="submitBtn" disabled>Enviar</button>
+        </div>
+      </div>
+      <div class="notice small" id="notes">O envio é automático ao final do tempo.</div>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <form id="quizForm" class="grid" autocomplete="off">
+      <!-- Os cartões serão inseridos via JS -->
+    </form>
+
+    <div class="card">
+      <h3>Resultados & Admin</h3>
+      <p class="muted small">Somente professor.</p>
+      <div class="row" style="margin-top:10px">
+        <button id="downloadCsvBtn" disabled>Download CSV</button>
+        <button id="resetBtn" class="icon-btn">Reset</button>
+      </div>
+    </div>
+
+    <footer>
+      <div class="small">Designed by MF Bruno — versão recepção de perguntas.</div>
+    </footer>
+  </main>
+
+  <script>
+  // ====== Tema ======
+  (function(){
+    const root=document.documentElement;
+    const saved=localStorage.getItem('theme')||'light';
+    root.setAttribute('data-theme',saved);
+    document.getElementById('themeToggle').addEventListener('click',()=>{
+      const next=root.getAttribute('data-theme')==='light'?'dark':'light';
+      root.setAttribute('data-theme',next); localStorage.setItem('theme',next);
+    });
+  })();
+
+  // ====== Dados (lista em parênteses exactamente) ======
+  const QUESTIONS = [
+    { name:"Ana Carla", prompt:"(Ana Carla) When was the first electric light invented?", suggested:9 },
+    { name:"Quézia", prompt:"(Quézia) Who created the first power station?", suggested:10 },
+    { name:"João Scala", prompt:"(João Scala) Which philosopher noticed that rubbing amber with wool produces static electricity?", suggested:7 },
+    { name:"Sophia Hellen", prompt:"(Sophia Hellen) Who invented the steam turbine (that converts thermal energy into mechanical energy)?", suggested:9 },
+    { name:"Elisa Silva", prompt:"(Elisa Silva) Who coined the term “electricity,” and from which word did it come?", suggested:8 },
+    { name:"Anna Beatriz", prompt:"(Anna Beatriz) When did William Gilbert coin the term “electricity” from the Greek word elektron?", suggested:9 },
+    { name:"Guilherme França", prompt:"(Guilherme França) When did Thomas Edison introduce his light bulb?", suggested:9 },
+    { name:"Thiago Militão", prompt:"(Thiago Militão) When did nuclear power start to be developed, and in which country did this happen?", suggested:9 },
+    { name:"Lívia Lima", prompt:"(Lívia Lima) What did Sir Charles invent?", suggested:7 },
+    { name:"Lívia Régis", prompt:"(Lívia Régis) Who designed the first hydroelectric power station?", suggested:9 },
+    { name:"Henry Ferreira", prompt:"(Henry Ferreira) Who designed the first power station?", suggested:9 },
+    { name:"Denzel", prompt:"(Denzel) In which year was the electric light created?", suggested:8 },
+    { name:"Júlia Vieira", prompt:"(Júlia Vieira) Who discovered electricity, and why is it used around the world?", suggested:6 },
+    { name:"Marina Pereira", prompt:"(Marina Pereira) Where was the oldest record of people noticing electricity found?", suggested:8 },
+    { name:"Emanuel", prompt:"(Emanuel) What was the first invention that caused a worldwide change?", suggested:5 },
+    { name:"Nicolas Adriel", prompt:"(Nicolas Adriel) In what year did sustainable energy production begin? (a) 1844 (b) 1839 (c) 1913 (d) 1857", suggested:10 },
+    { name:"Emanuella", prompt:"(Emanuella) Who presented the first commercially famous light bulb?", suggested:8 },
+    { name:"Clarisse Alves", prompt:"(Clarisse Alves) In which year did nuclear energy start to be produced, and in which country?", suggested:8 },
+    { name:"Thales Cardoso", prompt:"(Thales Cardoso) When did Humphry Davy invent an electric light?", suggested:9 },
+    { name:"Rebeca Luiza", prompt:"(Rebeca Luiza) Who invented the flashlight?", suggested:8 },
+    { name:"Pedro Henrique", prompt:"(Pedro Henrique) When did light-bulb sales begin?", suggested:6 },
+    { name:"Geovana Torres", prompt:"(Geovana Torres) What did Sir Charles invent?", suggested:7 },
+    { name:"Geicielly Alves", prompt:"(Geicielly Alves) Who invented the first commercially successful light bulb?", suggested:9 },
+    { name:"Maria Luiza", prompt:"(Maria Luiza) What happened to electricity use during World War II?", suggested:8 },
+    { name:"Marcio", prompt:"(Marcio) Who was the first person to describe electricity?", suggested:8 },
+    { name:"Teacher Bruno", prompt:"(Teacher Bruno) — (incomplete sentence)", suggested:0 },
+    { name:"João Marcos", prompt:"(João Marcos) What are the advantages and disadvantages of solar energy?", suggested:10 },
+  ];
+
+  // ====== Config ======
+  const DEFAULT_MINUTES=30;
+  const ENDPOINT='https://script.google.com/macros/s/REPLACE_WITH_YOUR_DEPLOY_ID/exec'; // troque pelo seu
+
+  // ====== Estado ======
+  let started=false, ended=false;
+  let startTime=null, endTime=null, timerInterval=null;
+  let secondsLeft = DEFAULT_MINUTES*60;
+
+  // Anti-cheat
+  let tabSwitches=0, blurCount=0, isBlurred=false, blurStart=null, totalBlurMs=0;
+  let copyCount=0, pasteCount=0, findCount=0;
+
+  // Offset após popup
+  let acceptTs=null; const GRACE_MS=2500; let systemPopupOffsetApplied=false;
+
+  // ====== DOM ======
+  const startBtn=document.getElementById('startBtn');
+  const submitBtn=document.getElementById('submitBtn');
+  const timerEl=document.getElementById('timer');
+  const form=document.getElementById('quizForm');
+  const nameInput=document.getElementById('studentName');
+  const testIdInput=document.getElementById('testId');
+  const focusFlag=document.getElementById('focusFlag');
+  const tabCountEl=document.getElementById('tabCount');
+  const downloadCsvBtn=document.getElementById('downloadCsvBtn'); const resetBtn=document.getElementById('resetBtn');
+  const toast=document.getElementById('toast');
+  const consentBackdrop=document.getElementById('consentBackdrop');
+  const modalName=document.getElementById('modalName'); const acceptBtnEl=document.getElementById('acceptBtn');
+  document.body.style.overflow='hidden';
+
+  // Desabilita form até iniciar
+  function lockForm(disabled=true){ [...form.elements].forEach(el=>el.disabled=disabled) }
+  lockForm(true);
+
+  // ====== Render dinámico dos cartões ======
+  function renderCards(){
+    const frag=document.createDocumentFragment();
+    QUESTIONS.forEach((q,i)=>{
+      const sec=document.createElement('section');
+      sec.className='card'; sec.dataset.index=i;
+      sec.innerHTML=`
+        <h3>${q.prompt}</h3>
+        <div class="muted small">Escreva sua resposta (pontos principais, datas, nomes, conceitos).</div>
+        <textarea class="writing" name="ans_${i}" placeholder="Digite aqui..."></textarea>
+        <div class="range">
+          <label class="small muted">Nota (0–10): <output id="out_${i}">${q.suggested??0}</output></label>
+          <input type="range" min="0" max="10" step="1" value="${q.suggested??0}" name="score_${i}" aria-label="Nota para ${q.name}" />
+        </div>
+        <div class="small muted" id="status_${i}" aria-live="polite">Status: aguardando…</div>
+      `;
+      frag.appendChild(sec);
+    });
+    form.appendChild(frag);
+
+    // liga sliders/textarea
+    QUESTIONS.forEach((_,i)=>{
+      const rng=form.querySelector(`[name=score_${i}]`);
+      const out=document.getElementById(`out_${i}`);
+      const ta=form.querySelector(`[name=ans_${i}]`);
+      const st=document.getElementById(`status_${i}`);
+      rng.addEventListener('input',()=>{ out.textContent=rng.value; st.textContent='Status: em edição'; });
+      ta.addEventListener('input',()=>{ st.textContent= ta.value.trim()? 'Status: entregue (rascunho salvo localmente)' : 'Status: aguardando…'; saveDraft(); });
+    });
+  }
+  renderCards();
+
+  // ====== Draft local ======
+  const DRAFT_KEY='recepcao_perguntas_draft_v1';
+  function saveDraft(){
+    if(!started) return;
+    const data = collectAnswersOnly();
+    localStorage.setItem(DRAFT_KEY, JSON.stringify({ testId:testIdInput.value, name:nameInput.value, data }));
+  }
+  function loadDraft(){
+    try{
+      const raw=localStorage.getItem(DRAFT_KEY); if(!raw) return;
+      const {testId,name,data}=JSON.parse(raw||'{}');
+      if(testId) testIdInput.value=testId; if(name) nameInput.value=name;
+      (data||[]).forEach((row,i)=>{
+        const ta=form.querySelector(`[name=ans_${i}]`); const rng=form.querySelector(`[name=score_${i}]`); const out=document.getElementById(`out_${i}`); const st=document.getElementById(`status_${i}`);
+        if(ta) ta.value=row.answer||''; if(rng){ rng.value=row.score??0; if(out) out.textContent=rng.value; }
+        if(st) st.textContent = (row.answer||'').trim()? 'Status: entregue (rascunho salvo localmente)' : 'Status: aguardando…';
+      });
+    }catch(e){}
+  }
+
+  // ====== Util ======
+  function showToast(msg){ toast.textContent=msg||'Ação registrada.'; toast.classList.add('show'); setTimeout(()=>toast.classList.remove('show'),1500) }
+  function fmt(secs){ const m=String(Math.floor(secs/60)).padStart(2,'0'); const s=String(secs%60).padStart(2,'0'); return `${m}:${s}` }
+  function tick(){ secondsLeft--; if(secondsLeft<0) secondsLeft=0; timerEl.textContent=fmt(secondsLeft); if(secondsLeft===0) autoSubmit('time') }
+  function startTimer(){ clearInterval(timerInterval); timerInterval=setInterval(tick,1000) }
+  async function goFullscreen(){ try{ if(!document.fullscreenElement && document.documentElement.requestFullscreen){ await document.documentElement.requestFullscreen(); } }catch(e){} }
+  function maybeApplySystemPopupOffset(){
+    if(started && !systemPopupOffsetApplied && acceptTs && (Date.now()-acceptTs)<=GRACE_MS){
+      tabSwitches=Math.max(0,tabSwitches-1); systemPopupOffsetApplied=true; tabCountEl.textContent=`Abas: ${tabSwitches}`;
+    }
+  }
+  function isValidFullName(n){ const t=(n||'').trim().replace(/\s+/g,' '); const parts=t.split(' ').filter(p=>p.length>=2); return parts.length>=2 }
+
+  // ====== Coleta ======
+  function collectAnswersOnly(){
+    return QUESTIONS.map((q,i)=>{
+      const ans=form.querySelector(`[name=ans_${i}]`)?.value||'';
+      const score=Number(form.querySelector(`[name=score_${i}]`)?.value||0);
+      return { name:q.name, prompt:q.prompt, answer:ans.trim(), score };
+    });
+  }
+  function gradeSummary(data){
+    // aqui “nota” é manual; ainda calculo apenas média e itens preenchidos
+    const filled=data.filter(d=>d.answer.length>0).length;
+    const avg = data.length? (data.reduce((a,c)=>a+(Number(c.score)||0),0)/data.length) : 0;
+    return { filled, total:data.length, avg };
+  }
+  function collectPayload(reason='manual'){
+    const rows=collectAnswersOnly();
+    const sum=gradeSummary(rows);
+    const now=new Date();
+    const studentNameSafe=(nameInput.value||'').trim()||'(no name)';
+    return {
+      testId:(testIdInput.value.trim()||'Perguntas-Electricidade-v1'),
+      studentName:studentNameSafe,
+      startISO:startTime?.toISOString()||null,
+      endISO:now.toISOString(),
+      durationSec:startTime?Math.round((now-startTime)/1000):null,
+      reason,
+      score:{ filled:sum.filled, total:sum.total, average:sum.avg },
+      items: rows,
+      focus:{ tabSwitches, blurCount, totalBlurMs, copyCount, pasteCount, findCount }
+    };
+  }
+  function toCSV(payload){
+    const header=['timestamp','testId','studentName','startISO','endISO','durationSec','filled','total','average','tabSwitches','blurCount','totalBlurMs','copyCount','pasteCount','findCount'];
+    const row=[new Date().toISOString(), payload.testId, JSON.stringify(payload.studentName), payload.startISO, payload.endISO, payload.durationSec, payload.score.filled, payload.score.total, payload.score.average, payload.focus.tabSwitches, payload.focus.blurCount, payload.focus.totalBlurMs, payload.focus.copyCount, payload.focus.pasteCount, payload.focus.findCount];
+    // linhas itemizadas
+    const itemHeader=['name','prompt','score','answer'];
+    const itemsCsv = payload.items.map(it=>[it.name, JSON.stringify(it.prompt), it.score, JSON.stringify(it.answer)].join(',')).join('\n');
+    return header.join(',')+'\n'+row.join(',')+'\n\n'+'name,prompt,score,answer\n'+itemsCsv;
+  }
+  async function sendResults(payload){
+    try{
+      const res=await fetch(ENDPOINT,{ method:'POST', headers:{'Content-Type':'text/plain'}, body:JSON.stringify(payload) });
+      return { posted:res.ok, status:res.status };
+    }catch(err){ console.warn('POST failed',err); return { posted:false, error:String(err) } }
+  }
+  function downloadCSV(name, csv){
+    const blob=new Blob([csv],{type:'text/csv'});
+    const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+    a.download=`${(name||'anonymous').replace(/\s+/g,'_')}_Perguntas_Electricidade.csv`; document.body.appendChild(a); a.click(); a.remove();
+  }
+  function lockTest(){
+    lockForm(true); submitBtn.disabled=true; downloadCsvBtn.disabled=false;
+    document.getElementById('notes').textContent='Locked. Respostas registradas.';
+    document.querySelectorAll('section.card').forEach(sec=>sec.classList.add('strike'));
+  }
+  async function finalize(reason){
+    if(ended) return; ended=true; endTime=new Date(); clearInterval(timerInterval);
+    const payload=collectPayload(reason);
+    const csv=toCSV(payload);
+    const postRes=await sendResults(payload);
+    downloadCSV(payload.studentName||'anonymous', csv);
+    lockTest();
+    try{ if(document.fullscreenElement) document.exitFullscreen(); }catch(e){}
+    console.log('Payload:', payload, 'POST:', postRes);
+  }
+  function autoSubmit(reason){ finalize(reason) }
+
+  // ====== Eventos básicos ======
+  startBtn.addEventListener('click', startTest);
+  submitBtn.addEventListener('click', ()=> finalize('manual'));
+  downloadCsvBtn.addEventListener('click', ()=>{
+    const csv=toCSV(collectPayload('download-only')); downloadCSV((nameInput.value||'').trim()||'anonymous', csv);
+  });
+  resetBtn.addEventListener('click', ()=>{ localStorage.removeItem(DRAFT_KEY); location.reload(); });
+
+  // ====== Início da prova ======
+  function startTest(){
+    started=true; startTime=new Date();
+    nameInput.disabled=true; testIdInput.disabled=true;
+    startBtn.disabled=true; startBtn.classList.add('hidden'); submitBtn.disabled=false;
+    lockForm(false); setTimeout(()=>lockForm(false),0);
+    startTimer();
+    document.addEventListener('copy',(e)=>{copyCount++; e.preventDefault(); showToast('Cópia bloqueada.')});
+    document.addEventListener('cut',(e)=>{e.preventDefault(); showToast('Recorte bloqueado.')});
+    document.addEventListener('paste',(e)=>{pasteCount++; e.preventDefault(); showToast('Colagem bloqueada.')});
+    document.addEventListener('keydown',(e)=>{
+      const k=e.key.toLowerCase(); const ctrl=e.ctrlKey||e.metaKey;
+      if(ctrl&&(k==='c'||k==='v'||k==='x'||k==='s'||k==='p'||k==='f')){ e.preventDefault(); showToast('Atalho bloqueado.'); if(k==='f') findCount++; }
+      if(k==='f11'){ e.preventDefault(); showToast('F11 bloqueado.'); }
+    },{capture:true});
+    document.addEventListener('contextmenu',(e)=> e.preventDefault());
+    document.addEventListener('fullscreenchange',()=>{ /* não re-força para evitar popups */ });
+    loadDraft(); // carrega rascunho salvo (se existir)
+  }
+
+  // ====== Anti-cheat ======
+  document.addEventListener('visibilitychange', ()=>{
+    if(!started||ended) return;
+    if(document.visibilityState==='hidden'){
+      tabSwitches++; tabCountEl.textContent=`Abas: ${tabSwitches}`;
+      focusFlag.textContent='Focus LOST'; isBlurred=true; blurStart=Date.now();
+      maybeApplySystemPopupOffset(); showToast('Troca de aba registrada.');
+      saveDraft();
+    }else{
+      focusFlag.textContent='Foco OK';
+      if(isBlurred){ totalBlurMs += Date.now()-(blurStart||Date.now()); isBlurred=false; }
+    }
+  });
+  window.addEventListener('blur', ()=>{
+    if(!started||ended) return;
+    blurCount++; if(document.visibilityState!=='hidden'){ tabSwitches++; tabCountEl.textContent=`Abas: ${tabSwitches}`; maybeApplySystemPopupOffset(); }
+    focusFlag.textContent='Focus LOST'; isBlurred=true; blurStart=Date.now(); saveDraft();
+  });
+  window.addEventListener('focus', ()=>{
+    if(!started||ended) return;
+    focusFlag.textContent='Foco OK';
+    if(isBlurred){ totalBlurMs += Date.now()-(blurStart||Date.now()); isBlurred=false; }
+  });
+  window.addEventListener('pagehide', ()=>{
+    if(!started||ended) return;
+    tabSwitches++; tabCountEl.textContent=`Abas: ${tabSwitches}`; maybeApplySystemPopupOffset();
+    if(isBlurred){ totalBlurMs += Date.now()-(blurStart||Date.now()); isBlurred=false; }
+    saveDraft();
+  });
+
+  // ====== Modal ======
+  modalName.addEventListener('input', ()=>{ acceptBtnEl.disabled=!isValidFullName(modalName.value) });
+  document.getElementById('acceptBtn').addEventListener('click', async ()=>{
+    const fullName=(modalName.value||'').trim().replace(/\s+/g,' ');
+    if(!isValidFullName(fullName)){ modalName.setAttribute('aria-invalid','true'); modalName.focus(); return; }
+    document.getElementById('studentName').value=fullName;
+    const backdrop=document.getElementById('consentBackdrop'); if(backdrop) backdrop.remove(); document.body.style.overflow='';
+    acceptTs=Date.now(); startTest(); try{ await goFullscreen(); }catch(e){}
+  });
+  document.getElementById('declineBtn').addEventListener('click', ()=>{ window.location.href='about:blank' });
+
+  // Bloqueios enquanto modal aberto
+  document.addEventListener('keydown',(e)=>{
+    if(document.getElementById('consentBackdrop')){
+      const k=e.key.toLowerCase(); if((e.ctrlKey||e.metaKey)&&(k==='w'||k==='r'||k==='p'||k==='s'||k==='f')) e.preventDefault(); if(k==='f11') e.preventDefault();
+    }
+  });
+
+  // bloqueio global do menu de contexto
+  document.addEventListener('contextmenu',(e)=> e.preventDefault());
+  </script>
+</body>
+</html>
