@@ -93,7 +93,7 @@
 
   <main class="wrap">
     <form id="quizForm" class="grid" autocomplete="off">
-      <!-- Os cartões serão inseridos via JS -->
+      <!-- Cartões inseridos via JS -->
     </form>
 
     <div class="card">
@@ -111,7 +111,7 @@
   </main>
 
   <script>
-  // ====== Tema ======
+  // ===== Tema =====
   (function(){
     const root=document.documentElement;
     const saved=localStorage.getItem('theme')||'light';
@@ -122,83 +122,81 @@
     });
   })();
 
-  // ====== Dados (lista exatamente com parênteses) ======
+  // ===== Perguntas =====
   const QUESTIONS = [
-  { name:"Ana Carla", prompt:"(Ana Carla) When was the first electric light invented?", suggested:9 },
-  { name:"Quézia", prompt:"(Quézia) Who created the first power station?", suggested:10 },
-  { name:"João Scala", prompt:"(João Scala) Which philosopher noticed that rubbing amber with wool produces static electricity?", suggested:7 },
-  { name:"Sophia Hellen", prompt:"(Sophia Hellen) Who invented the steam turbine (that converts thermal energy into mechanical energy)?", suggested:9 },
-  { name:"Elisa Silva", prompt:"(Elisa Silva) Who coined the term “electricity,” and from which word did it come?", suggested:8 },
-  { name:"Anna Beatriz", prompt:"(Anna Beatriz) When did William Gilbert coin the term “electricity” from the Greek word elektron?", suggested:9 },
-  { name:"Guilherme França", prompt:"(Guilherme França) When did Thomas Edison introduce his light bulb?", suggested:9 },
-  { name:"Thiago Militão", prompt:"(Thiago Militão) When did nuclear power start to be developed, and in which country did this happen?", suggested:9 },
-  { name:"Lívia Lima", prompt:"(Lívia Lima) What did Sir Charles invent?", suggested:7 },
-  { name:"Lívia Régis", prompt:"(Lívia Régis) Who designed the first hydroelectric power station?", suggested:9 },
-  { name:"Henry Ferreira", prompt:"(Henry Ferreira) Who designed the first power station?", suggested:9 },
-  { name:"Denzel", prompt:"(Denzel) In which year was the electric light created?", suggested:8 },
-  { name:"Júlia Vieira", prompt:"(Júlia Vieira) Who discovered electricity, and why is it used around the world?", suggested:6 },
-  { name:"Marina Pereira", prompt:"(Marina Pereira) Where was the oldest record of people noticing electricity found?", suggested:8 },
-  { name:"Emanuel", prompt:"(Emanuel) What was the first invention that caused a worldwide change?", suggested:5 },
-  { name:"Nicolas Adriel", prompt:"(Nicolas Adriel) In what year did sustainable energy production begin? (a) 1844 (b) 1839 (c) 1913 (d) 1857", suggested:10 },
-  { name:"Emanuella", prompt:"(Emanuella) Who presented the first commercially famous light bulb?", suggested:8 },
-  { name:"Clarisse Alves", prompt:"(Clarisse Alves) In which year did nuclear energy start to be produced, and in which country?", suggested:8 },
-  { name:"Thales Cardoso", prompt:"(Thales Cardoso) When did Humphry Davy invent an electric light?", suggested:9 },
-  { name:"Rebeca Luiza", prompt:"(Rebeca Luiza) Who invented the flashlight?", suggested:8 },
-  { name:"Pedro Henrique", prompt:"(Pedro Henrique) When did light-bulb sales begin?", suggested:6 },
-  { name:"Geovana Torres", prompt:"(Geovana Torres) What did Sir Charles invent?", suggested:7 },
-  { name:"Geicielly Alves", prompt:"(Geicielly Alves) Who invented the first commercially successful light bulb?", suggested:9 },
-  { name:"Maria Luiza", prompt:"(Maria Luiza) What happened to electricity use during World War II?", suggested:8 },
-  { name:"Marcio", prompt:"(Marcio) Who was the first person to describe electricity?", suggested:8 },
-  { name:"João Marcos", prompt:"(João Marcos) What are the advantages and disadvantages of solar energy?", suggested:10 },
-  { name: "Leticia Ventura", prompt: "(Leticia Ventura) In what year did Sir Charles Parsons invent the steam turbine?" },
-  { name: "Kássio Gabriel", prompt: "(Kássio Gabriel) Which country first introduced a commercially available TV, and in which year?", suggested: 9 },
-  { name: "Dayane", prompt: "(Dayane) What did Humphry Davy invent?", suggested: 9 },
+    { name:"Ana Carla", prompt:"(Ana Carla) When was the first electric light invented?", suggested:9 },
+    { name:"Quézia", prompt:"(Quézia) Who created the first power station?", suggested:10 },
+    { name:"João Scala", prompt:"(João Scala) Which philosopher noticed that rubbing amber with wool produces static electricity?", suggested:7 },
+    { name:"Sophia Hellen", prompt:"(Sophia Hellen) Who invented the steam turbine (that converts thermal energy into mechanical energy)?", suggested:9 },
+    { name:"Elisa Silva", prompt:"(Elisa Silva) Who coined the term “electricity,” and from which word did it come?", suggested:8 },
+    { name:"Anna Beatriz", prompt:"(Anna Beatriz) When did William Gilbert coin the term “electricity” from the Greek word elektron?", suggested:9 },
+    { name:"Guilherme França", prompt:"(Guilherme França) When did Thomas Edison introduce his light bulb?", suggested:9 },
+    { name:"Thiago Militão", prompt:"(Thiago Militão) When did nuclear power start to be developed, and in which country did this happen?", suggested:9 },
+    { name:"Lívia Lima", prompt:"(Lívia Lima) What did Sir Charles invent?", suggested:7 },
+    { name:"Lívia Régis", prompt:"(Lívia Régis) Who designed the first hydroelectric power station?", suggested:9 },
+    { name:"Henry Ferreira", prompt:"(Henry Ferreira) Who designed the first power station?", suggested:9 },
+    { name:"Denzel", prompt:"(Denzel) In which year was the electric light created?", suggested:8 },
+    { name:"Júlia Vieira", prompt:"(Júlia Vieira) Who discovered electricity, and why is it used around the world?", suggested:6 },
+    { name:"Marina Pereira", prompt:"(Marina Pereira) Where was the oldest record of people noticing electricity found?", suggested:8 },
+    { name:"Emanuel", prompt:"(Emanuel) What was the first invention that caused a worldwide change?", suggested:5 },
+    { name:"Nicolas Adriel", prompt:"(Nicolas Adriel) In what year did sustainable energy production begin? (a) 1844 (b) 1839 (c) 1913 (d) 1857", suggested:10 },
+    { name:"Emanuella", prompt:"(Emanuella) Who presented the first commercially famous light bulb?", suggested:8 },
+    { name:"Clarisse Alves", prompt:"(Clarisse Alves) In which year did nuclear energy start to be produced, and in which country?", suggested:8 },
+    { name:"Thales Cardoso", prompt:"(Thales Cardoso) When did Humphry Davy invent an electric light?", suggested:9 },
+    { name:"Rebeca Luiza", prompt:"(Rebeca Luiza) Who invented the flashlight?", suggested:8 },
+    { name:"Pedro Henrique", prompt:"(Pedro Henrique) When did light-bulb sales begin?", suggested:6 },
+    { name:"Geovana Torres", prompt:"(Geovana Torres) What did Sir Charles invent?", suggested:7 },
+    { name:"Geicielly Alves", prompt:"(Geicielly Alves) Who invented the first commercially successful light bulb?", suggested:9 },
+    { name:"Maria Luiza", prompt:"(Maria Luiza) What happened to electricity use during World War II?", suggested:8 },
+    { name:"Marcio", prompt:"(Marcio) Who was the first person to describe electricity?", suggested:8 },
+    { name:"João Marcos", prompt:"(João Marcos) What are the advantages and disadvantages of solar energy?", suggested:10 },
+    { name:"Leticia Ventura", prompt:"(Leticia Ventura) In what year did Sir Charles Parsons invent the steam turbine?" },
+    { name:"Kássio Gabriel", prompt:"(Kássio Gabriel) Which country first introduced a commercially available TV, and in which year?", suggested:9 },
+    { name:"Dayane", prompt:"(Dayane) What did Humphry Davy invent?", suggested:9 },
 
-  // --- Novas perguntas adicionadas ---
-  { name:"Isabelly", prompt:"(Isabelly) When did nuclear power start to be produced?", suggested:9 },
-  { name:"João V.", prompt:"(João V.) What year did Humphry Davy invent the first electric light?", suggested:9 },
-  { name:"Ana Cecília", prompt:"(Ana Cecília) What is the nationality of Thales of Miletus?", suggested:8 },
-  { name:"Davi de Oliveira", prompt:"(Davi de Oliveira) Who invented the light bulb?", suggested:10 },
-  { name:"Pedro Arthur", prompt:"(Pedro Arthur) Who was the designer who used hydroelectricity to power and heat his own house in England?", suggested:7 },
-  { name:"Janduy", prompt:"(Janduy) When did the steam engine become the main source of power?", suggested:9 },
-  { name:"Elisa Andrade", prompt:"(Elisa Andrade) Who invented the first electric light?", suggested:9 },
-  { name:"Natanael", prompt:"(Natanael) Who invented the first electric light?", suggested:9 },
-  { name:"Davi Thialyson", prompt:"(Davi Thialyson) Who invented the steam turbine?", suggested:10 },
-  { name:"Melissa", prompt:"(Melissa) Who coined the term “electricity”?", suggested:8 },
-  { name:"Roana", prompt:"(Roana) Who was the first person to record observations about electricity?", suggested:9 },
-  { name:"Jessé Schaida", prompt:"(Jessé Schaida) When were the first large wind farms installed?", suggested:7 },
-  { name:"Pedro Lucca", prompt:"(Pedro Lucca) Where were the first large wind farms located?", suggested:8 },
-  { name:"Thayná", prompt:"(Thayná) Who was the English scientist who coined the word “electricity”?", suggested:9 },
-  { name:"Ranaiça", prompt:"(Ranaiça) Who was the first person to record observations about electricity?", suggested:9 },
-  { name:"Duda", prompt:"(Duda) When were wind turbines first created?", suggested:9 },
-  { name:"Anamim", prompt:"(Anamim) When did Humphry Davy invent the first electric light?", suggested:8 },
-  { name:"Victória", prompt:"(Victória) Did Humphry Davy invent the first electric light?", suggested:10 },
-  { name:"Júlia Ester", prompt:"(Júlia Ester) Who first invented the electric light?", suggested:8 },
-  { name:"Arthur Melo", prompt:"(Arthur Melo) — (no question provided)", suggested:0 },
-  { name:"Ana Clara", prompt:"(Ana Clara) In what year did the study of energy begin?", suggested:8 },
-  { name:"Yan", prompt:"(Yan) Who discovered electricity?", suggested:9 },
-  { name:"Kauane", prompt:"(Kauane) Where was nuclear power first produced?", suggested:7 },
-  { name:"Hannan", prompt:"(Hannan) Where was the first large wind farm installed?", suggested:10 },
-  { name:"Alicia Azevedo", prompt:"(Alicia Azevedo) Why were city lights switched off during World War II?", suggested:9 },
-  { name:"Rayssa Caúla", prompt:"(Rayssa Caúla) Who invented the first electric light?", suggested:9 },
-  { name:"Heitor Melo", prompt:"(Heitor Melo) In which year did nuclear power start to be produced in the US?", suggested:8 },
-  { name:"Marjorie", prompt:"(Marjorie) When did Thomas Edison present his first commercially successful light bulb?", suggested:9 },
-  { name:"Henrique", prompt:"(Henrique) When did nuclear power start to be produced in the US?", suggested:8 },
-  { name:"Murilo Fandim", prompt:"(Murilo Fandim) When were wind turbines first created?", suggested:8 },
-  { name:"Nathanny", prompt:"(Nathanny) Who invented the first electric light?", suggested:8 },
-  { name:"Jullia Melo", prompt:"(Jullia Melo) Who invented the first commercially available TV?", suggested:9 },
-  { name:"Laura", prompt:"(Laura) What happened to city lights during World War II?", suggested:9 },
-  { name:"Gabriel Rocha", prompt:"(Gabriel Rocha) Who was the scientist who coined the term “electricity”?", suggested:10 },
-  { name:"Arthur Figueiró", prompt:"(Arthur Figueiró) In what year was electricity discovered?", suggested:8 }
-];
+    // novas
+    { name:"Isabelly", prompt:"(Isabelly) When did nuclear power start to be produced?", suggested:9 },
+    { name:"João V.", prompt:"(João V.) What year did Humphry Davy invent the first electric light?", suggested:9 },
+    { name:"Ana Cecília", prompt:"(Ana Cecília) What is the nationality of Thales of Miletus?", suggested:8 },
+    { name:"Davi de Oliveira", prompt:"(Davi de Oliveira) Who invented the light bulb?", suggested:10 },
+    { name:"Pedro Arthur", prompt:"(Pedro Arthur) Who was the designer who used hydroelectricity to power and heat his own house in England?", suggested:7 },
+    { name:"Janduy", prompt:"(Janduy) When did the steam engine become the main source of power?", suggested:9 },
+    { name:"Elisa Andrade", prompt:"(Elisa Andrade) Who invented the first electric light?", suggested:9 },
+    { name:"Natanael", prompt:"(Natanael) Who invented the first electric light?", suggested:9 },
+    { name:"Davi Thialyson", prompt:"(Davi Thialyson) Who invented the steam turbine?", suggested:10 },
+    { name:"Melissa", prompt:"(Melissa) Who coined the term “electricity”?", suggested:8 },
+    { name:"Roana", prompt:"(Roana) Who was the first person to record observations about electricity?", suggested:9 },
+    { name:"Jessé Schaida", prompt:"(Jessé Schaida) When were the first large wind farms installed?", suggested:7 },
+    { name:"Pedro Lucca", prompt:"(Pedro Lucca) Where were the first large wind farms located?", suggested:8 },
+    { name:"Thayná", prompt:"(Thayná) Who was the English scientist who coined the word “electricity”?", suggested:9 },
+    { name:"Ranaiça", prompt:"(Ranaiça) Who was the first person to record observations about electricity?", suggested:9 },
+    { name:"Duda", prompt:"(Duda) When were wind turbines first created?", suggested:9 },
+    { name:"Anamim", prompt:"(Anamim) When did Humphry Davy invent the first electric light?", suggested:8 },
+    { name:"Victória", prompt:"(Victória) Did Humphry Davy invent the first electric light?", suggested:10 },
+    { name:"Júlia Ester", prompt:"(Júlia Ester) Who first invented the electric light?", suggested:8 },
+    { name:"Arthur Melo", prompt:"(Arthur Melo) — (no question provided)", suggested:0 },
+    { name:"Ana Clara", prompt:"(Ana Clara) In what year did the study of energy begin?", suggested:8 },
+    { name:"Yan", prompt:"(Yan) Who discovered electricity?", suggested:9 },
+    { name:"Kauane", prompt:"(Kauane) Where was nuclear power first produced?", suggested:7 },
+    { name:"Hannan", prompt:"(Hannan) Where was the first large wind farm installed?", suggested:10 },
+    { name:"Alicia Azevedo", prompt:"(Alicia Azevedo) Why were city lights switched off during World War II?", suggested:9 },
+    { name:"Rayssa Caúla", prompt:"(Rayssa Caúla) Who invented the first electric light?", suggested:9 },
+    { name:"Heitor Melo", prompt:"(Heitor Melo) In which year did nuclear power start to be produced in the US?", suggested:8 },
+    { name:"Marjorie", prompt:"(Marjorie) When did Thomas Edison present his first commercially successful light bulb?", suggested:9 },
+    { name:"Henrique", prompt:"(Henrique) When did nuclear power start to be produced in the US?", suggested:8 },
+    { name:"Murilo Fandim", prompt:"(Murilo Fandim) When were wind turbines first created?", suggested:8 },
+    { name:"Nathanny", prompt:"(Nathanny) Who invented the first electric light?", suggested:8 },
+    { name:"Jullia Melo", prompt:"(Jullia Melo) Who invented the first commercially available TV?", suggested:9 },
+    { name:"Laura", prompt:"(Laura) What happened to city lights during World War II?", suggested:9 },
+    { name:"Gabriel Rocha", prompt:"(Gabriel Rocha) Who was the scientist who coined the term “electricity”?", suggested:10 },
+    { name:"Arthur Figueiró", prompt:"(Arthur Figueiró) In what year was electricity discovered?", suggested:8 }
+  ];
 
-
-  // ====== Config ======
+  // ===== Config =====
   const DEFAULT_MINUTES=30;
-  // SEU ENDPOINT ANTIGO (usado anteriormente)
   const ENDPOINT='https://script.google.com/macros/s/AKfycbzWovrGHidKrd0HCXmH5BgGn-7_D-T_-VhWQ1IKXh68W1cvp4Q1s9d8WVLckKvy5fn96g/exec';
 
-  // ====== Estado ======
+  // ===== Estado =====
   let started=false, ended=false;
   let startTime=null, endTime=null, timerInterval=null;
   let secondsLeft = DEFAULT_MINUTES*60;
@@ -210,7 +208,7 @@
   // Offset após popup
   let acceptTs=null; const GRACE_MS=2500; let systemPopupOffsetApplied=false;
 
-  // ====== DOM ======
+  // ===== DOM =====
   const startBtn=document.getElementById('startBtn');
   const submitBtn=document.getElementById('submitBtn');
   const timerEl=document.getElementById('timer');
@@ -219,17 +217,38 @@
   const testIdInput=document.getElementById('testId');
   const focusFlag=document.getElementById('focusFlag');
   const tabCountEl=document.getElementById('tabCount');
-  const downloadCsvBtn=document.getElementById('downloadCsvBtn'); const resetBtn=document.getElementById('resetBtn');
+  const downloadCsvBtn=document.getElementById('downloadCsvBtn');
+  const resetBtn=document.getElementById('resetBtn');
   const toast=document.getElementById('toast');
-  const consentBackdrop=document.getElementById('consentBackdrop');
   const modalName=document.getElementById('modalName'); const acceptBtnEl=document.getElementById('acceptBtn');
   document.body.style.overflow='hidden';
 
-  // Desabilita form até iniciar
+  // ===== Versão/rascunho por prova =====
+  const FORM_VERSION = '2025-10-22'; // mude quando atualizar a prova
+  function draftKey(){
+    const tid = (testIdInput?.value || 'default').trim();
+    return `recepcao_perguntas_${FORM_VERSION}_${tid}`;
+  }
+  // remove chave legada
+  localStorage.removeItem('recepcao_perguntas_draft_v1');
+
+  // ===== Utils =====
   function lockForm(disabled=true){ [...form.elements].forEach(el=>el.disabled=disabled) }
   lockForm(true);
 
-  // ====== Render dos cartões ======
+  function showToast(msg){ toast.textContent=msg||'Ação registrada.'; toast.classList.add('show'); setTimeout(()=>toast.classList.remove('show'),1500) }
+  function fmt(secs){ const m=String(Math.floor(secs/60)).padStart(2,'0'); const s=String(secs%60).padStart(2,'0'); return `${m}:${s}` }
+  function tick(){ secondsLeft--; if(secondsLeft<0) secondsLeft=0; timerEl.textContent=fmt(secondsLeft); if(secondsLeft===0) autoSubmit('time') }
+  function startTimer(){ clearInterval(timerInterval); timerInterval=setInterval(tick,1000) }
+  async function goFullscreen(){ try{ if(!document.fullscreenElement && document.documentElement.requestFullscreen){ await document.documentElement.requestFullscreen(); } }catch(e){} }
+  function maybeApplySystemPopupOffset(){
+    if(started && !systemPopupOffsetApplied && acceptTs && (Date.now()-acceptTs)<=GRACE_MS){
+      tabSwitches=Math.max(0,tabSwitches-1); systemPopupOffsetApplied=true; tabCountEl.textContent=`Abas: ${tabSwitches}`;
+    }
+  }
+  function isValidFullName(n){ const t=(n||'').trim().replace(/\s+/g,' '); const parts=t.split(' ').filter(p=>p.length>=2); return parts.length>=2 }
+
+  // ===== Render cards =====
   function renderCards(){
     const frag=document.createDocumentFragment();
     QUESTIONS.forEach((q,i)=>{
@@ -249,7 +268,7 @@
     });
     form.appendChild(frag);
 
-    // liga sliders/textarea
+    // binds
     QUESTIONS.forEach((_,i)=>{
       const rng=form.querySelector(`[name=score_${i}]`);
       const out=document.getElementById(`out_${i}`);
@@ -261,40 +280,41 @@
   }
   renderCards();
 
-  // ====== Draft local ======
-  const DRAFT_KEY='recepcao_perguntas_draft_v1';
+  // ===== Draft local =====
   function saveDraft(){
     if(!started) return;
     const data = collectAnswersOnly();
-    localStorage.setItem(DRAFT_KEY, JSON.stringify({ testId:testIdInput.value, name:nameInput.value, data }));
+    localStorage.setItem(draftKey(), JSON.stringify({
+      testId: testIdInput.value,
+      name: nameInput.value,
+      data
+    }));
   }
+
   function loadDraft(){
     try{
-      const raw=localStorage.getItem(DRAFT_KEY); if(!raw) return;
+      const raw=localStorage.getItem(draftKey()); if(!raw) return;
       const {testId,name,data}=JSON.parse(raw||'{}');
-      if(testId) testIdInput.value=testId; if(name) nameInput.value=name;
+
+      const sameTest = (testId||'').trim() === (testIdInput.value||'').trim();
+      const sameName = (name||'').trim() === (nameInput.value||'').trim();
+      if(!(sameTest && sameName)) return; // só carrega se for mesma pessoa e mesma prova
+
       (data||[]).forEach((row,i)=>{
-        const ta=form.querySelector(`[name=ans_${i}]`); const rng=form.querySelector(`[name=score_${i}]`); const out=document.getElementById(`out_${i}`); const st=document.getElementById(`status_${i}`);
-        if(ta) ta.value=row.answer||''; if(rng){ rng.value=row.score??0; if(out) out.textContent=rng.value; }
-        if(st) st.textContent = (row.answer||'').trim()? 'Status: entregue (rascunho salvo localmente)' : 'Status: aguardando…';
+        const ta=form.querySelector(`[name=ans_${i}]`);
+        const rng=form.querySelector(`[name=score_${i}]`);
+        const out=document.getElementById(`out_${i}`);
+        const st=document.getElementById(`status_${i}`);
+        if(ta) ta.value=row.answer||'';
+        if(rng){ rng.value=row.score??0; if(out) out.textContent=rng.value; }
+        if(st) st.textContent = (row.answer||'').trim()
+          ? 'Status: entregue (rascunho salvo localmente)'
+          : 'Status: aguardando…';
       });
     }catch(e){}
   }
 
-  // ====== Util ======
-  function showToast(msg){ toast.textContent=msg||'Ação registrada.'; toast.classList.add('show'); setTimeout(()=>toast.classList.remove('show'),1500) }
-  function fmt(secs){ const m=String(Math.floor(secs/60)).padStart(2,'0'); const s=String(secs%60).padStart(2,'0'); return `${m}:${s}` }
-  function tick(){ secondsLeft--; if(secondsLeft<0) secondsLeft=0; timerEl.textContent=fmt(secondsLeft); if(secondsLeft===0) autoSubmit('time') }
-  function startTimer(){ clearInterval(timerInterval); timerInterval=setInterval(tick,1000) }
-  async function goFullscreen(){ try{ if(!document.fullscreenElement && document.documentElement.requestFullscreen){ await document.documentElement.requestFullscreen(); } }catch(e){} }
-  function maybeApplySystemPopupOffset(){
-    if(started && !systemPopupOffsetApplied && acceptTs && (Date.now()-acceptTs)<=GRACE_MS){
-      tabSwitches=Math.max(0,tabSwitches-1); systemPopupOffsetApplied=true; tabCountEl.textContent=`Abas: ${tabSwitches}`;
-    }
-  }
-  function isValidFullName(n){ const t=(n||'').trim().replace(/\s+/g,' '); const parts=t.split(' ').filter(p=>p.length>=2); return parts.length>=2 }
-
-  // ====== Coleta ======
+  // ===== Coleta =====
   function collectAnswersOnly(){
     return QUESTIONS.map((q,i)=>{
       const ans=form.querySelector(`[name=ans_${i}]`)?.value||'';
@@ -303,13 +323,13 @@
     });
   }
 
-  // >>> Payload compatível com o script antigo <<<
+  // >>> Payload compatível com script antigo <<<
   function collectPayload(reason='manual'){
-    const rows = collectAnswersOnly(); // {name, prompt, answer, score}
+    const rows = collectAnswersOnly();
     const now = new Date();
     const studentNameSafe = (nameInput.value || '').trim() || '(no name)';
 
-    const answers = {}; // sem múltipla escolha aqui
+    const answers = {};
     const writing = {};
     rows.forEach((r, idx) => {
       const key = 'q' + (idx + 1);
@@ -335,8 +355,8 @@
         filled: rows.filter(r=>r.answer.length>0).length,
         average: avgScore
       },
-      answers,   // objeto (compatível)
-      writing,   // respostas abertas
+      answers,
+      writing,
       focus: { tabSwitches, blurCount, totalBlurMs, copyCount, pasteCount, findCount }
     };
   }
@@ -386,7 +406,6 @@
     a.download=`${(name||'anonymous').replace(/\s+/g,'_')}_Perguntas_Electricidade.csv`; document.body.appendChild(a); a.click(); a.remove();
   }
 
-  function lockForm(disabled=true){ [...form.elements].forEach(el=>el.disabled=disabled) }
   function lockTest(){
     lockForm(true); submitBtn.disabled=true; downloadCsvBtn.disabled=false;
     document.getElementById('notes').textContent='Locked. Respostas registradas.';
@@ -405,15 +424,7 @@
   }
   function autoSubmit(reason){ finalize(reason) }
 
-  // ====== Eventos básicos ======
-  startBtn.addEventListener('click', startTest);
-  submitBtn.addEventListener('click', ()=> finalize('manual'));
-  downloadCsvBtn.addEventListener('click', ()=>{
-    const csv=toCSV(collectPayload('download-only')); downloadCSV((nameInput.value||'').trim()||'anonymous', csv);
-  });
-  resetBtn.addEventListener('click', ()=>{ localStorage.removeItem(DRAFT_KEY); location.reload(); });
-
-  // ====== Início ======
+  // ===== Eventos principais =====
   function startTest(){
     started=true; startTime=new Date();
     nameInput.disabled=true; testIdInput.disabled=true;
@@ -430,10 +441,27 @@
     },{capture:true});
     document.addEventListener('contextmenu',(e)=> e.preventDefault());
     document.addEventListener('fullscreenchange',()=>{ /* não re-força */ });
-    loadDraft();
+    // não carrega aqui: só depois que o nome foi setado (no aceitar)
   }
 
-  // ====== Anti-cheat ======
+  startBtn.addEventListener('click', startTest);
+  submitBtn.addEventListener('click', ()=> finalize('manual'));
+
+  downloadCsvBtn.addEventListener('click', ()=>{
+    const csv=toCSV(collectPayload('download-only'));
+    downloadCSV((nameInput.value||'').trim()||'anonymous', csv);
+  });
+
+  // RESET CORRIGIDO
+  resetBtn.addEventListener('click', ()=>{
+    try{
+      localStorage.removeItem(draftKey());                 // apaga rascunho desta prova/versão
+      localStorage.removeItem('recepcao_perguntas_draft_v1'); // apaga legado
+    }catch(e){}
+    location.reload();
+  });
+
+  // ===== Anti-cheat =====
   document.addEventListener('visibilitychange', ()=>{
     if(!started||ended) return;
     if(document.visibilityState==='hidden'){
@@ -463,22 +491,35 @@
     saveDraft();
   });
 
-  // ====== Modal ======
-  function isValidFullName(n){ const t=(n||'').trim().replace(/\s+/g,' '); const parts=t.split(' ').filter(p=>p.length>=2); return parts.length>=2 }
+  // ===== Modal / início =====
   modalName.addEventListener('input', ()=>{ acceptBtnEl.disabled=!isValidFullName(modalName.value) });
   document.getElementById('acceptBtn').addEventListener('click', async ()=>{
     const fullName=(modalName.value||'').trim().replace(/\s+/g,' ');
     if(!isValidFullName(fullName)){ modalName.setAttribute('aria-invalid','true'); modalName.focus(); return; }
+
+    // preenche o nome antes de iniciar (para draftKey correto)
     document.getElementById('studentName').value=fullName;
-    const backdrop=document.getElementById('consentBackdrop'); if(backdrop) backdrop.remove(); document.body.style.overflow='';
-    acceptTs=Date.now(); startTest(); try{ await goFullscreen(); }catch(e){}
+
+    // fecha modal
+    const backdrop=document.getElementById('consentBackdrop'); if(backdrop) backdrop.remove();
+    document.body.style.overflow='';
+
+    acceptTs=Date.now();
+    startTest();
+    try{ await goFullscreen(); }catch(e){}
+
+    // só agora, com nome + testId disponíveis, tenta carregar rascunho do mesmo aluno
+    loadDraft();
   });
+
   document.getElementById('declineBtn').addEventListener('click', ()=>{ window.location.href='about:blank' });
 
-  // bloqueio enquanto modal existe
+  // bloqueios enquanto modal existe
   document.addEventListener('keydown',(e)=>{
     if(document.getElementById('consentBackdrop')){
-      const k=e.key.toLowerCase(); if((e.ctrlKey||e.metaKey)&&(k==='w'||k==='r'||k==='p'||k==='s'||k==='f')) e.preventDefault(); if(k==='f11') e.preventDefault();
+      const k=e.key.toLowerCase();
+      if((e.ctrlKey||e.metaKey)&&(k==='w'||k==='r'||k==='p'||k==='s'||k==='f')) e.preventDefault();
+      if(k==='f11') e.preventDefault();
     }
   });
   document.addEventListener('contextmenu',(e)=> e.preventDefault());
