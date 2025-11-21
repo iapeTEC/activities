@@ -212,11 +212,10 @@
     <label for="valor">Valor (R$)</label>
     <input
       id="valor"
-      type="number"
-      step="0.01"
-      min="0"
+      type="text"
       inputmode="decimal"
       placeholder="Ex.: 5,00"
+      autocomplete="off"
     />
 
     <div class="buttons">
@@ -318,13 +317,30 @@
       container.innerHTML = html;
     }
 
+    // 🔹 Aceitar tanto "5,50" quanto "5.50"
+    function parseValorBR(raw) {
+      if (!raw) return NaN;
+      let s = raw.toString().trim();
+
+      // remove espaços
+      s = s.replace(/\s+/g, "");
+
+      // remove pontos como separador de milhar (1.000,50 -> 1000,50)
+      s = s.replace(/\./g, "");
+
+      // troca vírgula decimal por ponto (1000,50 -> 1000.50)
+      s = s.replace(",", ".");
+
+      const numero = Number(s);
+      return numero;
+    }
+
     async function registrar(acao) {
       const produtoInput = document.getElementById("produto");
       const valorInput = document.getElementById("valor");
 
       const produto = produtoInput.value.trim();
-      let valor = valorInput.value.replace(",", ".");
-      const numero = parseFloat(valor);
+      const numero = parseValorBR(valorInput.value);
 
       if (acao === "VENDA" && !produto) {
         setMensagem("Informe o nome do produto.", "erro");
