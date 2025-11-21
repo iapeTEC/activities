@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Bazar – Painel de Turmas</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #f3f4f6;
+      color: #111827;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+    }
+
+    .container {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 1.5rem 1rem 3rem;
+    }
+
+    h1 {
+      font-size: 1.5rem;
+      margin-bottom: 0.25rem;
+      text-align: center;
+    }
+
+    .subtitle {
+      font-size: 0.9rem;
+      color: #4b5563;
+      text-align: center;
+      margin-bottom: 1.5rem;
+    }
+
+    .toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .last-update {
+      font-size: 0.85rem;
+      color: #6b7280;
+    }
+
+    .btn-reload {
+      padding: 0.5rem 0.9rem;
+      border-radius: 999px;
+      border: none;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      background: #3b82f6;
+      color: white;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+
+    .btn-reload:disabled {
+      opacity: 0.6;
+      cursor: progress;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 0.9rem;
+    }
+
+    .card {
+      background: white;
+      border-radius: 1rem;
+      padding: 0.9rem 1rem;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.06);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      min-height: 120px;
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.4rem;
+    }
+
+    .turma {
+      font-weight: 700;
+      font-size: 1rem;
+    }
+
+    .badge {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 0.15rem 0.4rem;
+      border-radius: 999px;
+      background: #eef2ff;
+      color: #4f46e5;
+    }
+
+    .row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.9rem;
+      margin-bottom: 0.15rem;
+    }
+
+    .row strong {
+      color: #374151;
+    }
+
+    .saldo {
+      margin-top: 0.25rem;
+      border-top: 1px dashed #e5e7eb;
+      padding-top: 0.25rem;
+      font-weight: 600;
+    }
+
+    .saldo-positivo {
+      color: #15803d;
+    }
+
+    .saldo-negativo {
+      color: #b91c1c;
+    }
+
+    .card-empty {
+      font-size: 0.85rem;
+      color: #9ca3af;
+      margin-top: 0.2rem;
+    }
+
+    .footer-note {
+      margin-top: 1.5rem;
+      font-size: 0.8rem;
+      color: #6b7280;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <main class="container">
+    <h1>Painel do Bazar</h1>
+    <p class="subtitle">Resumo geral por turma – vendas, estornos e saldo</p>
+
+    <div class="toolbar">
+      <div class="last-update" id="last-update">Atualizando...</div>
+      <button class="btn-reload" id="btn-reload">
+        🔄 Atualizar agora
+      </button>
+    </div>
+
+    <section class="grid" id="grid-turmas">
+      <!-- Cards serão inseridos via JavaScript -->
+    </section>
+
+    <p class="footer-note">
+      Os valores são calculados com base na planilha "Vendas" do Google Sheets.
+    </p>
+  </main>
+
+  <script>
+    // MESMA URL do seu Web App usado nas páginas de venda
+    const API_URL = "https://script.google.com/macros/s/AKfycbw4rbaZd9Bcj2DWAJpXI8NYWfVWkIQxj8gYQ7wr8r6qZNPDI-kO576j7Hb1WVLX4vSW/exec";
+
+    // Lista oficial de turmas que você quer acompanhar no painel
+    const TURMAS = [
+      { id: "6A",  label: "6º A" },
+      { id: "6B",  label: "6º B" },
+      { id: "7",   label: "7º ano" },
+      { id: "8",   label: "8º ano" },
+      { id: "9",   label: "9º ano" },
+      { id: "1A",  label: "1º EM A" },
+      { id: "1B",  label: "1º EM B" },
+      { id: "2A",  label: "2º EM A" },
+      { id: "2B",  label: "2º EM B" },
+      { id: "3",   label: "3º EM" }
+    ];
+
+    function formatarBRL(valor) {
+      return new Intl.NumberFormat("pt-BR", {
+        style: "currency",
+        currency: "BRL",
+      }).format(valor || 0);
+    }
+
+    function setLastUpdate(texto) {
+      const el = document.getElementById("last-update");
+      if (el) el.textContent = texto;
+    }
+
+    function setReloadLoading(loading) {
+      const btn = document.getElementById("btn-reload");
+      if (!btn) return;
+      btn.disabled = loading;
+      btn.textContent = loading ? "Atualizando..." : "🔄 Atualizar agora";
+    }
+
+    function criarCard(turma, dados) {
+      const vendido   = dados?.vendido   ?? 0;
+      const extornado = dados?.extornado ?? 0;
+      const saldo     = dados?.saldo     ?? 0;
+
+      const saldoClasse =
+        saldo > 0 ? "saldo-positivo" :
+        saldo < 0 ? "saldo-negativo" :
+        "";
+
+      const temMovimento = vendido !== 0 || extornado !== 0 || saldo !== 0;
+
+      return `
+        <article class="card">
+          <header class="card-header">
+            <div class="turma">${turma.label}</div>
+            <span class="badge">${turma.id}</span>
+          </header>
+          <div>
+            <div class="row">
+              <strong>Total vendido:</strong>
+              <span>${formatarBRL(vendido)}</span>
+            </div>
+            <div class="row">
+              <strong>Total estornado:</strong>
+              <span>${formatarBRL(extornado)}</span>
+            </div>
+            <div class="row saldo ${saldoClasse}">
+              <strong>Saldo:</strong>
+              <span>${formatarBRL(saldo)}</span>
+            </div>
+            ${
+              temMovimento
+                ? ""
+                : '<div class="card-empty">Nenhuma movimentação registrada ainda.</div>'
+            }
+          </div>
+        </article>
+      `;
+    }
+
+    async function carregarTotais() {
+      setReloadLoading(true);
+      setLastUpdate("Atualizando...");
+
+      try {
+        const url = `${API_URL}?modo=dashboard&t=${Date.now()}`;
+        const resp = await fetch(url);
+        const dados = await resp.json();
+
+        if (!dados.success) {
+          throw new Error(dados.message || "Erro ao carregar totais.");
+        }
+
+        const mapa = dados.turmas || {};
+        const grid = document.getElementById("grid-turmas");
+
+        const html = TURMAS.map((turma) =>
+          criarCard(turma, mapa[turma.id])
+        ).join("");
+
+        grid.innerHTML = html;
+
+        const agora = new Date();
+        const horaFmt = agora.toLocaleTimeString("pt-BR", {
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit"
+        });
+
+        setLastUpdate("Última atualização: " + horaFmt);
+      } catch (erro) {
+        console.error(erro);
+        setLastUpdate("Erro ao atualizar: " + erro.message);
+      } finally {
+        setReloadLoading(false);
+      }
+    }
+
+    document.getElementById("btn-reload").addEventListener("click", () => {
+      carregarTotais();
+    });
+
+    window.addEventListener("DOMContentLoaded", () => {
+      carregarTotais();
+    });
+  </script>
+</body>
+</html>
