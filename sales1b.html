@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Controle de Vendas do Bazar</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <style>
+    :root {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #f3f4f6;
+      color: #111827;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+    }
+
+    .container {
+      max-width: 480px;
+      margin: 0 auto;
+      padding: 1.5rem 1rem 3rem;
+    }
+
+    h1 {
+      font-size: 1.4rem;
+      margin-bottom: 0.2rem;
+      text-align: center;
+    }
+
+    .subtitle {
+      font-size: 0.9rem;
+      color: #4b5563;
+      text-align: center;
+      margin-bottom: 1.5rem;
+    }
+
+    label {
+      display: block;
+      font-size: 0.9rem;
+      margin-bottom: 0.25rem;
+      font-weight: 600;
+    }
+
+    input {
+      width: 100%;
+      padding: 0.6rem 0.7rem;
+      border-radius: 0.5rem;
+      border: 1px solid #d1d5db;
+      font-size: 1rem;
+      box-sizing: border-box;
+      margin-bottom: 1rem;
+    }
+
+    input:focus {
+      outline: 2px solid #3b82f6;
+      border-color: transparent;
+    }
+
+    .buttons {
+      display: flex;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+    }
+
+    button {
+      flex: 1;
+      padding: 0.7rem 0.8rem;
+      border-radius: 999px;
+      border: none;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    #btn-vender {
+      background: #16a34a;
+      color: white;
+    }
+
+    #btn-extornar {
+      background: #f97316;
+      color: white;
+    }
+
+    button:disabled {
+      opacity: 0.6;
+      cursor: progress;
+    }
+
+    .status-card {
+      background: white;
+      border-radius: 1rem;
+      padding: 1rem 1rem 0.8rem;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+      margin-top: 0.5rem;
+    }
+
+    .status-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.95rem;
+      margin-bottom: 0.3rem;
+    }
+
+    .status-row strong {
+      color: #374151;
+    }
+
+    .saldo {
+      font-size: 1.05rem;
+      margin-top: 0.3rem;
+      border-top: 1px dashed #e5e7eb;
+      padding-top: 0.4rem;
+    }
+
+    #mensagem {
+      margin-top: 0.5rem;
+      font-size: 0.9rem;
+      min-height: 1.2em;
+    }
+
+    #mensagem.erro {
+      color: #b91c1c;
+    }
+
+    #mensagem.ok {
+      color: #15803d;
+    }
+
+    .loading-indicator {
+      font-size: 0.85rem;
+      color: #6b7280;
+      text-align: right;
+      margin-top: 0.2rem;
+    }
+
+    /* Lista zebrada de produtos */
+    .lista-card {
+      margin-top: 1rem;
+      background: white;
+      border-radius: 1rem;
+      padding: 0.75rem 1rem 1rem;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.05);
+    }
+
+    .lista-title {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #374151;
+      margin-bottom: 0.4rem;
+    }
+
+    #lista-itens {
+      border-radius: 0.75rem;
+      border: 1px solid #e5e7eb;
+      overflow: hidden;
+    }
+
+    .item-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.45rem 0.6rem;
+      font-size: 0.9rem;
+    }
+
+    .item-row:nth-child(odd) {
+      background: #f9fafb; /* cinza claro */
+    }
+
+    .item-row:nth-child(even) {
+      background: #ffffff; /* branco */
+    }
+
+    .item-produto {
+      flex: 1;
+      margin-right: 0.5rem;
+    }
+
+    .item-valor {
+      white-space: nowrap;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .item-row.extorno .item-valor {
+      color: #b91c1c;
+    }
+
+    .lista-vazia {
+      font-size: 0.85rem;
+      color: #6b7280;
+      padding: 0.5rem 0.6rem;
+    }
+  </style>
+</head>
+<body>
+  <main class="container">
+    <!-- 🔹 Altere esse texto com o nome da turma dessa página -->
+    <h1>Bazar – Turma 1º Ano B</h1>
+    <p class="subtitle">Controle de vendas e extornos</p>
+
+    <label for="produto">Produto</label>
+    <input
+      id="produto"
+      type="text"
+      placeholder="Ex.: Pastel de queijo"
+      autocomplete="off"
+    />
+
+    <label for="valor">Valor (R$)</label>
+    <input
+      id="valor"
+      type="text"
+      inputmode="decimal"
+      placeholder="Ex.: 5,00"
+      autocomplete="off"
+    />
+
+    <div class="buttons">
+      <button id="btn-vender">Registrar venda</button>
+      <button id="btn-extornar">Extornar</button>
+    </div>
+
+    <div class="status-card">
+      <div class="status-row">
+        <strong>Total vendido:</strong>
+        <span id="total-vendido">R$ 0,00</span>
+      </div>
+      <div class="status-row">
+        <strong>Total extornado:</strong>
+        <span id="total-extornado">R$ 0,00</span>
+      </div>
+      <div class="status-row saldo">
+        <strong>Saldo da turma:</strong>
+        <span id="saldo">R$ 0,00</span>
+      </div>
+      <div id="mensagem"></div>
+      <div class="loading-indicator" id="loading-indicator"></div>
+    </div>
+
+    <div class="lista-card">
+      <div class="lista-title">Últimos itens lançados</div>
+      <div id="lista-itens">
+        <p class="lista-vazia">Nenhum item registrado ainda.</p>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    // 🔧 CONFIGURAÇÃO – TROCAR PELO LINK DO SEU WEB APP (Apps Script)
+    const API_URL = "https://script.google.com/macros/s/AKfycbw4rbaZd9Bcj2DWAJpXI8NYWfVWkIQxj8gYQ7wr8r6qZNPDI-kO576j7Hb1WVLX4vSW/exec";
+
+    // 🔧 CÓDIGO DA TURMA DESSA PÁGINA (ex.: "6A", "6B", "7A"...)
+    const TURMA = "1B";
+
+    function formatarBRL(valor) {
+      return new Intl.NumberFormat("pt-BR", {
+        style: "currency",
+        currency: "BRL",
+      }).format(valor || 0);
+    }
+
+    function setMensagem(texto, tipo) {
+      const msg = document.getElementById("mensagem");
+      msg.textContent = texto || "";
+      msg.classList.remove("erro", "ok");
+      if (tipo) msg.classList.add(tipo);
+    }
+
+    function setLoading(loading) {
+      const btnVender = document.getElementById("btn-vender");
+      const btnExtornar = document.getElementById("btn-extornar");
+      const indicator = document.getElementById("loading-indicator");
+
+      btnVender.disabled = loading;
+      btnExtornar.disabled = loading;
+      indicator.textContent = loading ? "Enviando para a planilha..." : "";
+    }
+
+    function atualizarTotais(totais) {
+      if (!totais) return;
+      document.getElementById("total-vendido").textContent =
+        formatarBRL(totais.vendido);
+      document.getElementById("total-extornado").textContent =
+        formatarBRL(totais.extornado);
+      document.getElementById("saldo").textContent =
+        formatarBRL(totais.saldo);
+    }
+
+    function atualizarLista(itens) {
+      const container = document.getElementById("lista-itens");
+      if (!container) return;
+
+      if (!itens || itens.length === 0) {
+        container.innerHTML = '<p class="lista-vazia">Nenhum item registrado ainda.</p>';
+        return;
+      }
+
+      const html = itens
+        .map((item) => {
+          const valorFmt = formatarBRL(item.valor);
+          const produto = item.produto || "(sem nome)";
+          const isExtorno = item.acao === "EXTORNO";
+          const valorTexto = isExtorno ? `- ${valorFmt}` : valorFmt;
+
+          return `
+            <div class="item-row ${isExtorno ? "extorno" : ""}">
+              <div class="item-produto">${produto}</div>
+              <div class="item-valor">${valorTexto}</div>
+            </div>
+          `;
+        })
+        .join("");
+
+      container.innerHTML = html;
+    }
+
+    // 🔹 Aceitar tanto "5,50" quanto "5.50"
+    function parseValorBR(raw) {
+      if (!raw) return NaN;
+      let s = raw.toString().trim();
+
+      // remove espaços
+      s = s.replace(/\s+/g, "");
+
+      // remove pontos como separador de milhar (1.000,50 -> 1000,50)
+      s = s.replace(/\./g, "");
+
+      // troca vírgula decimal por ponto (1000,50 -> 1000.50)
+      s = s.replace(",", ".");
+
+      const numero = Number(s);
+      return numero;
+    }
+
+    async function registrar(acao) {
+      const produtoInput = document.getElementById("produto");
+      const valorInput = document.getElementById("valor");
+
+      const produto = produtoInput.value.trim();
+      const numero = parseValorBR(valorInput.value);
+
+      if (acao === "VENDA" && !produto) {
+        setMensagem("Informe o nome do produto.", "erro");
+        return;
+      }
+
+      if (isNaN(numero) || numero <= 0) {
+        setMensagem("Informe um valor maior que zero.", "erro");
+        return;
+      }
+
+      setLoading(true);
+      setMensagem("");
+
+      try {
+        // monta a URL com os parâmetros na querystring
+        const url = `${API_URL}?turma=${encodeURIComponent(TURMA)}&valor=${encodeURIComponent(
+          numero
+        )}&acao=${encodeURIComponent(acao)}&produto=${encodeURIComponent(produto)}&t=${Date.now()}`;
+
+        const resposta = await fetch(url); // GET simples
+        const dados = await resposta.json();
+
+        if (!dados.success) {
+          throw new Error(dados.message || "Erro ao salvar na planilha.");
+        }
+
+        atualizarTotais(dados.totais);
+        atualizarLista(dados.itens || []);
+
+        setMensagem("Registro salvo com sucesso! ✔", "ok");
+        valorInput.value = "";
+        if (acao === "VENDA") {
+          produtoInput.value = "";
+        }
+        valorInput.focus();
+      } catch (erro) {
+        console.error(erro);
+        setMensagem("Erro: " + erro.message, "erro");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    document.getElementById("btn-vender").addEventListener("click", () =>
+      registrar("VENDA")
+    );
+    document.getElementById("btn-extornar").addEventListener("click", () =>
+      registrar("EXTORNO")
+    );
+
+    window.addEventListener("DOMContentLoaded", () => {
+      document.getElementById("valor").focus();
+    });
+  </script>
+</body>
+</html>
