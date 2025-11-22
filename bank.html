@@ -13,14 +13,34 @@
     }
     h1 {
       font-size: 20px;
-      margin-bottom: 8px;
+      margin-bottom: 12px;
     }
+
+    .layout {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    .column-main {
+      flex: 2;
+      min-width: 260px;
+    }
+    .column-sidebar {
+      flex: 1;
+      min-width: 260px;
+    }
+
     .card {
       background: white;
       padding: 16px;
       border-radius: 12px;
       box-shadow: 0 4px 12px rgba(0,0,0,0.08);
       margin-bottom: 16px;
+    }
+    .card h2 {
+      margin-top: 0;
+      font-size: 16px;
+      margin-bottom: 8px;
     }
     label {
       display: block;
@@ -34,6 +54,7 @@
       border: 1px solid #ccc;
       font-size: 14px;
       margin-top: 4px;
+      box-sizing: border-box;
     }
     button {
       margin-top: 12px;
@@ -63,51 +84,158 @@
       font-size: 12px;
       color: #666;
     }
+
+    /* Sidebar de clientes */
+    .card-sidebar small {
+      display: block;
+      margin-bottom: 8px;
+    }
+    #btnCloseQr {
+      background: #b91c1c;
+      font-size: 12px;
+      padding: 6px 12px;
+      margin-bottom: 8px;
+    }
+    #clientsList {
+      max-height: 420px;
+      overflow-y: auto;
+      margin-top: 4px;
+    }
+    .client-item {
+      border-radius: 10px;
+      border: 1px solid #e5e7eb;
+      padding: 8px 10px;
+      margin-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 8px;
+      cursor: pointer;
+      background: #f9fafb;
+      transition: background 0.15s ease, box-shadow 0.15s ease;
+    }
+    .client-item:hover {
+      background: #eef2ff;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+    }
+    .client-main {
+      flex: 1;
+      min-width: 0;
+    }
+    .client-name {
+      font-size: 14px;
+      font-weight: 600;
+      color: #111827;
+      margin-bottom: 2px;
+    }
+    .client-sub {
+      font-size: 11px;
+      color: #6b7280;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      margin-bottom: 2px;
+    }
+    .chip {
+      padding: 2px 6px;
+      border-radius: 999px;
+      background: #e5e7eb;
+      font-size: 11px;
+    }
+    .chip-type {
+      background: #dbeafe;
+      color: #1d4ed8;
+    }
+    .client-balance {
+      font-size: 12px;
+      color: #374151;
+      margin-top: 2px;
+    }
+    .client-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .small-btn {
+      padding: 4px 8px;
+      border-radius: 999px;
+      border: none;
+      font-size: 11px;
+      cursor: pointer;
+      background: #2b5aa8;
+      color: white;
+      white-space: nowrap;
+    }
+    .small-btn.secondary {
+      background: #10b981;
+    }
+    .small-btn:disabled {
+      opacity: 0.5;
+      cursor: default;
+    }
   </style>
 </head>
 <body>
   <h1>IAPE Cash – Administração</h1>
 
-  <div class="card">
-    <h2>Criar nova conta</h2>
-    <label>
-      Nome do responsável ou turma
-      <input type="text" id="newName" placeholder="Ex: Pai do João 6ºA">
-    </label>
-    <label>
-      Tipo de conta
-      <select id="newType">
-        <option value="PARENT">Responsável (PARENT)</option>
-        <option value="CLASS">Turma (CLASS)</option>
-      </select>
-    </label>
-    <label>
-      Saldo inicial (opcional)
-      <input type="number" step="0.01" id="newInitialBalance" placeholder="Ex: 100.00">
-    </label>
-    <small>Use saldo inicial se o pai já estiver pagando agora.</small>
-    <button id="btnCreate">Criar conta</button>
-    <div id="createResult" class="result"></div>
-  </div>
+  <div class="layout">
+    <!-- Coluna esquerda: criação e crédito -->
+    <div class="column-main">
+      <div class="card">
+        <h2>Criar nova conta</h2>
+        <label>
+          Nome do responsável ou turma
+          <input type="text" id="newName" placeholder="Ex: Pai do João 6ºA">
+        </label>
+        <label>
+          Tipo de conta
+          <select id="newType">
+            <option value="PARENT">Responsável (PARENT)</option>
+            <option value="CLASS">Turma (CLASS)</option>
+          </select>
+        </label>
+        <label>
+          Saldo inicial (opcional)
+          <input type="number" step="0.01" id="newInitialBalance" placeholder="Ex: 100.00">
+        </label>
+        <small>Use saldo inicial se o pai já estiver pagando agora.</small>
+        <button id="btnCreate">Criar conta</button>
+        <div id="createResult" class="result"></div>
+      </div>
 
-  <div class="card">
-    <h2>Adicionar crédito</h2>
-    <label>
-      Token ou Account ID
-      <input type="text" id="creditTokenOrId" placeholder="Cole aqui o token ou o account_id">
-    </label>
-    <label>
-      Valor a adicionar
-      <input type="number" step="0.01" id="creditAmount" placeholder="Ex: 50.00">
-    </label>
-    <button id="btnCredit">Adicionar crédito</button>
-    <div id="creditResult" class="result"></div>
+      <div class="card">
+        <h2>Adicionar crédito</h2>
+        <label>
+          Token ou Account ID
+          <input type="text" id="creditTokenOrId" placeholder="Selecione um cliente na lista ou cole aqui">
+        </label>
+        <label>
+          Valor a adicionar
+          <input type="number" step="0.01" id="creditAmount" placeholder="Ex: 50.00">
+        </label>
+        <button id="btnCredit">Adicionar crédito</button>
+        <div id="creditResult" class="result"></div>
+      </div>
+    </div>
+
+    <!-- Coluna direita: lista de clientes -->
+    <div class="column-sidebar">
+      <div class="card card-sidebar">
+        <h2>Clientes cadastrados</h2>
+        <small>Clique no cliente para selecionar para crédito. Use "QR do cartão" para mostrar o cartão no celular do responsável.</small>
+        <button id="btnCloseQr" type="button">Recolher QR code</button>
+        <div id="clientsList">
+          <small>Carregando clientes...</small>
+        </div>
+      </div>
+    </div>
   </div>
 
   <script>
-    // CONFIGURE AQUI:
-    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw6TPyucHyCttAWlnHXigQXkC1PwUajpzwQgzGOa-b1bSPfuQiGvDoBXttrrDJYllab/exec';
-    const CARD_BASE_URL   = 'card.html'; // onde está seu card.html
+    // CONFIGURAÇÕES:
+    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby5RDf0UZVLkQL_oQlji6Gg5kbfmAl4NZx1DDDIDSRmAyXOKvoq2rADOIR6qPfR3gss/exec';
+    const CARD_BASE_URL   = 'https://iapetec.github.io/activities/card.html'; // cartão do cliente
+    const QRCODE_PAGE_URL = 'https://iapetec.github.io/activities/qrcode.html'; // nova página que vamos criar
 
     const btnCreate = document.getElementById('btnCreate');
     const createResult = document.getElementById('createResult');
@@ -115,6 +243,21 @@
     const btnCredit = document.getElementById('btnCredit');
     const creditResult = document.getElementById('creditResult');
 
+    const clientsListEl = document.getElementById('clientsList');
+    const btnCloseQr = document.getElementById('btnCloseQr');
+
+    let qrWindow = null;
+    let accountsCache = [];
+
+    function formatBRL(value) {
+      const n = Number(value || 0);
+      return n.toLocaleString('pt-BR', {
+        style: 'currency',
+        currency: 'BRL'
+      });
+    }
+
+    // -------- CRIAR CONTA --------
     btnCreate.addEventListener('click', async () => {
       createResult.textContent = '';
       btnCreate.disabled = true;
@@ -146,12 +289,17 @@
           const cardUrl = CARD_BASE_URL + '?t=' + encodeURIComponent(data.token);
           createResult.innerHTML = `
             Conta criada com sucesso!<br>
+            <span class="highlight">Nome:</span> ${data.name}<br>
             <span class="highlight">Account ID:</span> ${data.accountId}<br>
             <span class="highlight">Token:</span> ${data.token}<br>
-            <span class="highlight">Saldo inicial:</span> R$ ${Number(data.balance).toFixed(2)}<br><br>
+            <span class="highlight">Saldo inicial:</span> ${formatBRL(data.balance)}<br><br>
             Envie este link para o responsável:<br>
             <span class="highlight">${cardUrl}</span>
           `;
+          document.getElementById('newName').value = '';
+          document.getElementById('newInitialBalance').value = '';
+          // recarrega lista de clientes
+          loadAccounts();
         }
       } catch (err) {
         console.error(err);
@@ -161,6 +309,7 @@
       }
     });
 
+    // -------- ADICIONAR CRÉDITO --------
     btnCredit.addEventListener('click', async () => {
       creditResult.textContent = '';
       btnCredit.disabled = true;
@@ -169,7 +318,7 @@
       const amountStr = document.getElementById('creditAmount').value.trim();
 
       if (!tokenOrId) {
-        creditResult.textContent = 'Informe o token ou account_id.';
+        creditResult.textContent = 'Informe o token ou account_id (ou selecione um cliente na lista).';
         btnCredit.disabled = false;
         return;
       }
@@ -194,8 +343,11 @@
           creditResult.innerHTML = `
             Crédito adicionado com sucesso!<br>
             <span class="highlight">Account ID:</span> ${data.accountId}<br>
-            <span class="highlight">Novo saldo:</span> R$ ${Number(data.balance).toFixed(2)}
+            <span class="highlight">Novo saldo:</span> ${formatBRL(data.balance)}
           `;
+          document.getElementById('creditAmount').value = '';
+          // atualiza lista de clientes com novo saldo
+          loadAccounts();
         }
       } catch (err) {
         console.error(err);
@@ -203,6 +355,149 @@
       } finally {
         btnCredit.disabled = false;
       }
+    });
+
+    // -------- LISTA DE CLIENTES --------
+    async function loadAccounts() {
+      if (!clientsListEl) return;
+      clientsListEl.innerHTML = '<small>Carregando clientes...</small>';
+
+      try {
+        const url = APPS_SCRIPT_URL + '?action=listAccounts';
+        const res = await fetch(url);
+        const data = await res.json();
+
+        if (!data.success) {
+          clientsListEl.innerHTML = '<small>Erro ao carregar clientes: ' + (data.error || 'Erro desconhecido') + '</small>';
+          return;
+        }
+
+        accountsCache = data.accounts || [];
+        renderAccounts(accountsCache);
+      } catch (err) {
+        console.error(err);
+        clientsListEl.innerHTML = '<small>Erro de conexão ao carregar clientes.</small>';
+      }
+    }
+
+    function renderAccounts(accounts) {
+      if (!clientsListEl) return;
+
+      if (!accounts || !accounts.length) {
+        clientsListEl.innerHTML = '<small>Nenhum cliente cadastrado ainda.</small>';
+        return;
+      }
+
+      clientsListEl.innerHTML = '';
+      accounts.forEach(acc => {
+        const row = document.createElement('div');
+        row.className = 'client-item';
+
+        const main = document.createElement('div');
+        main.className = 'client-main';
+
+        const nameDiv = document.createElement('div');
+        nameDiv.className = 'client-name';
+        nameDiv.textContent = acc.name || '(sem nome)';
+
+        const subDiv = document.createElement('div');
+        subDiv.className = 'client-sub';
+
+        const typeSpan = document.createElement('span');
+        typeSpan.className = 'chip chip-type';
+        typeSpan.textContent = acc.type || '';
+
+        const idSpan = document.createElement('span');
+        idSpan.className = 'chip';
+        idSpan.textContent = acc.accountId || '';
+
+        subDiv.appendChild(typeSpan);
+        subDiv.appendChild(idSpan);
+
+        const balDiv = document.createElement('div');
+        balDiv.className = 'client-balance';
+        balDiv.textContent = 'Saldo: ' + formatBRL(acc.balance);
+
+        main.appendChild(nameDiv);
+        main.appendChild(subDiv);
+        main.appendChild(balDiv);
+
+        const actions = document.createElement('div');
+        actions.className = 'client-actions';
+
+        const btnSelect = document.createElement('button');
+        btnSelect.type = 'button';
+        btnSelect.className = 'small-btn';
+        btnSelect.textContent = 'Selecionar';
+        btnSelect.addEventListener('click', (ev) => {
+          ev.stopPropagation();
+          selectAccount(acc);
+        });
+        actions.appendChild(btnSelect);
+
+        const btnQr = document.createElement('button');
+        btnQr.type = 'button';
+        btnQr.className = 'small-btn secondary';
+        btnQr.textContent = 'QR do cartão';
+        if (acc.token) {
+          btnQr.addEventListener('click', (ev) => {
+            ev.stopPropagation();
+            openQrForAccount(acc);
+          });
+        } else {
+          btnQr.disabled = true;
+          btnQr.title = 'Conta sem token (cartão não disponível).';
+        }
+        actions.appendChild(btnQr);
+
+        row.addEventListener('click', () => {
+          selectAccount(acc);
+        });
+
+        row.appendChild(main);
+        row.appendChild(actions);
+        clientsListEl.appendChild(row);
+      });
+    }
+
+    function selectAccount(acc) {
+      const input = document.getElementById('creditTokenOrId');
+      if (!input) return;
+      input.value = acc.token || acc.accountId || '';
+      creditResult.innerHTML = `
+        Cliente selecionado: <span class="highlight">${acc.name || '(sem nome)'}</span><br>
+        Account ID: <span class="highlight">${acc.accountId || ''}</span>
+      `;
+    }
+
+    function openQrForAccount(acc) {
+      if (!acc.token) {
+        alert('Esta conta não possui token de cartão.');
+        return;
+      }
+      const url = QRCODE_PAGE_URL
+        + '?name=' + encodeURIComponent(acc.name || '')
+        + '&t=' + encodeURIComponent(acc.token);
+
+      if (qrWindow && !qrWindow.closed) {
+        qrWindow.close();
+      }
+      qrWindow = window.open(url, '_blank');
+      if (qrWindow) {
+        qrWindow.focus();
+      }
+    }
+
+    btnCloseQr.addEventListener('click', () => {
+      if (qrWindow && !qrWindow.closed) {
+        qrWindow.close();
+      }
+      qrWindow = null;
+    });
+
+    // Carrega lista ao abrir a página
+    window.addEventListener('DOMContentLoaded', () => {
+      loadAccounts();
     });
   </script>
 </body>
