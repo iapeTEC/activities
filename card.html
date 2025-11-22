@@ -48,6 +48,63 @@
       opacity: 0.6;
       cursor: default;
     }
+
+    .statement-card {
+      background: white;
+      border-radius: 12px;
+      padding: 0.75rem 1rem 1rem;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.05);
+      max-width: 900px;
+      width: 100%;
+    }
+    .statement-title {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #374151;
+      margin-bottom: 0.4rem;
+      text-align: left;
+    }
+    #statement-list {
+      border-radius: 0.75rem;
+      border: 1px solid #e5e7eb;
+      overflow: hidden;
+    }
+    .statement-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.45rem 0.6rem;
+      font-size: 0.85rem;
+    }
+    .statement-row:nth-child(odd) {
+      background: #f9fafb;
+    }
+    .statement-row:nth-child(even) {
+      background: #ffffff;
+    }
+    .statement-desc {
+      flex: 1;
+      margin-right: 0.5rem;
+    }
+    .statement-meta {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      white-space: nowrap;
+      font-variant-numeric: tabular-nums;
+      gap: 2px;
+    }
+    .statement-amount.debit {
+      color: #b91c1c;
+    }
+    .statement-amount.credit {
+      color: #15803d;
+    }
+    .statement-empty {
+      font-size: 0.85rem;
+      color: #6b7280;
+      padding: 0.5rem 0.6rem;
+    }
   </style>
 </head>
 <body>
@@ -57,9 +114,16 @@
   <div id="info">Carregando dados do cartão...</div>
   <button id="downloadBtn" disabled>Baixar cartão em PNG</button>
 
+  <div class="statement-card">
+    <div class="statement-title">Extrato recente</div>
+    <div id="statement-list">
+      <p class="statement-empty">Nenhuma movimentação registrada ainda.</p>
+    </div>
+  </div>
+
   <script>
     // CONFIGURE AQUI:
-    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw6TPyucHyCttAWlnHXigQXkC1PwUajpzwQgzGOa-b1bSPfuQiGvDoBXttrrDJYllab/exec';
+    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby5RDf0UZVLkQL_oQlji6Gg5kbfmAl4NZx1DDDIDSRmAyXOKvoq2rADOIR6qPfR3gss/exec';
 
     const params = new URLSearchParams(window.location.search);
     const token = params.get('t') || params.get('token'); // aceita ?t= ou ?token=
@@ -69,27 +133,56 @@
     const canvas = document.getElementById('cardCanvas');
     const ctx = canvas.getContext('2d');
 
+    let updating = false;
+
     if (!token) {
       infoEl.textContent = 'Token não encontrado na URL.';
     } else {
-      carregarDados();
+      atualizarTudo(true);
+      // atualiza a cada 1 segundo
+      setInterval(() => atualizarTudo(false), 1000);
     }
 
-    function carregarDados() {
-      const url = APPS_SCRIPT_URL + '?action=card&token=' + encodeURIComponent(token);
-      fetch(url)
-        .then(res => res.json())
-        .then(data => {
-          if (!data.success) {
-            infoEl.textContent = 'Erro: ' + (data.error || 'falha ao carregar cartão');
-            return;
-          }
-          desenharCartao(data);
-        })
-        .catch(err => {
-          console.error(err);
-          infoEl.textContent = 'Erro de conexão ao carregar o cartão.';
-        });
+    function atualizarTudo(initial) {
+      if (updating || !token) return;
+      updating = true;
+      if (initial) {
+        infoEl.textContent = 'Carregando dados do cartão...';
+      }
+
+      const urlCard = APPS_SCRIPT_URL + '?action=card&token=' + encodeURIComponent(token);
+      const urlStmt = APPS_SCRIPT_URL + '?action=statement&token=' + encodeURIComponent(token) + '&limit=20';
+
+      Promise.all([
+        fetch(urlCard).then(r => r.json()),
+        fetch(urlStmt).then(r => r.json()).catch(() => null)
+      ])
+      .then(([cardData, stmtData]) => {
+        if (!cardData.success) {
+          infoEl.textContent = 'Erro: ' + (cardData.error || 'falha ao carregar cartão');
+          return;
+        }
+        desenharCartao(cardData);
+
+        if (stmtData && stmtData.success) {
+          renderStatement(stmtData);
+        }
+
+        const now = new Date();
+        infoEl.textContent = 'Última atualização: ' + now.toLocaleTimeString('pt-BR');
+        downloadBtn.disabled = false;
+        if (!downloadBtn._initialized) {
+          downloadBtn.addEventListener('click', baixarPNG);
+          downloadBtn._initialized = true;
+        }
+      })
+      .catch(err => {
+        console.error(err);
+        infoEl.textContent = 'Erro de conexão ao carregar o cartão.';
+      })
+      .finally(() => {
+        updating = false;
+      });
     }
 
     function desenharCartao(data) {
@@ -121,44 +214,44 @@
         const logoSize = 100;
         ctx.drawImage(logo, canvas.width - logoSize - 40, 20, logoSize, logoSize);
 
-        // Nome do responsável
-        ctx.fillStyle = '#ffffff';
-        ctx.font = 'bold 36px "Segoe UI", system-ui';
-        ctx.fillText('Responsável:', 40, 190);
-
-        ctx.font = '28px "Segoe UI", system-ui';
-        wrapText(ctx, nome, 40, 230, canvas.width - 320, 32);
-
-        // Saldo
-        ctx.font = 'bold 34px "Segoe UI", system-ui';
-        ctx.fillText('Saldo disponível:', 40, 310);
-
-        ctx.font = 'bold 60px "Segoe UI", system-ui';
-        ctx.fillStyle = '#ffdd55';
-        ctx.fillText('R$ ' + saldoFormatado, 40, 380);
-
-        // Texto auxiliar
-        ctx.fillStyle = '#ffffff';
-        ctx.font = '20px "Segoe UI", system-ui';
-        ctx.fillText('Apresente este cartão na lojinha para pagar suas compras.', 40, 430);
-
-        // Link deste próprio cartão (vai dentro do QR)
-        const cardUrl = window.location.origin + window.location.pathname + '?t=' + encodeURIComponent(token);
-
-        // Gera o QR e desenha no cartão
-        gerarQR(cardUrl, function(qrCanvas) {
-          const qrSize = 220;
-          ctx.drawImage(qrCanvas, canvas.width - qrSize - 40, canvas.height - qrSize - 40, qrSize, qrSize);
-
-          infoEl.textContent = 'Cartão carregado com sucesso.';
-          downloadBtn.disabled = false;
-          downloadBtn.addEventListener('click', baixarPNG);
-        });
+        desenharTextoCartao(nome, saldoFormatado);
       };
 
       logo.onerror = function() {
-        infoEl.textContent = 'Não foi possível carregar o logo, mas o cartão funciona.';
+        desenharTextoCartao(nome, saldoFormatado);
       };
+    }
+
+    function desenharTextoCartao(nome, saldoFormatado) {
+      // Nome do responsável
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 36px "Segoe UI", system-ui';
+      ctx.fillText('Responsável:', 40, 190);
+
+      ctx.font = '28px "Segoe UI", system-ui';
+      wrapText(ctx, nome, 40, 230, canvas.width - 320, 32);
+
+      // Saldo
+      ctx.font = 'bold 34px "Segoe UI", system-ui';
+      ctx.fillText('Saldo disponível:', 40, 310);
+
+      ctx.font = 'bold 60px "Segoe UI", system-ui';
+      ctx.fillStyle = '#ffdd55';
+      ctx.fillText('R$ ' + saldoFormatado, 40, 380);
+
+      // Texto auxiliar
+      ctx.fillStyle = '#ffffff';
+      ctx.font = '20px "Segoe UI", system-ui';
+      ctx.fillText('Apresente este cartão na lojinha para pagar suas compras.', 40, 430);
+
+      // Link deste próprio cartão (vai dentro do QR)
+      const cardUrl = window.location.origin + window.location.pathname + '?t=' + encodeURIComponent(token);
+
+      // Gera o QR e desenha no cartão
+      gerarQR(cardUrl, function(qrCanvas) {
+        const qrSize = 220;
+        ctx.drawImage(qrCanvas, canvas.width - qrSize - 40, canvas.height - qrSize - 40, qrSize, qrSize);
+      });
     }
 
     // Gera um QR code em uma canvas temporária e devolve essa canvas no callback
@@ -182,6 +275,59 @@
         }
         callback(qrCanvas);
       });
+    }
+
+    function renderStatement(stmtData) {
+      const container = document.getElementById('statement-list');
+      if (!container) return;
+
+      const items = stmtData.items || [];
+      if (!items.length) {
+        container.innerHTML = '<p class="statement-empty">Nenhuma movimentação registrada ainda.</p>';
+        return;
+      }
+
+      const html = items.map(item => {
+        const ts = new Date(item.timestamp);
+        const hora = ts.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+        const data = ts.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+        const valor = Number(item.amount || 0);
+        const saldo = Number(item.balanceAfter || 0);
+
+        let tipoLabel = 'Movimentação';
+        let classe = '';
+        if (item.type === 'DEBIT') {
+          tipoLabel = 'Débito';
+          classe = 'debit';
+        } else if (item.type === 'CREDIT' || item.type === 'CREDIT_ADD' || item.type === 'CREDIT_INIT') {
+          tipoLabel = 'Crédito';
+          classe = 'credit';
+        }
+
+        const desc = item.description || tipoLabel;
+
+        return `
+          <div class="statement-row">
+            <div class="statement-desc">
+              <div>${desc}</div>
+              <div style="font-size:0.75rem;color:#6b7280;">${data} • ${hora}</div>
+            </div>
+            <div class="statement-meta">
+              <div class="statement-amount ${classe}">
+                ${valor >= 0 ? '' : '- '}${Math.abs(valor).toLocaleString('pt-BR', {
+                  style: 'currency',
+                  currency: 'BRL'
+                })}
+              </div>
+              <div style="font-size:0.75rem;color:#6b7280;">
+                Saldo: ${saldo.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      container.innerHTML = html;
     }
 
     function baixarPNG() {
