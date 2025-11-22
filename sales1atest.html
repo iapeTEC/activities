@@ -231,12 +231,74 @@
       font-size: 0.9rem;
       text-align: center;
     }
+
+    /* Toggle Modo IAPE */
+    .toggle-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.5rem;
+      margin-top: 0.5rem;
+    }
+
+    .toggle-label {
+      font-size: 0.85rem;
+      color: #4b5563;
+    }
+
+    .toggle-switch {
+      position: relative;
+      width: 52px;
+      height: 28px;
+      border-radius: 999px;
+      border: none;
+      background: #e5e7eb;
+      padding: 0;
+      cursor: pointer;
+      transition: background 0.2s ease;
+    }
+
+    .toggle-switch .toggle-knob {
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 24px;
+      height: 24px;
+      border-radius: 999px;
+      background: white;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+      transition: transform 0.2s ease;
+    }
+
+    .toggle-switch.on {
+      background: #16a34a;
+    }
+
+    .toggle-switch.on .toggle-knob {
+      transform: translateX(24px);
+    }
+
+    .toggle-hint {
+      font-size: 0.75rem;
+      color: #6b7280;
+      margin-bottom: 0.75rem;
+    }
   </style>
 </head>
 <body>
   <main class="container">
     <h1>Bazar – Turma 1º Ano A</h1>
     <p class="subtitle">Controle de vendas e extornos</p>
+
+    <div class="toggle-row">
+      <span class="toggle-label">Modo cartão IAPE</span>
+      <button id="toggle-iape" class="toggle-switch" type="button" aria-pressed="false">
+        <span class="toggle-knob"></span>
+      </button>
+    </div>
+    <div class="toggle-hint">
+      Desligado: recebe em dinheiro/Pix • Ligado: cobra do cartão IAPE
+    </div>
 
     <label for="produto">Produto</label>
     <input
@@ -286,8 +348,7 @@
   </main>
 
   <!-- Leitor de QR (jsQR) -->
-<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
-
+  <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
 
   <script>
     // 🔧 CONFIGURAÇÃO – API DO BAZAR (já existia)
@@ -297,9 +358,11 @@
     const TURMA = "1A";
 
     // 🔧 MODO CARTÃO IAPE
-    const IAPE_MODE_ENABLED = true; // mude para false se não quiser usar o cartão IAPE nessa turma
-    const IAPE_API_URL = "https://script.google.com/macros/s/AKfycbw6TPyucHyCttAWlnHXigQXkC1PwUajpzwQgzGOa-b1bSPfuQiGvDoBXttrrDJYllab/exec"; // Web App do IAPE
+    const IAPE_API_URL = "https://script.google.com/macros/s/AKfycby5RDf0UZVLkQL_oQlji6Gg5kbfmAl4NZx1DDDIDSRmAyXOKvoq2rADOIR6qPfR3gss/exec"; // Web App do IAPE
     const IAPE_CLASS_ACCOUNT_ID = "TURMA_1A"; // deve ser igual ao account_id da conta da turma na aba Accounts
+
+    // estado do modo IAPE (liga/desliga)
+    let iapeEnabled = false;
 
     function formatarBRL(valor) {
       return new Intl.NumberFormat("pt-BR", {
@@ -599,10 +662,45 @@
       await registrarNaPlanilha("VENDA", produto, numero);
     }
 
-    // 🔹 Listeners dos botões
+    // 🔹 Toggle Modo IAPE
+    function aplicarEstadoToggle() {
+      const btnToggle = document.getElementById("toggle-iape");
+      if (iapeEnabled) {
+        btnToggle.classList.add("on");
+        btnToggle.setAttribute("aria-pressed", "true");
+      } else {
+        btnToggle.classList.remove("on");
+        btnToggle.setAttribute("aria-pressed", "false");
+      }
+    }
 
+    function salvarEstadoToggle() {
+      try {
+        const chave = "iape_mode_" + TURMA;
+        localStorage.setItem(chave, iapeEnabled ? "1" : "0");
+      } catch (e) {
+        // ignora se não tiver localStorage
+      }
+    }
+
+    function carregarEstadoToggle() {
+      try {
+        const chave = "iape_mode_" + TURMA;
+        const v = localStorage.getItem(chave);
+        if (v === "1") {
+          iapeEnabled = true;
+        } else {
+          iapeEnabled = false;
+        }
+      } catch (e) {
+        iapeEnabled = false;
+      }
+      aplicarEstadoToggle();
+    }
+
+    // 🔹 Listeners dos botões
     document.getElementById("btn-vender").addEventListener("click", () => {
-      if (IAPE_MODE_ENABLED) {
+      if (iapeEnabled) {
         registrarVendaComIape();
       } else {
         const produtoInput = document.getElementById("produto");
@@ -620,8 +718,20 @@
       registrarNaPlanilha("EXTORNO", "", numero);
     });
 
+    document.getElementById("toggle-iape").addEventListener("click", () => {
+      iapeEnabled = !iapeEnabled;
+      aplicarEstadoToggle();
+      salvarEstadoToggle();
+      if (iapeEnabled) {
+        setMensagem("Modo cartão IAPE ATIVADO. A próxima venda vai debitar do cartão.", "ok");
+      } else {
+        setMensagem("Modo cartão IAPE DESATIVADO. Recebendo em dinheiro/Pix.", "ok");
+      }
+    });
+
     window.addEventListener("DOMContentLoaded", () => {
       document.getElementById("valor").focus();
+      carregarEstadoToggle();
     });
   </script>
 </body>
