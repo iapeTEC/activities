@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>IAPE Cash – Administração</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #f5f5f5;
+      margin: 0;
+      padding: 16px;
+    }
+    h1 {
+      font-size: 20px;
+      margin-bottom: 8px;
+    }
+    .card {
+      background: white;
+      padding: 16px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      margin-bottom: 16px;
+    }
+    label {
+      display: block;
+      margin-top: 8px;
+      font-size: 14px;
+    }
+    input, select {
+      width: 100%;
+      padding: 8px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      font-size: 14px;
+      margin-top: 4px;
+    }
+    button {
+      margin-top: 12px;
+      padding: 8px 16px;
+      border-radius: 999px;
+      border: none;
+      font-size: 14px;
+      cursor: pointer;
+      background: #2b5aa8;
+      color: white;
+    }
+    button:disabled {
+      opacity: 0.6;
+      cursor: default;
+    }
+    .result {
+      margin-top: 8px;
+      font-size: 13px;
+      color: #333;
+      word-break: break-all;
+    }
+    .highlight {
+      font-weight: bold;
+      color: #2b5aa8;
+    }
+    small {
+      font-size: 12px;
+      color: #666;
+    }
+  </style>
+</head>
+<body>
+  <h1>IAPE Cash – Administração</h1>
+
+  <div class="card">
+    <h2>Criar nova conta</h2>
+    <label>
+      Nome do responsável ou turma
+      <input type="text" id="newName" placeholder="Ex: Pai do João 6ºA">
+    </label>
+    <label>
+      Tipo de conta
+      <select id="newType">
+        <option value="PARENT">Responsável (PARENT)</option>
+        <option value="CLASS">Turma (CLASS)</option>
+      </select>
+    </label>
+    <label>
+      Saldo inicial (opcional)
+      <input type="number" step="0.01" id="newInitialBalance" placeholder="Ex: 100.00">
+    </label>
+    <small>Use saldo inicial se o pai já estiver pagando agora.</small>
+    <button id="btnCreate">Criar conta</button>
+    <div id="createResult" class="result"></div>
+  </div>
+
+  <div class="card">
+    <h2>Adicionar crédito</h2>
+    <label>
+      Token ou Account ID
+      <input type="text" id="creditTokenOrId" placeholder="Cole aqui o token ou o account_id">
+    </label>
+    <label>
+      Valor a adicionar
+      <input type="number" step="0.01" id="creditAmount" placeholder="Ex: 50.00">
+    </label>
+    <button id="btnCredit">Adicionar crédito</button>
+    <div id="creditResult" class="result"></div>
+  </div>
+
+  <script>
+    // CONFIGURE AQUI:
+    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw6TPyucHyCttAWlnHXigQXkC1PwUajpzwQgzGOa-b1bSPfuQiGvDoBXttrrDJYllab/exec';
+    const CARD_BASE_URL   = 'card.html'; // onde está seu card.html
+
+    const btnCreate = document.getElementById('btnCreate');
+    const createResult = document.getElementById('createResult');
+
+    const btnCredit = document.getElementById('btnCredit');
+    const creditResult = document.getElementById('creditResult');
+
+    btnCreate.addEventListener('click', async () => {
+      createResult.textContent = '';
+      btnCreate.disabled = true;
+
+      const name = document.getElementById('newName').value.trim();
+      const type = document.getElementById('newType').value;
+      const initialBalanceStr = document.getElementById('newInitialBalance').value.trim();
+      const initialBalance = initialBalanceStr || '0';
+
+      if (!name) {
+        createResult.textContent = 'Informe um nome.';
+        btnCreate.disabled = false;
+        return;
+      }
+
+      const url = APPS_SCRIPT_URL
+        + '?action=createAccount'
+        + '&name=' + encodeURIComponent(name)
+        + '&type=' + encodeURIComponent(type)
+        + '&initialBalance=' + encodeURIComponent(initialBalance);
+
+      try {
+        const res = await fetch(url);
+        const data = await res.json();
+
+        if (!data.success) {
+          createResult.textContent = 'Erro: ' + (data.error || 'Falha ao criar conta.');
+        } else {
+          const cardUrl = CARD_BASE_URL + '?t=' + encodeURIComponent(data.token);
+          createResult.innerHTML = `
+            Conta criada com sucesso!<br>
+            <span class="highlight">Account ID:</span> ${data.accountId}<br>
+            <span class="highlight">Token:</span> ${data.token}<br>
+            <span class="highlight">Saldo inicial:</span> R$ ${Number(data.balance).toFixed(2)}<br><br>
+            Envie este link para o responsável:<br>
+            <span class="highlight">${cardUrl}</span>
+          `;
+        }
+      } catch (err) {
+        console.error(err);
+        createResult.textContent = 'Erro de conexão ao criar conta.';
+      } finally {
+        btnCreate.disabled = false;
+      }
+    });
+
+    btnCredit.addEventListener('click', async () => {
+      creditResult.textContent = '';
+      btnCredit.disabled = true;
+
+      const tokenOrId = document.getElementById('creditTokenOrId').value.trim();
+      const amountStr = document.getElementById('creditAmount').value.trim();
+
+      if (!tokenOrId) {
+        creditResult.textContent = 'Informe o token ou account_id.';
+        btnCredit.disabled = false;
+        return;
+      }
+      if (!amountStr) {
+        creditResult.textContent = 'Informe o valor.';
+        btnCredit.disabled = false;
+        return;
+      }
+
+      const url = APPS_SCRIPT_URL
+        + '?action=addCredit'
+        + '&tokenOrId=' + encodeURIComponent(tokenOrId)
+        + '&amount=' + encodeURIComponent(amountStr);
+
+      try {
+        const res = await fetch(url);
+        const data = await res.json();
+
+        if (!data.success) {
+          creditResult.textContent = 'Erro: ' + (data.error || 'Falha ao adicionar crédito.');
+        } else {
+          creditResult.innerHTML = `
+            Crédito adicionado com sucesso!<br>
+            <span class="highlight">Account ID:</span> ${data.accountId}<br>
+            <span class="highlight">Novo saldo:</span> R$ ${Number(data.balance).toFixed(2)}
+          `;
+        }
+      } catch (err) {
+        console.error(err);
+        creditResult.textContent = 'Erro de conexão ao adicionar crédito.';
+      } finally {
+        btnCredit.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>
