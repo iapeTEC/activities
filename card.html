@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Card IAPE</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Biblioteca de QR Code (client-side, funciona no GitHub Pages) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode/1.5.0/qrcode.min.js"></script>
+
+  <style>
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #f5f5f5;
+      margin: 0;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+    }
+    #cardContainer {
+      background: white;
+      padding: 12px;
+      border-radius: 16px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+    }
+    canvas {
+      max-width: 100%;
+      height: auto;
+      border-radius: 12px;
+    }
+    #info {
+      text-align: center;
+      font-size: 14px;
+      color: #555;
+    }
+    #downloadBtn {
+      padding: 8px 16px;
+      border-radius: 999px;
+      border: none;
+      font-size: 14px;
+      cursor: pointer;
+      background: #2b5aa8;
+      color: white;
+    }
+    #downloadBtn:disabled {
+      opacity: 0.6;
+      cursor: default;
+    }
+  </style>
+</head>
+<body>
+  <div id="cardContainer">
+    <canvas id="cardCanvas" width="900" height="540"></canvas>
+  </div>
+  <div id="info">Carregando dados do cartão...</div>
+  <button id="downloadBtn" disabled>Baixar cartão em PNG</button>
+
+  <script>
+    // CONFIGURE AQUI:
+    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw6TPyucHyCttAWlnHXigQXkC1PwUajpzwQgzGOa-b1bSPfuQiGvDoBXttrrDJYllab/exec';
+
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get('t') || params.get('token'); // aceita ?t= ou ?token=
+
+    const infoEl = document.getElementById('info');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const canvas = document.getElementById('cardCanvas');
+    const ctx = canvas.getContext('2d');
+
+    if (!token) {
+      infoEl.textContent = 'Token não encontrado na URL.';
+    } else {
+      carregarDados();
+    }
+
+    function carregarDados() {
+      const url = APPS_SCRIPT_URL + '?action=card&token=' + encodeURIComponent(token);
+      fetch(url)
+        .then(res => res.json())
+        .then(data => {
+          if (!data.success) {
+            infoEl.textContent = 'Erro: ' + (data.error || 'falha ao carregar cartão');
+            return;
+          }
+          desenharCartao(data);
+        })
+        .catch(err => {
+          console.error(err);
+          infoEl.textContent = 'Erro de conexão ao carregar o cartão.';
+        });
+    }
+
+    function desenharCartao(data) {
+      const nome = data.name;
+      const balance = Number(data.balance || 0);
+      const saldoFormatado = balance.toLocaleString('pt-BR', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      });
+
+      // Fundo
+      ctx.fillStyle = '#1a2b4f'; // azul escuro
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Faixa superior
+      ctx.fillStyle = '#2b5aa8';
+      ctx.fillRect(0, 0, canvas.width, 120);
+
+      // Título
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 42px "Segoe UI", system-ui';
+      ctx.fillText('IAPE MARKET CARD', 40, 80);
+
+      // Logo
+      const logo = new Image();
+      logo.src = 'iape.png?text=IAPE'; // seu PNG
+
+      logo.onload = function() {
+        const logoSize = 100;
+        ctx.drawImage(logo, canvas.width - logoSize - 40, 20, logoSize, logoSize);
+
+        // Nome do responsável
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 36px "Segoe UI", system-ui';
+        ctx.fillText('Responsável:', 40, 190);
+
+        ctx.font = '28px "Segoe UI", system-ui';
+        wrapText(ctx, nome, 40, 230, canvas.width - 320, 32);
+
+        // Saldo
+        ctx.font = 'bold 34px "Segoe UI", system-ui';
+        ctx.fillText('Saldo disponível:', 40, 310);
+
+        ctx.font = 'bold 60px "Segoe UI", system-ui';
+        ctx.fillStyle = '#ffdd55';
+        ctx.fillText('R$ ' + saldoFormatado, 40, 380);
+
+        // Texto auxiliar
+        ctx.fillStyle = '#ffffff';
+        ctx.font = '20px "Segoe UI", system-ui';
+        ctx.fillText('Apresente este cartão na lojinha para pagar suas compras.', 40, 430);
+
+        // Link deste próprio cartão (vai dentro do QR)
+        const cardUrl = window.location.origin + window.location.pathname + '?t=' + encodeURIComponent(token);
+
+        // Gera o QR e desenha no cartão
+        gerarQR(cardUrl, function(qrCanvas) {
+          const qrSize = 220;
+          ctx.drawImage(qrCanvas, canvas.width - qrSize - 40, canvas.height - qrSize - 40, qrSize, qrSize);
+
+          infoEl.textContent = 'Cartão carregado com sucesso.';
+          downloadBtn.disabled = false;
+          downloadBtn.addEventListener('click', baixarPNG);
+        });
+      };
+
+      logo.onerror = function() {
+        infoEl.textContent = 'Não foi possível carregar o logo, mas o cartão funciona.';
+      };
+    }
+
+    // Gera um QR code em uma canvas temporária e devolve essa canvas no callback
+    function gerarQR(text, callback) {
+      if (typeof QRCode === 'undefined') {
+        console.error('Biblioteca QRCode não carregada.');
+        infoEl.textContent = 'Erro: biblioteca de QR não carregou (QRCode undefined).';
+        return;
+      }
+
+      const qrCanvas = document.createElement('canvas');
+
+      QRCode.toCanvas(qrCanvas, text, {
+        width: 220,
+        margin: 1
+      }, function (error) {
+        if (error) {
+          console.error(error);
+          infoEl.textContent = 'Erro ao gerar QR code.';
+          return;
+        }
+        callback(qrCanvas);
+      });
+    }
+
+    function baixarPNG() {
+      const dataURL = canvas.toDataURL('image/png');
+      const a = document.createElement('a');
+      a.href = dataURL;
+      a.download = 'iape-card.png';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }
+
+    // helper simples pra quebrar texto em múltiplas linhas
+    function wrapText(context, text, x, y, maxWidth, lineHeight) {
+      const words = text.split(' ');
+      let line = '';
+
+      for (let n = 0; n < words.length; n++) {
+        const testLine = line + words[n] + ' ';
+        const metrics = context.measureText(testLine);
+        const testWidth = metrics.width;
+        if (testWidth > maxWidth && n > 0) {
+          context.fillText(line, x, y);
+          line = words[n] + ' ';
+          y += lineHeight;
+        } else {
+          line = testLine;
+        }
+      }
+      context.fillText(line, x, y);
+    }
+  </script>
+</body>
+</html>
