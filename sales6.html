@@ -36,59 +36,57 @@
       margin-bottom: 1.5rem;
     }
 
-    label {
-      display: block;
-      font-size: 0.9rem;
-      margin-bottom: 0.25rem;
-      font-weight: 600;
-    }
-
-    input {
-      width: 100%;
-      padding: 0.6rem 0.7rem;
-      border-radius: 0.5rem;
-      border: 1px solid #d1d5db;
-      font-size: 1rem;
-      box-sizing: border-box;
-      margin-bottom: 1rem;
-    }
-
-    input:focus {
-      outline: 2px solid #3b82f6;
-      border-color: transparent;
-    }
-
-    .buttons {
-      display: flex;
+    /* CARDS DE PRODUTO */
+    .products-grid {
+      display: grid;
+      grid-template-columns: 1fr;
       gap: 0.75rem;
-      margin-bottom: 1rem;
+      margin-bottom: 1.5rem;
     }
 
-    button {
-      flex: 1;
-      padding: 0.7rem 0.8rem;
-      border-radius: 999px;
-      border: none;
-      font-size: 1rem;
-      font-weight: 600;
+    @media (min-width: 480px) {
+      .products-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    .product-card {
+      background: white;
+      border-radius: 1rem;
+      padding: 0.9rem 1rem;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.08);
       cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      min-height: 90px;
+      transition: transform 0.08s ease, box-shadow 0.08s ease;
     }
 
-    #btn-vender {
-      background: #16a34a;
-      color: white;
+    .product-card:active {
+      transform: scale(0.97);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.12);
     }
 
-    #btn-extornar {
-      background: #f97316;
-      color: white;
+    .product-name {
+      font-weight: 700;
+      font-size: 1rem;
+      margin-bottom: 0.25rem;
     }
 
-    button:disabled {
-      opacity: 0.6;
-      cursor: progress;
+    .product-price {
+      font-size: 0.95rem;
+      color: #16a34a;
+      font-weight: 600;
     }
 
+    .product-note {
+      font-size: 0.8rem;
+      color: #6b7280;
+      margin-top: 0.1rem;
+    }
+
+    /* CARD DE STATUS */
     .status-card {
       background: white;
       border-radius: 1rem;
@@ -193,36 +191,98 @@
       color: #6b7280;
       padding: 0.5rem 0.6rem;
     }
+
+    /* OVERLAY DE QUANTIDADE */
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.35);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 20;
+    }
+
+    .dialog {
+      background: white;
+      border-radius: 1rem;
+      padding: 1rem 1.1rem 0.9rem;
+      max-width: 320px;
+      width: calc(100% - 2rem);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    }
+
+    .dialog-title {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 0.4rem;
+    }
+
+    .dialog-text {
+      font-size: 0.9rem;
+      color: #4b5563;
+      margin-bottom: 0.6rem;
+    }
+
+    .dialog input {
+      width: 100%;
+      padding: 0.55rem 0.7rem;
+      border-radius: 0.6rem;
+      border: 1px solid #d1d5db;
+      font-size: 1rem;
+      box-sizing: border-box;
+      margin-bottom: 0.7rem;
+      text-align: center;
+    }
+
+    .dialog-buttons {
+      display: flex;
+      gap: 0.5rem;
+      justify-content: flex-end;
+    }
+
+    .btn-dialog {
+      padding: 0.45rem 0.9rem;
+      border-radius: 999px;
+      border: none;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .btn-cancel {
+      background: #e5e7eb;
+      color: #374151;
+    }
+
+    .btn-confirm {
+      background: #16a34a;
+      color: white;
+    }
   </style>
 </head>
 <body>
   <main class="container">
     <!-- 🔹 Altere esse texto com o nome da turma dessa página -->
     <h1>Bazar – Turma 6º A</h1>
-    <p class="subtitle">Controle de vendas e extornos</p>
+    <p class="subtitle">Toque no produto, informe a quantidade e registre a venda</p>
 
-    <label for="produto">Produto</label>
-    <input
-      id="produto"
-      type="text"
-      placeholder="Ex.: Pastel de queijo"
-      autocomplete="off"
-    />
+    <!-- CARDS DOS DOIS PRODUTOS FIXOS -->
+    <section class="products-grid">
+      <article class="product-card" data-produto-id="vela25">
+        <div class="product-name">Vela 25g</div>
+        <div class="product-price">R$ 5,00</div>
+        <div class="product-note">Toque para registrar venda</div>
+      </article>
 
-    <label for="valor">Valor (R$)</label>
-    <input
-      id="valor"
-      type="text"
-      inputmode="decimal"
-      placeholder="Ex.: 5,00"
-      autocomplete="off"
-    />
+      <article class="product-card" data-produto-id="vela50">
+        <div class="product-name">Vela 50g</div>
+        <div class="product-price">R$ 10,00</div>
+        <div class="product-note">Toque para registrar venda</div>
+      </article>
+    </section>
 
-    <div class="buttons">
-      <button id="btn-vender">Registrar venda</button>
-      <button id="btn-extornar">Extornar</button>
-    </div>
-
+    <!-- CARD DE TOTAIS -->
     <div class="status-card">
       <div class="status-row">
         <strong>Total vendido:</strong>
@@ -240,6 +300,7 @@
       <div class="loading-indicator" id="loading-indicator"></div>
     </div>
 
+    <!-- LISTA ZEBRADA -->
     <div class="lista-card">
       <div class="lista-title">Últimos itens lançados</div>
       <div id="lista-itens">
@@ -248,12 +309,42 @@
     </div>
   </main>
 
+  <!-- OVERLAY PARA PERGUNTAR A QUANTIDADE -->
+  <div class="overlay" id="overlay">
+    <div class="dialog">
+      <div class="dialog-title" id="dialog-title">Vela</div>
+      <div class="dialog-text" id="dialog-text">
+        Informe a quantidade vendida:
+      </div>
+      <input
+        id="qty-input"
+        type="number"
+        inputmode="numeric"
+        min="1"
+        step="1"
+        placeholder="Ex.: 1, 2, 3..."
+      />
+      <div class="dialog-buttons">
+        <button class="btn-dialog btn-cancel" id="btn-cancelar">Cancelar</button>
+        <button class="btn-dialog btn-confirm" id="btn-confirmar">Confirmar</button>
+      </div>
+    </div>
+  </div>
+
   <script>
-    // 🔧 CONFIGURAÇÃO – TROCAR PELO LINK DO SEU WEB APP (Apps Script)
+    // 🔧 CONFIGURAÇÃO – LINK DO WEB APP (Apps Script)
     const API_URL = "https://script.google.com/macros/s/AKfycbw4rbaZd9Bcj2DWAJpXI8NYWfVWkIQxj8gYQ7wr8r6qZNPDI-kO576j7Hb1WVLX4vSW/exec";
 
-    // 🔧 CÓDIGO DA TURMA DESSA PÁGINA (ex.: "6A", "6B", "7A"...)
+    // 🔧 CÓDIGO DA TURMA DESSA PÁGINA
     const TURMA = "6A";
+
+    // Produtos fixos
+    const PRODUCTS = {
+      vela25: { nome: "Vela 25g", preco: 5 },
+      vela50: { nome: "Vela 50g", preco: 10 }
+    };
+
+    let produtoAtual = null; // { nome, preco, id }
 
     function formatarBRL(valor) {
       return new Intl.NumberFormat("pt-BR", {
@@ -270,13 +361,15 @@
     }
 
     function setLoading(loading) {
-      const btnVender = document.getElementById("btn-vender");
-      const btnExtornar = document.getElementById("btn-extornar");
       const indicator = document.getElementById("loading-indicator");
-
-      btnVender.disabled = loading;
-      btnExtornar.disabled = loading;
       indicator.textContent = loading ? "Enviando para a planilha..." : "";
+
+      // Desabilita/abilita cards enquanto envia
+      const cards = document.querySelectorAll(".product-card");
+      cards.forEach(card => {
+        card.style.pointerEvents = loading ? "none" : "auto";
+        card.style.opacity = loading ? "0.6" : "1";
+      });
     }
 
     function atualizarTotais(totais) {
@@ -317,51 +410,41 @@
       container.innerHTML = html;
     }
 
-    // 🔹 Aceitar tanto "5,50" quanto "5.50"
-    function parseValorBR(raw) {
-      if (!raw) return NaN;
-      let s = raw.toString().trim();
+    function abrirDialogQuantidade(produto) {
+      produtoAtual = produto;
+      const overlay = document.getElementById("overlay");
+      const title = document.getElementById("dialog-title");
+      const text = document.getElementById("dialog-text");
+      const input = document.getElementById("qty-input");
 
-      // remove espaços
-      s = s.replace(/\s+/g, "");
-
-      // remove pontos como separador de milhar (1.000,50 -> 1000,50)
-      s = s.replace(/\./g, "");
-
-      // troca vírgula decimal por ponto (1000,50 -> 1000.50)
-      s = s.replace(",", ".");
-
-      const numero = Number(s);
-      return numero;
+      title.textContent = produto.nome;
+      text.textContent = `Informe a quantidade de ${produto.nome} vendida:`;
+      input.value = "";
+      overlay.style.display = "flex";
+      setTimeout(() => input.focus(), 50);
     }
 
-    async function registrar(acao) {
-      const produtoInput = document.getElementById("produto");
-      const valorInput = document.getElementById("valor");
+    function fecharDialogQuantidade() {
+      const overlay = document.getElementById("overlay");
+      overlay.style.display = "none";
+    }
 
-      const produto = produtoInput.value.trim();
-      const numero = parseValorBR(valorInput.value);
-
-      if (acao === "VENDA" && !produto) {
-        setMensagem("Informe o nome do produto.", "erro");
-        return;
-      }
-
-      if (isNaN(numero) || numero <= 0) {
-        setMensagem("Informe um valor maior que zero.", "erro");
-        return;
-      }
+    async function registrarVenda(produtoNome, precoUnitario, quantidade) {
+      const valorTotal = precoUnitario * quantidade;
+      const descricaoProduto = `${produtoNome} x${quantidade}`;
 
       setLoading(true);
       setMensagem("");
 
       try {
-        // monta a URL com os parâmetros na querystring
-        const url = `${API_URL}?turma=${encodeURIComponent(TURMA)}&valor=${encodeURIComponent(
-          numero
-        )}&acao=${encodeURIComponent(acao)}&produto=${encodeURIComponent(produto)}&t=${Date.now()}`;
+        const url =
+          `${API_URL}?turma=${encodeURIComponent(TURMA)}` +
+          `&valor=${encodeURIComponent(valorTotal)}` +
+          `&acao=${encodeURIComponent("VENDA")}` +
+          `&produto=${encodeURIComponent(descricaoProduto)}` +
+          `&t=${Date.now()}`;
 
-        const resposta = await fetch(url); // GET simples
+        const resposta = await fetch(url);
         const dados = await resposta.json();
 
         if (!dados.success) {
@@ -370,13 +453,7 @@
 
         atualizarTotais(dados.totais);
         atualizarLista(dados.itens || []);
-
-        setMensagem("Registro salvo com sucesso! ✔", "ok");
-        valorInput.value = "";
-        if (acao === "VENDA") {
-          produtoInput.value = "";
-        }
-        valorInput.focus();
+        setMensagem("Venda registrada com sucesso! ✔", "ok");
       } catch (erro) {
         console.error(erro);
         setMensagem("Erro: " + erro.message, "erro");
@@ -385,15 +462,41 @@
       }
     }
 
-    document.getElementById("btn-vender").addEventListener("click", () =>
-      registrar("VENDA")
-    );
-    document.getElementById("btn-extornar").addEventListener("click", () =>
-      registrar("EXTORNO")
-    );
+    // Eventos principais
+    document.addEventListener("DOMContentLoaded", () => {
+      // Clique nos cards de produto
+      document.querySelectorAll(".product-card").forEach(card => {
+        card.addEventListener("click", () => {
+          const id = card.getAttribute("data-produto-id");
+          const produto = PRODUCTS[id];
+          if (!produto) return;
+          abrirDialogQuantidade({ ...produto, id });
+        });
+      });
 
-    window.addEventListener("DOMContentLoaded", () => {
-      document.getElementById("valor").focus();
+      // Botões do diálogo
+      document.getElementById("btn-cancelar").addEventListener("click", () => {
+        fecharDialogQuantidade();
+      });
+
+      document.getElementById("btn-confirmar").addEventListener("click", async () => {
+        const input = document.getElementById("qty-input");
+        const qtd = parseInt(input.value, 10);
+
+        if (!produtoAtual) {
+          fecharDialogQuantidade();
+          return;
+        }
+
+        if (!qtd || qtd <= 0) {
+          setMensagem("Informe uma quantidade válida (1 ou mais).", "erro");
+          input.focus();
+          return;
+        }
+
+        fecharDialogQuantidade();
+        await registrarVenda(produtoAtual.nome, produtoAtual.preco, qtd);
+      });
     });
   </script>
 </body>
