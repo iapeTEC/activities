@@ -15,6 +15,31 @@ const modal = document.getElementById("modal");
 const modalMsg = document.getElementById("modalMsg");
 const modalOk = document.getElementById("modalOk");
 
+// Theme toggle
+const themeToggle = document.getElementById("themeToggle");
+const THEME_KEY = "submission_theme";
+
+function applyTheme(theme) {
+  document.documentElement.dataset.theme = theme;
+  localStorage.setItem(THEME_KEY, theme);
+  if (themeToggle) themeToggle.checked = (theme === "dark");
+}
+
+(function initTheme(){
+  const saved = localStorage.getItem(THEME_KEY);
+  if (saved === "dark" || saved === "light") {
+    applyTheme(saved);
+  } else {
+    applyTheme("light"); // default claro
+  }
+})();
+
+if (themeToggle) {
+  themeToggle.addEventListener("change", () => {
+    applyTheme(themeToggle.checked ? "dark" : "light");
+  });
+}
+
 function openModal(msg) {
   modalMsg.textContent = msg;
   modal.hidden = false;
