@@ -4,13 +4,26 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Entrega de Texto</title>
-  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="styles7.css" />
 </head>
 <body>
   <main class="wrap">
     <h1>Escreva seu trabalho aqui:</h1>
 
     <section class="card">
+      <div class="meta">
+        <input id="studentName" class="field" type="text" placeholder="Seu nome" autocomplete="name" />
+        <select id="studentClass" class="field">
+          <option value="" selected disabled>Selecione sua turma</option>
+          <option>1 Ano A</option>
+          <option>1 Ano B</option>
+          <option>2 Ano A</option>
+          <option>2 Ano B</option>
+          <option>3 Ano A</option>
+          <option>3 Ano B</option>
+        </select>
+      </div>
+
       <div id="editor"
            class="editor"
            contenteditable="true"
@@ -32,6 +45,13 @@
 
     <button id="sendBtn" class="send">Enviar ao Professor</button>
   </main>
+
+  <div id="modal" class="modal" hidden>
+    <div class="modalCard" role="dialog" aria-modal="true">
+      <div id="modalMsg" class="modalMsg"></div>
+      <button id="modalOk" class="modalOk" type="button">OK</button>
+    </div>
+  </div>
 
   <script src="app.js"></script>
 </body>
