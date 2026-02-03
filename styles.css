@@ -77,6 +77,23 @@ select.field{
   cursor:pointer;
 }
 
+/* Deixa o texto do SELECT visível (tema escuro) */
+select.field{
+  color: rgba(255,255,255,.92);
+}
+
+/* A cor das opções do dropdown (Chrome/Edge/Firefox) */
+select.field option{
+  background: #0f172a;
+  color: rgba(255,255,255,.92);
+}
+
+/* Placeholder do select (a primeira opção disabled) */
+select.field option[disabled]{
+  color: rgba(255,255,255,.60);
+}
+
+
 .editor{
   min-height: 300px;
   padding: 18px 18px 8px;
