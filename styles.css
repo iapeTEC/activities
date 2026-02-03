@@ -1,0 +1,115 @@
+:root{
+  --bg1:#0b1220;
+  --bg2:#0a1b15;
+  --card:#0f172a;
+  --border:rgba(255,255,255,.10);
+  --text:rgba(255,255,255,.92);
+  --muted:rgba(255,255,255,.60);
+  --shadow: 0 20px 60px rgba(0,0,0,.45);
+  --radius: 18px;
+}
+
+*{ box-sizing:border-box; }
+html,body{ height:100%; }
+body{
+  margin:0;
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Apple Color Emoji","Segoe UI Emoji";
+  color:var(--text);
+  background:
+    radial-gradient(1200px 800px at 20% 10%, rgba(46, 204, 113, .12), transparent 60%),
+    radial-gradient(1000px 700px at 80% 30%, rgba(52, 152, 219, .10), transparent 60%),
+    linear-gradient(160deg, var(--bg1), var(--bg2));
+}
+
+.wrap{
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 48px 18px 64px;
+  display:flex;
+  flex-direction:column;
+  gap: 18px;
+}
+
+h1{
+  margin:0 0 6px;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: .2px;
+  color: var(--text);
+}
+
+.card{
+  background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  overflow:hidden;
+}
+
+.editor{
+  min-height: 320px;
+  padding: 18px 18px 8px;
+  outline:none;
+  line-height: 1.55;
+  font-size: 16px;
+}
+
+.editor:empty:before{
+  content: "Digite aqui…";
+  color: var(--muted);
+}
+
+.toolbar{
+  display:flex;
+  gap: 10px;
+  padding: 12px 14px 14px;
+  border-top: 1px solid rgba(255,255,255,.08);
+  align-items:center;
+  flex-wrap:wrap;
+}
+
+.tbtn{
+  appearance:none;
+  border: 1px solid rgba(255,255,255,.12);
+  background: rgba(255,255,255,.06);
+  color: var(--text);
+  border-radius: 12px;
+  padding: 10px 12px;
+  font-size: 14px;
+  cursor:pointer;
+  transition: transform .08s ease, background .12s ease, border-color .12s ease;
+}
+
+.tbtn:hover{
+  background: rgba(255,255,255,.10);
+  border-color: rgba(255,255,255,.18);
+}
+.tbtn:active{ transform: translateY(1px); }
+
+.sep{
+  width:1px;
+  height: 22px;
+  background: rgba(255,255,255,.12);
+  margin: 0 2px;
+}
+
+.send{
+  width: 100%;
+  border: 0;
+  border-radius: 16px;
+  padding: 14px 16px;
+  font-size: 16px;
+  font-weight: 700;
+  color: rgba(255,255,255,.95);
+  cursor:pointer;
+  box-shadow: 0 18px 45px rgba(0,0,0,.35);
+  background: linear-gradient(135deg, rgba(46, 204, 113, 1), rgba(20, 170, 90, 1));
+  transition: transform .10s ease, filter .12s ease;
+}
+
+.send:hover{ filter: brightness(1.06); }
+.send:active{ transform: translateY(1px); }
+
+@media (max-width: 520px){
+  .editor{ min-height: 260px; }
+}

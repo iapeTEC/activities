@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Entrega de Texto</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="wrap">
+    <h1>Escreva seu trabalho aqui:</h1>
+
+    <section class="card">
+      <div id="editor"
+           class="editor"
+           contenteditable="true"
+           spellcheck="true"
+           aria-label="Editor de texto"></div>
+
+      <div id="toolbar" class="toolbar" hidden>
+        <button type="button" class="tbtn" data-cmd="bold" aria-label="Negrito"><b>B</b></button>
+        <button type="button" class="tbtn" data-cmd="italic" aria-label="Itálico"><i>I</i></button>
+        <button type="button" class="tbtn" data-cmd="underline" aria-label="Sublinhado"><u>U</u></button>
+        <span class="sep"></span>
+        <button type="button" class="tbtn" data-cmd="insertUnorderedList" aria-label="Marcadores">•</button>
+        <button type="button" class="tbtn" data-cmd="insertOrderedList" aria-label="Numeração">1.</button>
+        <span class="sep"></span>
+        <button type="button" class="tbtn" id="linkBtn" aria-label="Inserir link">🔗</button>
+        <button type="button" class="tbtn" data-cmd="removeFormat" aria-label="Limpar formatação">⟲</button>
+      </div>
+    </section>
+
+    <button id="sendBtn" class="send">Enviar ao Professor</button>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
