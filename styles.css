@@ -158,6 +158,11 @@ select.field{
   backdrop-filter: blur(6px);
 }
 
+/* FIX: garante que o atributo hidden funcione mesmo com display:flex acima */
+.modal[hidden]{
+  display: none !important;
+}
+
 .modalCard{
   width: min(520px, 92vw);
   border-radius: 18px;
