@@ -8,6 +8,13 @@
 </head>
 <body>
   <main class="wrap">
+    <div class="topbar">
+      <label class="switch" aria-label="Alternar tema claro/escuro">
+        <input id="themeToggle" type="checkbox" />
+        <span class="slider" aria-hidden="true"></span>
+      </label>
+    </div>
+
     <h1>Escreva seu trabalho aqui:</h1>
 
     <section class="card">
@@ -38,8 +45,8 @@
         <button type="button" class="tbtn" data-cmd="insertUnorderedList" aria-label="Marcadores">•</button>
         <button type="button" class="tbtn" data-cmd="insertOrderedList" aria-label="Numeração">1.</button>
         <span class="sep"></span>
-        <button type="button" class="tbtn" id="linkBtn" aria-label="Inserir link">🔗</button>
-        <button type="button" class="tbtn" data-cmd="removeFormat" aria-label="Limpar formatação">⟲</button>
+        <button type="button" class="tbtn" id="linkBtn" aria-label="Inserir link">Link</button>
+        <button type="button" class="tbtn" data-cmd="removeFormat" aria-label="Limpar formatação">Limpar</button>
       </div>
     </section>
 
