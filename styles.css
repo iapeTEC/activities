@@ -1,33 +1,74 @@
 :root{
+  /* Light theme (default) */
+  --bg1:#f5f7fb;
+  --bg2:#eef2f7;
+  --card:#ffffff;
+  --border: rgba(17,24,39,.10);
+  --text: rgba(17,24,39,.92);
+  --muted: rgba(17,24,39,.55);
+  --shadow: 0 18px 60px rgba(17,24,39,.12);
+  --radius: 18px;
+
+  --fieldBg: rgba(17,24,39,.04);
+  --fieldBorder: rgba(17,24,39,.10);
+  --fieldFocus: rgba(17,24,39,.16);
+
+  --btnBg: rgba(17,24,39,.06);
+  --btnBorder: rgba(17,24,39,.12);
+
+  --overlay: rgba(17,24,39,.25);
+
+  --green1: rgba(46, 204, 113, 1);
+  --green2: rgba(20, 170, 90, 1);
+}
+
+/* Dark theme (toggle) */
+html[data-theme="dark"]{
   --bg1:#0b1220;
   --bg2:#0a1b15;
   --card:#0f172a;
-  --border:rgba(255,255,255,.10);
-  --text:rgba(255,255,255,.92);
-  --muted:rgba(255,255,255,.60);
+  --border: rgba(255,255,255,.10);
+  --text: rgba(255,255,255,.92);
+  --muted: rgba(255,255,255,.60);
   --shadow: 0 20px 60px rgba(0,0,0,.45);
-  --radius: 18px;
+
+  --fieldBg: rgba(255,255,255,.06);
+  --fieldBorder: rgba(255,255,255,.12);
+  --fieldFocus: rgba(255,255,255,.20);
+
+  --btnBg: rgba(255,255,255,.06);
+  --btnBorder: rgba(255,255,255,.12);
+
+  --overlay: rgba(0,0,0,.55);
 }
 
 *{ box-sizing:border-box; }
 html,body{ height:100%; }
+
 body{
   margin:0;
   font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Apple Color Emoji","Segoe UI Emoji";
   color:var(--text);
   background:
-    radial-gradient(1200px 800px at 20% 10%, rgba(46, 204, 113, .12), transparent 60%),
-    radial-gradient(1000px 700px at 80% 30%, rgba(52, 152, 219, .10), transparent 60%),
+    radial-gradient(1200px 800px at 20% 10%, rgba(46, 204, 113, .10), transparent 60%),
+    radial-gradient(1000px 700px at 80% 30%, rgba(52, 152, 219, .08), transparent 60%),
     linear-gradient(160deg, var(--bg1), var(--bg2));
 }
 
 .wrap{
   max-width: 920px;
   margin: 0 auto;
-  padding: 48px 18px 64px;
+  padding: 28px 18px 64px;
   display:flex;
   flex-direction:column;
   gap: 18px;
+}
+
+.topbar{
+  display:flex;
+  justify-content:flex-end;
+  align-items:center;
+  min-height: 34px;
 }
 
 h1{
@@ -39,7 +80,7 @@ h1{
 }
 
 .card{
-  background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+  background: var(--card);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
@@ -50,15 +91,15 @@ h1{
   display:flex;
   gap: 12px;
   padding: 14px 14px 12px;
-  border-bottom: 1px solid rgba(255,255,255,.08);
+  border-bottom: 1px solid var(--border);
   flex-wrap:wrap;
 }
 
 .field{
   flex: 1 1 240px;
   appearance:none;
-  border: 1px solid rgba(255,255,255,.12);
-  background: rgba(255,255,255,.06);
+  border: 1px solid var(--fieldBorder);
+  background: var(--fieldBg);
   color: var(--text);
   border-radius: 14px;
   padding: 12px 12px;
@@ -66,33 +107,25 @@ h1{
   outline: none;
 }
 
-.field::placeholder{ color: rgba(255,255,255,.55); }
+.field::placeholder{ color: var(--muted); }
 
 .field:focus{
-  border-color: rgba(255,255,255,.20);
-  background: rgba(255,255,255,.08);
+  border-color: var(--fieldFocus);
+  background: color-mix(in srgb, var(--fieldBg) 85%, white 15%);
 }
 
 select.field{
   cursor:pointer;
 }
 
-/* Deixa o texto do SELECT visível (tema escuro) */
-select.field{
-  color: rgba(255,255,255,.92);
-}
-
-/* A cor das opções do dropdown (Chrome/Edge/Firefox) */
+/* Dropdown legível em ambos temas */
 select.field option{
-  background: #0f172a;
-  color: rgba(255,255,255,.92);
+  background: var(--card);
+  color: var(--text);
 }
-
-/* Placeholder do select (a primeira opção disabled) */
 select.field option[disabled]{
-  color: rgba(255,255,255,.60);
+  color: var(--muted);
 }
-
 
 .editor{
   min-height: 300px;
@@ -111,15 +144,15 @@ select.field option[disabled]{
   display:flex;
   gap: 10px;
   padding: 12px 14px 14px;
-  border-top: 1px solid rgba(255,255,255,.08);
+  border-top: 1px solid var(--border);
   align-items:center;
   flex-wrap:wrap;
 }
 
 .tbtn{
   appearance:none;
-  border: 1px solid rgba(255,255,255,.12);
-  background: rgba(255,255,255,.06);
+  border: 1px solid var(--btnBorder);
+  background: var(--btnBg);
   color: var(--text);
   border-radius: 12px;
   padding: 10px 12px;
@@ -129,15 +162,20 @@ select.field option[disabled]{
 }
 
 .tbtn:hover{
-  background: rgba(255,255,255,.10);
-  border-color: rgba(255,255,255,.18);
+  background: color-mix(in srgb, var(--btnBg) 70%, white 30%);
+  border-color: color-mix(in srgb, var(--btnBorder) 70%, black 30%);
 }
+html[data-theme="dark"] .tbtn:hover{
+  background: color-mix(in srgb, var(--btnBg) 70%, white 30%);
+  border-color: color-mix(in srgb, var(--btnBorder) 70%, white 30%);
+}
+
 .tbtn:active{ transform: translateY(1px); }
 
 .sep{
   width:1px;
   height: 22px;
-  background: rgba(255,255,255,.12);
+  background: var(--border);
   margin: 0 2px;
 }
 
@@ -150,12 +188,12 @@ select.field option[disabled]{
   font-weight: 700;
   color: rgba(255,255,255,.95);
   cursor:pointer;
-  box-shadow: 0 18px 45px rgba(0,0,0,.35);
-  background: linear-gradient(135deg, rgba(46, 204, 113, 1), rgba(20, 170, 90, 1));
+  box-shadow: 0 18px 45px rgba(0,0,0,.18);
+  background: linear-gradient(135deg, var(--green1), var(--green2));
   transition: transform .10s ease, filter .12s ease;
 }
 
-.send:hover{ filter: brightness(1.06); }
+.send:hover{ filter: brightness(1.05); }
 .send:active{ transform: translateY(1px); }
 
 .send[disabled]{
@@ -164,6 +202,7 @@ select.field option[disabled]{
   filter: none;
 }
 
+/* Modal */
 .modal{
   position: fixed;
   inset: 0;
@@ -171,11 +210,11 @@ select.field option[disabled]{
   align-items:center;
   justify-content:center;
   padding: 18px;
-  background: rgba(0,0,0,.55);
+  background: var(--overlay);
   backdrop-filter: blur(6px);
 }
 
-/* FIX: garante que o atributo hidden funcione mesmo com display:flex acima */
+/* ESSENCIAL: faz o atributo hidden realmente esconder o modal */
 .modal[hidden]{
   display: none !important;
 }
@@ -183,16 +222,16 @@ select.field option[disabled]{
 .modalCard{
   width: min(520px, 92vw);
   border-radius: 18px;
-  border: 1px solid rgba(255,255,255,.12);
-  background: linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.06));
-  box-shadow: 0 25px 70px rgba(0,0,0,.55);
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--card) 92%, white 8%);
+  box-shadow: 0 25px 70px rgba(0,0,0,.22);
   padding: 18px;
 }
 
 .modalMsg{
   font-size: 15px;
   line-height: 1.4;
-  color: rgba(255,255,255,.92);
+  color: var(--text);
   margin-bottom: 14px;
 }
 
@@ -205,7 +244,65 @@ select.field option[disabled]{
   font-weight: 800;
   color: rgba(255,255,255,.95);
   cursor:pointer;
-  background: linear-gradient(135deg, rgba(46, 204, 113, 1), rgba(20, 170, 90, 1));
+  background: linear-gradient(135deg, var(--green1), var(--green2));
+}
+
+/* Switch (tic-tac) */
+.switch{
+  position: relative;
+  display: inline-block;
+  width: 52px;
+  height: 30px;
+}
+
+.switch input{
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider{
+  position:absolute;
+  inset:0;
+  cursor:pointer;
+  background: rgba(17,24,39,.14);
+  border: 1px solid rgba(17,24,39,.14);
+  border-radius: 999px;
+  transition: background .18s ease, border-color .18s ease;
+  box-shadow: 0 10px 25px rgba(17,24,39,.10);
+}
+
+html[data-theme="dark"] .slider{
+  background: rgba(255,255,255,.14);
+  border-color: rgba(255,255,255,.14);
+  box-shadow: 0 10px 25px rgba(0,0,0,.40);
+}
+
+.slider::before{
+  content:"";
+  position:absolute;
+  height: 24px;
+  width: 24px;
+  left: 3px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: #ffffff;
+  border-radius: 999px;
+  box-shadow: 0 8px 20px rgba(0,0,0,.18);
+  transition: transform .18s ease;
+}
+
+html[data-theme="dark"] .slider::before{
+  background: rgba(255,255,255,.92);
+}
+
+.switch input:checked + .slider::before{
+  transform: translate(22px, -50%);
+}
+
+.switch input:checked + .slider{
+  background: rgba(46, 204, 113, .35);
+  border-color: rgba(46, 204, 113, .35);
 }
 
 @media (max-width: 520px){
