@@ -1,5 +1,5 @@
 // 1) Cole aqui a URL /exec do seu Apps Script Web App
-const GAS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbyDgkZcSj4Ix706AIJlMhclLd7b-z-gdAf31vm9a5IrDfi_X2IpP5fbSLmFN2PdVOkaGA/exec";
+const GAS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbxcf8a5bn0jXvLPZVmi4eSpK7ItI6lxSIfAwJzw1bk1mScKwxm8jkUA9dh_MN7OWPTuiA/exec";
 
 // 2) (Opcional) Um segredo simples (igual no Apps Script). Deixe "" se não usar.
 const SHARED_KEY = "MzAk9do3@.@";
@@ -7,6 +7,23 @@ const SHARED_KEY = "MzAk9do3@.@";
 const editor = document.getElementById("editor");
 const toolbar = document.getElementById("toolbar");
 const sendBtn = document.getElementById("sendBtn");
+
+const studentName = document.getElementById("studentName");
+const studentClass = document.getElementById("studentClass");
+
+const modal = document.getElementById("modal");
+const modalMsg = document.getElementById("modalMsg");
+const modalOk = document.getElementById("modalOk");
+
+function openModal(msg) {
+  modalMsg.textContent = msg;
+  modal.hidden = false;
+}
+function closeModal() {
+  modal.hidden = true;
+}
+modalOk.addEventListener("click", closeModal);
+modal.addEventListener("mousedown", (e) => { if (e.target === modal) closeModal(); });
 
 function showToolbar() { toolbar.hidden = false; }
 function hideToolbarIfNeeded(e) {
@@ -19,7 +36,7 @@ editor.addEventListener("focus", showToolbar);
 editor.addEventListener("click", showToolbar);
 
 toolbar.addEventListener("mousedown", (e) => {
-  e.preventDefault(); // mantém o cursor no editor
+  e.preventDefault();
   const btn = e.target.closest("button");
   if (!btn) return;
 
@@ -36,30 +53,51 @@ toolbar.addEventListener("mousedown", (e) => {
 function getPayload() {
   const html = editor.innerHTML.trim();
   const text = editor.innerText.trim();
-  return { html, text };
+  const name = (studentName.value || "").trim();
+  const turma = (studentClass.value || "").trim();
+  return { html, text, name, turma };
+}
+
+function validate(payload) {
+  if (!payload.name) return "Informe seu nome.";
+  if (!payload.turma) return "Selecione sua turma.";
+  if (!payload.text) return "Digite seu texto antes de enviar.";
+  return "";
 }
 
 async function sendToTeacher() {
-  const { html, text } = getPayload();
-  if (!text) return;
+  const payload = getPayload();
+  const err = validate(payload);
+  if (err) { openModal(err); return; }
+
+  sendBtn.disabled = true;
 
   const body = new URLSearchParams();
-  body.set("html", html);
-  body.set("text", text);
+  body.set("name", payload.name);
+  body.set("class", payload.turma);
+  body.set("html", payload.html);
+  body.set("text", payload.text);
   if (SHARED_KEY) body.set("key", SHARED_KEY);
 
-  // "no-cors" evita depender de CORS (mas não dá pra ler a resposta).
-  await fetch(GAS_WEBAPP_URL, {
-    method: "POST",
-    mode: "no-cors",
-    headers: { "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8" },
-    body
-  });
+  try {
+    await fetch(GAS_WEBAPP_URL, {
+      method: "POST",
+      mode: "no-cors",
+      headers: { "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8" },
+      body
+    });
 
-  editor.innerHTML = "";
-  toolbar.hidden = true;
+    editor.innerHTML = "";
+    toolbar.hidden = true;
+
+    openModal("Enviado com sucesso. Obrigado!");
+  } catch (_) {
+    openModal("Não foi possível enviar agora. Tente novamente.");
+  } finally {
+    sendBtn.disabled = false;
+  }
 }
 
 sendBtn.addEventListener("click", () => {
-  try { sendToTeacher(); } catch (_) {}
+  sendToTeacher();
 });
