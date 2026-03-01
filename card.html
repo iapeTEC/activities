@@ -20,7 +20,7 @@
       gap: 16px;
     }
     #cardContainer {
-      background: white;
+      background: transparent;
       padding: 12px;
       border-radius: 16px;
       box-shadow: 0 4px 16px rgba(0,0,0,0.1);
@@ -193,65 +193,154 @@
         maximumFractionDigits: 2
       });
 
-      // Fundo
-      ctx.fillStyle = '#1a2b4f'; // azul escuro
+      // Background da página (fora do cartão)
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = '#f5f5f5';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      // Faixa superior
-      ctx.fillStyle = '#2b5aa8';
-      ctx.fillRect(0, 0, canvas.width, 120);
+      // Cartão estilo "Black" (cantos arredondados)
+      const cardX = 30;
+      const cardY = 30;
+      const cardW = canvas.width - 60;
+      const cardH = canvas.height - 60;
+      const radius = 32;
 
-      // Título
+      // Sombra
+      ctx.save();
+      ctx.shadowColor = 'rgba(0,0,0,0.35)';
+      ctx.shadowBlur = 24;
+      ctx.shadowOffsetY = 10;
+      roundRect(ctx, cardX, cardY, cardW, cardH, radius);
+      ctx.fillStyle = '#0b0c0f';
+      ctx.fill();
+      ctx.restore();
+
+      // Fundo com gradiente sutil
+      const g = ctx.createLinearGradient(cardX, cardY, cardX + cardW, cardY + cardH);
+      g.addColorStop(0, '#0a0b0f');
+      g.addColorStop(0.55, '#111318');
+      g.addColorStop(1, '#05060a');
+
+      ctx.save();
+      roundRect(ctx, cardX, cardY, cardW, cardH, radius);
+      ctx.clip();
+      ctx.fillStyle = g;
+      ctx.fillRect(cardX, cardY, cardW, cardH);
+
+      // Textura discreta (pontos)
+      ctx.globalAlpha = 0.06;
       ctx.fillStyle = '#ffffff';
-      ctx.font = 'bold 42px "Segoe UI", system-ui';
-      ctx.fillText('IAPE MARKET CARD', 40, 80);
+      for (let y = cardY + 18; y < cardY + cardH; y += 14) {
+        for (let x = cardX + 18; x < cardX + cardW; x += 14) {
+          ctx.fillRect(x, y, 1, 1);
+        }
+      }
+      ctx.globalAlpha = 1;
 
-      // Logo
+      // Filete dourado (borda interna)
+      ctx.lineWidth = 2;
+      const goldGrad = ctx.createLinearGradient(cardX, cardY, cardX + cardW, cardY);
+      goldGrad.addColorStop(0, '#d7b76a');
+      goldGrad.addColorStop(0.5, '#f3e5b5');
+      goldGrad.addColorStop(1, '#b88a2f');
+      ctx.strokeStyle = goldGrad;
+      roundRect(ctx, cardX + 6, cardY + 6, cardW - 12, cardH - 12, radius - 6);
+      ctx.stroke();
+
+      // Cabeçalho
+      ctx.fillStyle = '#e7d7a6';
+      ctx.font = '700 34px "Segoe UI", system-ui';
+      ctx.fillText('Banco do IAPE', cardX + 34, cardY + 72);
+
+      // Selo "Infinity Black" no canto superior direito
+      ctx.textAlign = 'right';
+      ctx.fillStyle = '#f3e5b5';
+      ctx.font = 'italic 28px "Brush Script MT", "Segoe Script", "Snell Roundhand", cursive';
+      ctx.fillText('Infinity Black', cardX + cardW - 34, cardY + 72);
+      ctx.textAlign = 'left';
+
+      // Logo (opcional)
       const logo = new Image();
-      logo.src = 'iape.png?text=IAPE'; // seu PNG
+      logo.src = 'iape.png?text=IAPE';
 
       logo.onload = function() {
-        const logoSize = 100;
-        ctx.drawImage(logo, canvas.width - logoSize - 40, 20, logoSize, logoSize);
-
-        desenharTextoCartao(nome, saldoFormatado);
+        const logoSize = 88;
+        ctx.drawImage(logo, cardX + cardW - logoSize - 34, cardY + 92, logoSize, logoSize);
+        desenharTextoCartao(nome, saldoFormatado, { cardX, cardY, cardW, cardH });
       };
 
       logo.onerror = function() {
-        desenharTextoCartao(nome, saldoFormatado);
+        desenharTextoCartao(nome, saldoFormatado, { cardX, cardY, cardW, cardH });
       };
+
+      ctx.restore();
     }
 
-    function desenharTextoCartao(nome, saldoFormatado) {
+    function desenharTextoCartao(nome, saldoFormatado, layout) {
+      const cardX = layout?.cardX ?? 30;
+      const cardY = layout?.cardY ?? 30;
+      const cardW = layout?.cardW ?? (canvas.width - 60);
+      const cardH = layout?.cardH ?? (canvas.height - 60);
+
+      const left = cardX + 34;
+      const topBase = cardY + 160;
+
       // Nome do responsável
       ctx.fillStyle = '#ffffff';
-      ctx.font = 'bold 36px "Segoe UI", system-ui';
-      ctx.fillText('Responsável:', 40, 190);
+      ctx.font = '700 30px "Segoe UI", system-ui';
+      ctx.fillText('Responsável', left, topBase);
 
-      ctx.font = '28px "Segoe UI", system-ui';
-      wrapText(ctx, nome, 40, 230, canvas.width - 320, 32);
+      ctx.fillStyle = 'rgba(255,255,255,0.92)';
+      ctx.font = '26px "Segoe UI", system-ui';
+      wrapText(ctx, nome, left, topBase + 38, cardW - 320, 32);
 
       // Saldo
-      ctx.font = 'bold 34px "Segoe UI", system-ui';
-      ctx.fillText('Saldo disponível:', 40, 310);
+      ctx.fillStyle = '#ffffff';
+      ctx.font = '700 28px "Segoe UI", system-ui';
+      ctx.fillText('Saldo disponível', left, topBase + 140);
 
-      ctx.font = 'bold 60px "Segoe UI", system-ui';
-      ctx.fillStyle = '#ffdd55';
-      ctx.fillText('R$ ' + saldoFormatado, 40, 380);
+      const goldGrad2 = ctx.createLinearGradient(left, 0, left + 380, 0);
+      goldGrad2.addColorStop(0, '#d7b76a');
+      goldGrad2.addColorStop(0.45, '#f3e5b5');
+      goldGrad2.addColorStop(1, '#b88a2f');
+      ctx.fillStyle = goldGrad2;
+      ctx.font = '800 60px "Segoe UI", system-ui';
+      ctx.fillText('R$ ' + saldoFormatado, left, topBase + 220);
 
       // Texto auxiliar
-      ctx.fillStyle = '#ffffff';
+      ctx.fillStyle = 'rgba(255,255,255,0.78)';
       ctx.font = '20px "Segoe UI", system-ui';
-      ctx.fillText('Apresente este cartão na lojinha para pagar suas compras.', 40, 430);
+      ctx.fillText('Apresente este cartão na lojinha para pagar suas compras.', left, cardY + cardH - 56);
 
       // Link deste próprio cartão (vai dentro do QR)
       const cardUrl = window.location.origin + window.location.pathname + '?t=' + encodeURIComponent(token);
 
-      // Gera o QR e desenha no cartão
       gerarQR(cardUrl, function(qrCanvas) {
         const qrSize = 220;
-        ctx.drawImage(qrCanvas, canvas.width - qrSize - 40, canvas.height - qrSize - 40, qrSize, qrSize);
+        const qrX = cardX + cardW - qrSize - 34;
+        const qrY = cardY + cardH - qrSize - 34;
+
+        // fundo do QR
+        ctx.save();
+        ctx.fillStyle = 'rgba(255,255,255,0.95)';
+        roundRect(ctx, qrX - 10, qrY - 10, qrSize + 20, qrSize + 20, 18);
+        ctx.fill();
+        ctx.restore();
+
+        ctx.drawImage(qrCanvas, qrX, qrY, qrSize, qrSize);
       });
+    }
+
+    // Rounded rectangle helper (canvas 2D)
+    function roundRect(ctx, x, y, w, h, r) {
+      const radius = Math.min(r, w / 2, h / 2);
+      ctx.beginPath();
+      ctx.moveTo(x + radius, y);
+      ctx.arcTo(x + w, y, x + w, y + h, radius);
+      ctx.arcTo(x + w, y + h, x, y + h, radius);
+      ctx.arcTo(x, y + h, x, y, radius);
+      ctx.arcTo(x, y, x + w, y, radius);
+      ctx.closePath();
     }
 
     // Gera um QR code em uma canvas temporária e devolve essa canvas no callback
