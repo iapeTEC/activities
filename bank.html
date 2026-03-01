@@ -173,6 +173,28 @@
       opacity: 0.5;
       cursor: default;
     }
+  
+    .btn-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+      flex-wrap: wrap;
+    }
+    .btn-row button {
+      flex: 1;
+      min-width: 140px;
+    }
+    .btn-secondary {
+      background: #10b981;
+    }
+    .btn-neutral {
+      background: #111827;
+    }
+    input[readonly] {
+      background: #f9fafb;
+      color: #111827;
+    }
+
   </style>
 </head>
 <body>
@@ -216,6 +238,21 @@
         <button id="btnCredit">Adicionar crédito</button>
         <div id="creditResult" class="result"></div>
       </div>
+
+      <div class="card">
+        <h2>Link do cartão do cliente</h2>
+        <small>Selecione um cliente na lista para gerar o link. Depois copie e envie no WhatsApp.</small>
+        <label>
+          Link do cartão (somente leitura)
+          <input type="text" id="cardLink" readonly placeholder="Selecione um cliente para ver o link aqui">
+        </label>
+        <div class="btn-row">
+          <button id="btnCopyCardLink" type="button" disabled>Copiar link</button>
+          <button id="btnOpenCardLink" type="button" class="btn-secondary" disabled>Abrir cartão</button>
+        </div>
+        <div id="cardLinkStatus" class="result"></div>
+      </div>
+
     </div>
 
     <!-- Coluna direita: lista de clientes -->
@@ -246,6 +283,12 @@
     const clientsListEl = document.getElementById('clientsList');
     const btnCloseQr = document.getElementById('btnCloseQr');
 
+    const cardLinkInput = document.getElementById('cardLink');
+    const cardLinkStatus = document.getElementById('cardLinkStatus');
+    const btnCopyCardLink = document.getElementById('btnCopyCardLink');
+    const btnOpenCardLink = document.getElementById('btnOpenCardLink');
+
+
     let qrWindow = null;
     let accountsCache = [];
 
@@ -255,6 +298,60 @@
         style: 'currency',
         currency: 'BRL'
       });
+    }
+
+    function buildCardUrlFromToken(token) {
+      if (!token) return '';
+      return CARD_BASE_URL + '?t=' + encodeURIComponent(token);
+    }
+
+    function setCardLinkFromAccount(acc) {
+      if (!cardLinkInput || !btnCopyCardLink || !btnOpenCardLink) return;
+
+      const token = acc && acc.token ? acc.token : '';
+      const url = buildCardUrlFromToken(token);
+
+      cardLinkInput.value = url || '';
+      btnCopyCardLink.disabled = !url;
+      btnOpenCardLink.disabled = !url;
+
+      if (!cardLinkStatus) return;
+      if (url) {
+        cardLinkStatus.innerHTML = 'Link pronto para envio:<br><span class="highlight">' + url + '</span>';
+      } else {
+        cardLinkStatus.textContent = 'Selecione um cliente com token para gerar o link.';
+      }
+    }
+
+    async function copyTextToClipboard(text) {
+      if (!text) return false;
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          await navigator.clipboard.writeText(text);
+          return true;
+        }
+      } catch (e) {
+        // fallback abaixo
+      }
+      try {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.setAttribute('readonly', '');
+        ta.style.position = 'absolute';
+        ta.style.left = '-9999px';
+        document.body.appendChild(ta);
+        ta.select();
+        const ok = document.execCommand('copy');
+        document.body.removeChild(ta);
+        return ok;
+      } catch (e) {
+        return false;
+      }
+    }
+
+    function setCardLinkStatusText(text) {
+      if (!cardLinkStatus) return;
+      cardLinkStatus.textContent = text || '';
     }
 
     // -------- CRIAR CONTA --------
@@ -296,6 +393,7 @@
             Envie este link para o responsável:<br>
             <span class="highlight">${cardUrl}</span>
           `;
+          setCardLinkFromAccount({ token: data.token, name: data.name });
           document.getElementById('newName').value = '';
           document.getElementById('newInitialBalance').value = '';
           // recarrega lista de clientes
@@ -468,6 +566,8 @@
         Cliente selecionado: <span class="highlight">${acc.name || '(sem nome)'}</span><br>
         Account ID: <span class="highlight">${acc.accountId || ''}</span>
       `;
+          
+      setCardLinkFromAccount(acc);
     }
 
     function openQrForAccount(acc) {
@@ -495,8 +595,26 @@
       qrWindow = null;
     });
 
+    // -------- LINK DO CARTÃO (COPIAR / ABRIR) --------
+    if (btnCopyCardLink) {
+      btnCopyCardLink.addEventListener('click', async () => {
+        const text = (cardLinkInput && cardLinkInput.value) ? cardLinkInput.value.trim() : '';
+        const ok = await copyTextToClipboard(text);
+        setCardLinkStatusText(ok ? 'Link copiado. Agora é só colar no WhatsApp.' : 'Não foi possível copiar automaticamente. Selecione e copie manualmente.');
+      });
+    }
+
+    if (btnOpenCardLink) {
+      btnOpenCardLink.addEventListener('click', () => {
+        const url = (cardLinkInput && cardLinkInput.value) ? cardLinkInput.value.trim() : '';
+        if (!url) return;
+        window.open(url, '_blank');
+      });
+    }
+
     // Carrega lista ao abrir a página
     window.addEventListener('DOMContentLoaded', () => {
+      setCardLinkFromAccount(null);
       loadAccounts();
     });
   </script>
