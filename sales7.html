@@ -136,7 +136,6 @@
       margin-top: 0.2rem;
     }
 
-    /* Lista zebrada de produtos */
     .lista-card {
       margin-top: 1rem;
       background: white;
@@ -167,11 +166,11 @@
     }
 
     .item-row:nth-child(odd) {
-      background: #f9fafb; /* cinza claro */
+      background: #f9fafb;
     }
 
     .item-row:nth-child(even) {
-      background: #ffffff; /* branco */
+      background: #ffffff;
     }
 
     .item-produto {
@@ -193,13 +192,114 @@
       color: #6b7280;
       padding: 0.5rem 0.6rem;
     }
+
+    /* Overlay da câmera para ler QR */
+    #qr-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.85);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+      color: white;
+      padding: 1rem;
+      box-sizing: border-box;
+    }
+
+    #qr-overlay video {
+      width: 100%;
+      max-width: 400px;
+      border-radius: 12px;
+      background: black;
+    }
+
+    #qr-overlay button {
+      margin-top: 12px;
+      padding: 0.5rem 1rem;
+      border-radius: 999px;
+      border: none;
+      font-size: 0.9rem;
+      cursor: pointer;
+      background: #ef4444;
+      color: white;
+    }
+
+    #qr-overlay .texto {
+      margin-bottom: 0.5rem;
+      font-size: 0.9rem;
+      text-align: center;
+    }
+
+    /* Toggle Modo IAPE */
+    .toggle-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.75rem;
+      margin: 0.5rem 0 0.35rem;
+    }
+
+    .toggle-label {
+      font-size: 0.85rem;
+      color: #4b5563;
+    }
+
+    .toggle-switch {
+      position: relative;
+      width: 44px;
+      height: 22px;
+      border-radius: 999px;
+      border: none;
+      background: #e5e7eb;
+      padding: 0;
+      cursor: pointer;
+      transition: background 0.2s ease;
+      flex: 0 0 auto;
+    }
+
+    .toggle-switch .toggle-knob {
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 18px;
+      height: 18px;
+      border-radius: 999px;
+      background: white;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+      transition: transform 0.2s ease;
+    }
+
+    .toggle-switch.on {
+      background: #16a34a;
+    }
+
+    .toggle-switch.on .toggle-knob {
+      transform: translateX(22px);
+    }
+
+    .toggle-hint {
+      font-size: 0.75rem;
+      color: #6b7280;
+      margin-bottom: 0.75rem;
+    }
   </style>
 </head>
 <body>
   <main class="container">
-    <!-- 🔹 Altere esse texto com o nome da turma dessa página -->
-    <h1>Lojinha da Capelania</h1>
+    <h1>Bazar – Turma 1º Ano A</h1>
     <p class="subtitle">Controle de vendas e extornos</p>
+
+    <div class="toggle-row">
+      <span class="toggle-label">Modo cartão IAPE</span>
+      <button id="toggle-iape" class="toggle-switch" type="button" aria-pressed="false">
+        <span class="toggle-knob"></span>
+      </button>
+    </div>
+    <div class="toggle-hint">
+      Ligado: cobra do cartão IAPE • Desligado: recebe em dinheiro/Pix
+    </div>
 
     <label for="produto">Produto</label>
     <input
@@ -248,12 +348,22 @@
     </div>
   </main>
 
+  <!-- Leitor de QR (jsQR) -->
+  <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+
   <script>
-    // 🔧 CONFIGURAÇÃO – TROCAR PELO LINK DO SEU WEB APP (Apps Script)
+    // 🔧 CONFIGURAÇÃO – API DO BAZAR (já existia)
     const API_URL = "https://script.google.com/macros/s/AKfycbw4rbaZd9Bcj2DWAJpXI8NYWfVWkIQxj8gYQ7wr8r6qZNPDI-kO576j7Hb1WVLX4vSW/exec";
 
-    // 🔧 CÓDIGO DA TURMA DESSA PÁGINA (ex.: "6A", "6B", "7A"...)
-    const TURMA = "7A";
+    // 🔧 CÓDIGO DA TURMA DESSA PÁGINA (para a planilha de vendas)
+    const TURMA = "1A";
+
+    // 🔧 MODO CARTÃO IAPE
+    const IAPE_API_URL = "https://script.google.com/macros/s/AKfycbzqfA1JLzSu-cvjy4qed-O3Tgil_KKggwW0v0qXpF7TsxSnK-aHoZYN3nFDOfmioIC4/exec"; // Web App do IAPE
+    const IAPE_CLASS_ACCOUNT_ID = "TURMA_1A"; // deve ser igual ao account_id da conta da turma na aba Accounts
+
+    // estado do modo IAPE (liga/desliga)
+    let iapeEnabled = true;
 
     function formatarBRL(valor) {
       return new Intl.NumberFormat("pt-BR", {
@@ -276,7 +386,7 @@
 
       btnVender.disabled = loading;
       btnExtornar.disabled = loading;
-      indicator.textContent = loading ? "Enviando para a planilha..." : "";
+      indicator.textContent = loading ? "Processando..." : "";
     }
 
     function atualizarTotais(totais) {
@@ -317,30 +427,20 @@
       container.innerHTML = html;
     }
 
-    // 🔹 Aceitar tanto "5,50" quanto "5.50"
+    // Aceita "5,50" ou "5.50"
     function parseValorBR(raw) {
       if (!raw) return NaN;
       let s = raw.toString().trim();
-
-      // remove espaços
       s = s.replace(/\s+/g, "");
-
-      // remove pontos como separador de milhar (1.000,50 -> 1000,50)
       s = s.replace(/\./g, "");
-
-      // troca vírgula decimal por ponto (1000,50 -> 1000.50)
       s = s.replace(",", ".");
-
-      const numero = Number(s);
-      return numero;
+      return Number(s);
     }
 
-    async function registrar(acao) {
+    // 🔹 Registrar na planilha do bazar (API_URL) – VENDA ou EXTORNO
+    async function registrarNaPlanilha(acao, produto, numero) {
       const produtoInput = document.getElementById("produto");
       const valorInput = document.getElementById("valor");
-
-      const produto = produtoInput.value.trim();
-      const numero = parseValorBR(valorInput.value);
 
       if (acao === "VENDA" && !produto) {
         setMensagem("Informe o nome do produto.", "erro");
@@ -356,12 +456,13 @@
       setMensagem("");
 
       try {
-        // monta a URL com os parâmetros na querystring
-        const url = `${API_URL}?turma=${encodeURIComponent(TURMA)}&valor=${encodeURIComponent(
-          numero
-        )}&acao=${encodeURIComponent(acao)}&produto=${encodeURIComponent(produto)}&t=${Date.now()}`;
+        const url = `${API_URL}?turma=${encodeURIComponent(
+          TURMA
+        )}&valor=${encodeURIComponent(numero)}&acao=${encodeURIComponent(
+          acao
+        )}&produto=${encodeURIComponent(produto || "")}&t=${Date.now()}`;
 
-        const resposta = await fetch(url); // GET simples
+        const resposta = await fetch(url);
         const dados = await resposta.json();
 
         if (!dados.success) {
@@ -372,10 +473,14 @@
         atualizarLista(dados.itens || []);
 
         setMensagem("Registro salvo com sucesso! ✔", "ok");
-        valorInput.value = "";
+
         if (acao === "VENDA") {
           produtoInput.value = "";
+          valorInput.value = "";
+        } else {
+          valorInput.value = "";
         }
+
         valorInput.focus();
       } catch (erro) {
         console.error(erro);
@@ -385,15 +490,252 @@
       }
     }
 
-    document.getElementById("btn-vender").addEventListener("click", () =>
-      registrar("VENDA")
-    );
-    document.getElementById("btn-extornar").addEventListener("click", () =>
-      registrar("EXTORNO")
-    );
+    // 🔹 Leitor de QR via câmera (usa jsQR)
+    async function scanQrFromCamera() {
+      if (typeof jsQR === "undefined") {
+        throw new Error("Leitor de QR (jsQR) não carregado.");
+      }
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        throw new Error("Este dispositivo não suporta acesso à câmera.");
+      }
+
+      const overlay = document.createElement("div");
+      overlay.id = "qr-overlay";
+      overlay.innerHTML = `
+        <div class="texto">Aponte a câmera para o QR do cartão IAPE do responsável.</div>
+        <video id="qr-video" playsinline></video>
+        <button id="qr-cancel">Cancelar</button>
+      `;
+      document.body.appendChild(overlay);
+
+      const video = document.getElementById("qr-video");
+      const cancelBtn = document.getElementById("qr-cancel");
+
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: "environment" },
+      });
+      video.srcObject = stream;
+      await video.play();
+
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d");
+
+      return new Promise((resolve, reject) => {
+        let active = true;
+
+        function cleanup() {
+          if (stream) {
+            stream.getTracks().forEach((t) => t.stop());
+          }
+          if (overlay.parentNode) {
+            overlay.parentNode.removeChild(overlay);
+          }
+        }
+
+        cancelBtn.addEventListener("click", () => {
+          active = false;
+          cleanup();
+          reject(new Error("SCAN_CANCELLED"));
+        });
+
+        const tick = () => {
+          if (!active) return;
+
+          if (video.readyState === video.HAVE_ENOUGH_DATA) {
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const code = jsQR(imageData.data, canvas.width, canvas.height);
+
+            if (code && code.data) {
+              active = false;
+              cleanup();
+              resolve(code.data);
+              return;
+            }
+          }
+
+          requestAnimationFrame(tick);
+        };
+
+        tick();
+      });
+    }
+
+    function extractTokenFromText(text) {
+      if (!text) return null;
+      text = text.toString().trim();
+
+      try {
+        if (text.includes("http")) {
+          const url = new URL(text);
+          const params = new URLSearchParams(url.search);
+          return params.get("t") || params.get("token") || text;
+        }
+
+        if (text.includes("t=")) {
+          const idx = text.indexOf("t=");
+          const query = text.substring(idx);
+          const params = new URLSearchParams(query);
+          return params.get("t") || params.get("token");
+        }
+      } catch (e) {
+        // ignora erro e cai no fallback
+      }
+
+      return text;
+    }
+
+    async function fazerTransferenciaIape(payerToken, valorNumero) {
+      if (!IAPE_API_URL || !IAPE_CLASS_ACCOUNT_ID) {
+        throw new Error("Configuração do cartão IAPE incompleta.");
+      }
+
+      const url = `${IAPE_API_URL}?action=transfer&payerToken=${encodeURIComponent(
+        payerToken
+      )}&receiverId=${encodeURIComponent(
+        IAPE_CLASS_ACCOUNT_ID
+      )}&amount=${encodeURIComponent(valorNumero)}`;
+
+      const resposta = await fetch(url);
+      const dados = await resposta.json();
+
+      if (!dados.success) {
+        if (dados.code === "INSUFFICIENT_FUNDS") {
+          setMensagem("Saldo insuficiente no cartão IAPE.", "erro");
+          return false;
+        }
+        throw new Error(dados.error || "Erro ao debitar do cartão IAPE.");
+      }
+
+      return true;
+    }
+
+    // 🔹 Fluxo completo: VENDA usando cartão IAPE
+    async function registrarVendaComIape() {
+      const produtoInput = document.getElementById("produto");
+      const valorInput = document.getElementById("valor");
+
+      const produto = produtoInput.value.trim();
+      const numero = parseValorBR(valorInput.value);
+
+      if (!produto) {
+        setMensagem("Informe o nome do produto.", "erro");
+        return;
+      }
+      if (isNaN(numero) || numero <= 0) {
+        setMensagem("Informe um valor maior que zero.", "erro");
+        return;
+      }
+
+      try {
+        setLoading(true);
+        setMensagem("Abrindo câmera. Leia o QR do responsável...", "ok");
+
+        const qrText = await scanQrFromCamera();
+        const payerToken = extractTokenFromText(qrText);
+
+        if (!payerToken) {
+          setMensagem("QR lido não contém token válido.", "erro");
+          return;
+        }
+
+        const ok = await fazerTransferenciaIape(payerToken, numero);
+        if (!ok) {
+          // mensagem já foi mostrada
+          return;
+        }
+      } catch (erro) {
+        console.error(erro);
+        if (erro.message === "SCAN_CANCELLED") {
+          setMensagem("Leitura do QR cancelada.", "erro");
+        } else {
+          setMensagem("Erro na leitura do QR: " + erro.message, "erro");
+        }
+        return;
+      } finally {
+        setLoading(false);
+      }
+
+      // Se deu tudo certo no IAPE, registra venda normalmente na planilha
+      await registrarNaPlanilha("VENDA", produto, numero);
+    }
+
+    // 🔹 Toggle Modo IAPE
+    function aplicarEstadoToggle() {
+      const btnToggle = document.getElementById("toggle-iape");
+      if (iapeEnabled) {
+        btnToggle.classList.add("on");
+        btnToggle.setAttribute("aria-pressed", "true");
+      } else {
+        btnToggle.classList.remove("on");
+        btnToggle.setAttribute("aria-pressed", "false");
+      }
+    }
+
+    function salvarEstadoToggle() {
+      try {
+        const chave = "iape_mode_" + TURMA;
+        localStorage.setItem(chave, iapeEnabled ? "1" : "0");
+      } catch (e) {
+        // ignora se não tiver localStorage
+      }
+    }
+
+    function carregarEstadoToggle() {
+      // Default: cartão IAPE ligado. Se o vendedor preferir Pix, ele desliga no botão.
+      iapeEnabled = true;
+
+      try {
+        const chave = "iape_mode_" + TURMA;
+        const v = localStorage.getItem(chave);
+
+        // Se existir preferência salva, ela manda.
+        if (v === "0") iapeEnabled = false;
+        if (v === "1") iapeEnabled = true;
+      } catch (e) {
+        // mantém o default (ligado)
+      }
+
+      aplicarEstadoToggle();
+    }
+
+    // 🔹 Listeners dos botões
+    document.getElementById("btn-vender").addEventListener("click", () => {
+      if (iapeEnabled) {
+        registrarVendaComIape();
+      } else {
+        const produtoInput = document.getElementById("produto");
+        const valorInput = document.getElementById("valor");
+        const produto = produtoInput.value.trim();
+        const numero = parseValorBR(valorInput.value);
+        registrarNaPlanilha("VENDA", produto, numero);
+      }
+    });
+
+    document.getElementById("btn-extornar").addEventListener("click", () => {
+      const valorInput = document.getElementById("valor");
+      const numero = parseValorBR(valorInput.value);
+      // Extorno não mexe no cartão IAPE, só corrige na planilha do bazar
+      registrarNaPlanilha("EXTORNO", "", numero);
+    });
+
+    document.getElementById("toggle-iape").addEventListener("click", () => {
+      iapeEnabled = !iapeEnabled;
+      aplicarEstadoToggle();
+      salvarEstadoToggle();
+      if (iapeEnabled) {
+        setMensagem("Modo cartão IAPE ATIVADO. A próxima venda vai debitar do cartão.", "ok");
+      } else {
+        setMensagem("Modo cartão IAPE DESATIVADO. Recebendo em dinheiro/Pix.", "ok");
+      }
+    });
 
     window.addEventListener("DOMContentLoaded", () => {
       document.getElementById("valor").focus();
+      carregarEstadoToggle();
     });
   </script>
 </body>
