@@ -105,6 +105,56 @@
       color: #6b7280;
       padding: 0.5rem 0.6rem;
     }
+  
+    /* Modal de QR em tela cheia */
+    .qr-modal {
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      padding: 16px;
+    }
+    .qr-modal.show {
+      display: flex;
+    }
+    .qr-modal-backdrop {
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,0.72);
+      backdrop-filter: blur(2px);
+    }
+    .qr-modal-content {
+      position: relative;
+      z-index: 1;
+      width: min(560px, 92vw);
+      background: #0b0c0f;
+      border: 1px solid rgba(215, 183, 106, 0.35);
+      border-radius: 16px;
+      box-shadow: 0 18px 60px rgba(0,0,0,0.6);
+      padding: 14px 14px 16px;
+      color: #ffffff;
+      text-align: center;
+    }
+    .qr-modal-title {
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 0.2px;
+      color: #f3e5b5;
+      margin-bottom: 10px;
+    }
+    .qr-modal-link {
+      margin-top: 10px;
+      font-size: 12px;
+      color: rgba(255,255,255,0.85);
+      word-break: break-all;
+    }
+    #qrModalClose {
+      margin-top: 12px;
+      background: #111827;
+    }
+
   </style>
 </head>
 <body>
@@ -121,6 +171,18 @@
     </div>
   </div>
 
+  
+  <div id="qrModal" class="qr-modal" aria-hidden="true">
+    <div class="qr-modal-backdrop" id="qrModalBackdrop"></div>
+    <div class="qr-modal-content" role="dialog" aria-modal="true" aria-label="QR do cartão">
+      <div class="qr-modal-title">QR do cartão</div>
+      <canvas id="qrBigCanvas" width="520" height="520" style="max-width:100%;height:auto;border-radius:14px;background:#ffffff;padding:10px;box-sizing:border-box;"></canvas>
+      <div id="qrModalLink" class="qr-modal-link"></div>
+      <button id="qrModalClose" type="button">Fechar</button>
+    </div>
+  </div>
+
+
   <script>
     // CONFIGURE AQUI:
     const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzqfA1JLzSu-cvjy4qed-O3Tgil_KKggwW0v0qXpF7TsxSnK-aHoZYN3nFDOfmioIC4/exec';
@@ -132,6 +194,65 @@
     const downloadBtn = document.getElementById('downloadBtn');
     const canvas = document.getElementById('cardCanvas');
     const ctx = canvas.getContext('2d');
+
+    let qrHitBox = null;
+    let currentCardUrl = '';
+
+    const qrModal = document.getElementById('qrModal');
+    const qrModalBackdrop = document.getElementById('qrModalBackdrop');
+    const qrModalClose = document.getElementById('qrModalClose');
+    const qrBigCanvas = document.getElementById('qrBigCanvas');
+    const qrModalLink = document.getElementById('qrModalLink');
+
+    function isModalOpen() {
+      return qrModal && qrModal.classList.contains('show');
+    }
+
+    function openQrModal() {
+      if (!qrModal || !qrBigCanvas) return;
+      qrModal.classList.add('show');
+      qrModal.setAttribute('aria-hidden', 'false');
+
+      // Gera QR grande
+      if (typeof QRCode !== 'undefined' && currentCardUrl) {
+        QRCode.toCanvas(qrBigCanvas, currentCardUrl, { width: 520, margin: 1 }, function (error) {
+          if (error) console.error(error);
+        });
+      }
+      if (qrModalLink) qrModalLink.textContent = currentCardUrl || '';
+    }
+
+    function closeQrModal() {
+      if (!qrModal) return;
+      qrModal.classList.remove('show');
+      qrModal.setAttribute('aria-hidden', 'true');
+    }
+
+    function pointInRect(px, py, r) {
+      return !!(r && px >= r.x && px <= (r.x + r.w) && py >= r.y && py <= (r.y + r.h));
+    }
+
+    // Clique no QR (dentro do canvas) abre/fecha a tela cheia
+    canvas.addEventListener('click', (ev) => {
+      if (!qrHitBox) return;
+      if (isModalOpen()) return; // quando aberto, clique é tratado no backdrop/botão
+
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = canvas.width / rect.width;
+      const scaleY = canvas.height / rect.height;
+      const x = (ev.clientX - rect.left) * scaleX;
+      const y = (ev.clientY - rect.top) * scaleY;
+
+      if (pointInRect(x, y, qrHitBox)) {
+        openQrModal();
+      }
+    });
+
+    if (qrModalBackdrop) qrModalBackdrop.addEventListener('click', closeQrModal);
+    if (qrModalClose) qrModalClose.addEventListener('click', closeQrModal);
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && isModalOpen()) closeQrModal();
+    });
 
     let updating = false;
 
@@ -315,10 +436,15 @@
       // Link deste próprio cartão (vai dentro do QR)
       const cardUrl = window.location.origin + window.location.pathname + '?t=' + encodeURIComponent(token);
 
+      currentCardUrl = cardUrl;
+
       gerarQR(cardUrl, function(qrCanvas) {
         const qrSize = 220;
         const qrX = cardX + cardW - qrSize - 34;
         const qrY = cardY + cardH - qrSize - 34;
+
+        // área clicável do QR (inclui o fundo arredondado)
+        qrHitBox = { x: (qrX - 10), y: (qrY - 10), w: (qrSize + 20), h: (qrSize + 20) };
 
         // fundo do QR
         ctx.save();
