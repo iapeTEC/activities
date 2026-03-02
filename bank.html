@@ -235,6 +235,13 @@
           Valor a adicionar
           <input type="number" step="0.01" id="creditAmount" placeholder="Ex: 50.00">
         </label>
+
+        <label>
+          Motivo do crédito (aparece no extrato do cartão)
+          <input type="text" id="creditDescription" placeholder="Ex: Estudo bíblico | Lição | Ajuda a alguém">
+        </label>
+        <small>Esse texto fica registrado no extrato do cartão do aluno/responsável.</small>
+
         <button id="btnCredit">Adicionar crédito</button>
         <div id="creditResult" class="result"></div>
       </div>
@@ -414,6 +421,7 @@
 
       const tokenOrId = document.getElementById('creditTokenOrId').value.trim();
       const amountStr = document.getElementById('creditAmount').value.trim();
+      const desc = document.getElementById('creditDescription') ? document.getElementById('creditDescription').value.trim() : '';
 
       if (!tokenOrId) {
         creditResult.textContent = 'Informe o token ou account_id (ou selecione um cliente na lista).';
@@ -425,11 +433,18 @@
         btnCredit.disabled = false;
         return;
       }
+      if (!desc) {
+        creditResult.textContent = 'Informe o motivo do crédito (para aparecer no extrato).';
+        btnCredit.disabled = false;
+        return;
+      }
+
 
       const url = APPS_SCRIPT_URL
         + '?action=addCredit'
         + '&tokenOrId=' + encodeURIComponent(tokenOrId)
-        + '&amount=' + encodeURIComponent(amountStr);
+        + '&amount=' + encodeURIComponent(amountStr)
+        + '&description=' + encodeURIComponent(desc);
 
       try {
         const res = await fetch(url);
@@ -444,6 +459,7 @@
             <span class="highlight">Novo saldo:</span> ${formatBRL(data.balance)}
           `;
           document.getElementById('creditAmount').value = '';
+          if (document.getElementById('creditDescription')) document.getElementById('creditDescription').value = '';
           // atualiza lista de clientes com novo saldo
           loadAccounts();
         }
