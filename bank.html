@@ -208,11 +208,24 @@
           Nome do titular da conta
           <input type="text" id="newName" placeholder="Ex: Bruno Agostinho">
         </label>
+
+        <label>
+          Número/WhatsApp
+          <input type="text" id="newPhone" placeholder="Ex: +55 83 9 9999-9999">
+        </label>
+        <label>
+          Série/Classe
+          <input type="text" id="newClass" placeholder="Ex: 1A">
+        </label>
+        <label>
+          Data de nascimento
+          <input type="date" id="newDob">
+        </label>
         <label>
           Tipo de conta
           <select id="newType">
-            <option value="PARENT">Aluno</option>
-            <option value="CLASS">Professor</option>
+            <option value="INFINITY_BLACK">Infinity Black</option>
+            <option value="DIAMOND">Diamond</option>
           </select>
         </label>
         <label>
@@ -267,6 +280,12 @@
         <h2>Clientes cadastrados</h2>
         <small>Clique no cliente para selecionar para crédito. Use "QR do cartão" para mostrar o cartão no celular do responsável.</small>
         <button id="btnCloseQr" type="button">Recolher QR code</button>
+        
+        <label style="margin-top:10px">
+          Buscar cliente
+          <input type="text" id="clientSearch" placeholder="Digite para filtrar por nome...">
+        </label>
+
         <div id="clientsList">
           <small>Carregando clientes...</small>
         </div>
@@ -276,7 +295,7 @@
 
   <script>
     // CONFIGURAÇÕES:
-    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxR7KTYm8LH1VDBpXzZy--6t_dB2YgyMWvRXVvl-LZ7K6bTarMelTJun0wkASsxxWil/exec';
+    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwFspAVfSMZ6LdoHfFq5RDLyW1AzuAxbprTNb6hIBS3Guk8HvjvWJfqLNXmQDRwWdkn/exec';
     const CARD_BASE_URL   = 'https://iapetec.github.io/activities/card.html'; // cartão do cliente
     const QRCODE_PAGE_URL = 'https://iapetec.github.io/activities/qrcode.html'; // nova página que vamos criar
 
@@ -297,6 +316,7 @@
 
     let qrWindow = null;
     let accountsCache = [];
+    let accountsAll = [];
 
     function formatBRL(value) {
       const n = Number(value || 0);
@@ -367,8 +387,12 @@
 
       const name = document.getElementById('newName').value.trim();
       const type = document.getElementById('newType').value;
-      const initialBalanceStr = document.getElementById('newInitialBalance').value.trim();
-      const initialBalance = initialBalanceStr || '0';
+      const phone = (document.getElementById('newPhone').value || '').trim();
+      const classStr = (document.getElementById('newClass').value || '').trim();
+      const dob = (document.getElementById('newDob').value || '').trim();
+      const initialBalanceStr = (document.getElementById('newInitialBalance').value || '').trim();
+      const initialBalance = initialBalanceStr ? Number(String(initialBalanceStr).replace(',', '.')) : 0;
+
 
       if (!name) {
         createResult.textContent = 'Informe um nome.';
@@ -380,7 +404,10 @@
         + '?action=createAccount'
         + '&name=' + encodeURIComponent(name)
         + '&type=' + encodeURIComponent(type)
-        + '&initialBalance=' + encodeURIComponent(initialBalance);
+        + '&initialBalance=' + encodeURIComponent(initialBalance)
+        + '&phone=' + encodeURIComponent(phone)
+        + '&class=' + encodeURIComponent(classStr)
+        + '&dob=' + encodeURIComponent(dob);
 
       try {
         const res = await fetch(url);
@@ -486,6 +513,9 @@
         }
 
         accountsCache = data.accounts || [];
+        // ordem alfabética (pt-BR)
+        accountsCache.sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''), 'pt-BR', {sensitivity:'base'}));
+        accountsAll = accountsCache.slice();
         renderAccounts(accountsCache);
       } catch (err) {
         console.error(err);
@@ -632,6 +662,21 @@
       setCardLinkFromAccount(null);
       loadAccounts();
     });
-  </script>
+  
+    
+
+    // Busca em tempo real (filtra por nome)
+    window.addEventListener('DOMContentLoaded', () => {
+      const input = document.getElementById('clientSearch');
+      if (!input) return;
+      input.addEventListener('input', () => {
+        const q = input.value.trim().toLowerCase();
+        const base = accountsAll || [];
+        const filtered = q ? base.filter(a => String(a.name||'').toLowerCase().includes(q)) : base;
+        renderAccounts(filtered);
+      });
+    });
+
+</script>
 </body>
 </html>
