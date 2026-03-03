@@ -1,579 +1,355 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
+<!doctype html>
+<html lang="pt-br">
 <head>
-  <meta charset="UTF-8">
-  <title>Card IAPE</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-
-  <!-- Biblioteca de QR Code (client-side, funciona no GitHub Pages) -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode/1.5.0/qrcode.min.js"></script>
-
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Cartão – Bank of IAPE</title>
   <style>
-    body {
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: #f5f5f5;
-      margin: 0;
-      padding: 16px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 16px;
+    :root{
+      --bg:#0b1020;
+      --text:#e8eefc;
+      --muted:rgba(232,238,252,.7);
+      --green:#22c55e;
     }
-    #cardContainer {
-      background: transparent;
-      padding: 12px;
-      border-radius: 16px;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background: radial-gradient(900px 550px at 20% -10%, rgba(34,197,94,.18), transparent 55%),
+                  radial-gradient(900px 550px at 90% 10%, rgba(59,130,246,.18), transparent 55%),
+                  var(--bg);
+      color:var(--text);
+      display:flex;
+      min-height:100vh;
+      align-items:center;
+      justify-content:center;
+      padding:18px 12px;
     }
-    canvas {
-      max-width: 100%;
-      height: auto;
-      border-radius: 12px;
+    .wrap{max-width:980px;width:100%}
+    .cardWrap{
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      gap:14px;
     }
-    #info {
-      text-align: center;
-      font-size: 14px;
-      color: #555;
+    canvas{
+      width: min(960px, 100%);
+      height:auto;
+      border-radius:18px;
+      box-shadow: 0 16px 44px rgba(0,0,0,.45);
+      background:#000;
+      cursor:pointer;
+      user-select:none;
     }
-    #downloadBtn {
-      padding: 8px 16px;
-      border-radius: 999px;
-      border: none;
-      font-size: 14px;
-      cursor: pointer;
-      background: #2b5aa8;
-      color: white;
+    .balance{
+      font-weight:800;
+      letter-spacing:.5px;
+      font-size: clamp(34px, 6vw, 64px);
+      line-height:1;
+      color:var(--green);
+      text-align:center;
     }
-    #downloadBtn:disabled {
-      opacity: 0.6;
-      cursor: default;
-    }
-
-    .statement-card {
-      background: white;
-      border-radius: 12px;
-      padding: 0.75rem 1rem 1rem;
-      box-shadow: 0 8px 20px rgba(0,0,0,0.05);
-      max-width: 900px;
-      width: 100%;
-    }
-    .statement-title {
-      font-size: 0.95rem;
-      font-weight: 600;
-      color: #374151;
-      margin-bottom: 0.4rem;
-      text-align: left;
-    }
-    #statement-list {
-      border-radius: 0.75rem;
-      border: 1px solid #e5e7eb;
-      overflow: hidden;
-    }
-    .statement-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 0.45rem 0.6rem;
-      font-size: 0.85rem;
-    }
-    .statement-row:nth-child(odd) {
-      background: #f9fafb;
-    }
-    .statement-row:nth-child(even) {
-      background: #ffffff;
-    }
-    .statement-desc {
-      flex: 1;
-      margin-right: 0.5rem;
-    }
-    .statement-meta {
-      display: flex;
-      flex-direction: column;
-      align-items: flex-end;
-      white-space: nowrap;
-      font-variant-numeric: tabular-nums;
-      gap: 2px;
-    }
-    .statement-amount.debit {
-      color: #b91c1c;
-    }
-    .statement-amount.credit {
-      color: #15803d;
-    }
-    .statement-empty {
-      font-size: 0.85rem;
-      color: #6b7280;
-      padding: 0.5rem 0.6rem;
-    }
-  
-    /* Modal de QR em tela cheia */
-    .qr-modal {
-      position: fixed;
-      inset: 0;
-      display: none;
-      align-items: center;
-      justify-content: center;
-      z-index: 9999;
-      padding: 16px;
-    }
-    .qr-modal.show {
-      display: flex;
-    }
-    .qr-modal-backdrop {
-      position: absolute;
-      inset: 0;
-      background: rgba(0,0,0,0.72);
-      backdrop-filter: blur(2px);
-    }
-    .qr-modal-content {
-      position: relative;
-      z-index: 1;
-      width: min(560px, 92vw);
-      background: #0b0c0f;
-      border: 1px solid rgba(215, 183, 106, 0.35);
-      border-radius: 16px;
-      box-shadow: 0 18px 60px rgba(0,0,0,0.6);
-      padding: 14px 14px 16px;
-      color: #ffffff;
-      text-align: center;
-    }
-    .qr-modal-title {
-      font-size: 14px;
-      font-weight: 700;
-      letter-spacing: 0.2px;
-      color: #f3e5b5;
-      margin-bottom: 10px;
-    }
-    .qr-modal-link {
-      margin-top: 10px;
-      font-size: 12px;
-      color: rgba(255,255,255,0.85);
-      word-break: break-all;
-    }
-    #qrModalClose {
-      margin-top: 12px;
-      background: #111827;
+    .balance.zero{color:#000; text-shadow:none}
+    .sub{
+      font-size:12px;
+      color:var(--muted);
+      text-align:center;
+      max-width:860px;
     }
 
+    .modal{
+      position:fixed;
+      inset:0;
+      background: rgba(0,0,0,.78);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding:20px;
+      z-index:50;
+    }
+    .modal.on{display:flex}
+    .modalBox{
+      width:min(820px, 100%);
+      background: rgba(10,14,30,.72);
+      border:1px solid rgba(255,255,255,.14);
+      border-radius:16px;
+      padding:16px;
+      box-shadow: 0 18px 56px rgba(0,0,0,.55);
+    }
+    .modalHeader{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      margin-bottom:10px;
+    }
+    .modalHeader b{font-size:13px;letter-spacing:.2px}
+    .modalHeader button{
+      appearance:none;
+      border:1px solid rgba(255,255,255,.18);
+      background: rgba(255,255,255,.06);
+      color:var(--text);
+      padding:8px 10px;
+      border-radius:10px;
+      cursor:pointer;
+      font-size:12px;
+    }
+    #codeCanvas{
+      width:100%;
+      height:auto;
+      background:#fff;
+      border-radius:14px;
+      display:block;
+    }
+    .hint{
+      margin-top:10px;
+      font-size:12px;
+      color:var(--muted);
+      text-align:center;
+    }
   </style>
 </head>
 <body>
-  <div id="cardContainer">
-    <canvas id="cardCanvas" width="900" height="540"></canvas>
-  </div>
-  <div id="info">Carregando dados do cartão...</div>
-  <button id="downloadBtn" disabled>Baixar cartão em PNG</button>
+  <div class="wrap">
+    <div class="cardWrap">
+      <canvas id="cardCanvas" width="1536" height="864" aria-label="Cartão do cliente"></canvas>
 
-  <div class="statement-card">
-    <div class="statement-title">Extrato recente</div>
-    <div id="statement-list">
-      <p class="statement-empty">Nenhuma movimentação registrada ainda.</p>
+      <div id="balance" class="balance">R$ 0,00</div>
+      <div class="sub" id="sub">Toque no código para ampliar e facilitar a leitura na câmera.</div>
     </div>
   </div>
 
-  
-  <div id="qrModal" class="qr-modal" aria-hidden="true">
-    <div class="qr-modal-backdrop" id="qrModalBackdrop"></div>
-    <div class="qr-modal-content" role="dialog" aria-modal="true" aria-label="QR do cartão">
-      <div class="qr-modal-title">QR do cartão</div>
-      <canvas id="qrBigCanvas" width="520" height="520" style="max-width:100%;height:auto;border-radius:14px;background:#ffffff;padding:10px;box-sizing:border-box;"></canvas>
-      <div id="qrModalLink" class="qr-modal-link"></div>
-      <button id="qrModalClose" type="button">Fechar</button>
+  <div id="modal" class="modal" role="dialog" aria-modal="true">
+    <div class="modalBox">
+      <div class="modalHeader">
+        <b>Código do cartão</b>
+        <button id="btnClose" type="button">Fechar</button>
+      </div>
+      <canvas id="codeCanvas" width="1024" height="1024"></canvas>
+      <div class="hint">Dica: aumente o brilho da tela para ler mais rápido.</div>
     </div>
   </div>
 
+<script>
+const ART_INFINITY = "Infinity Black.png";
+const ART_DIAMOND  = "diamond.png";
 
-  <script>
-    // CONFIGURE AQUI:
-    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxR7KTYm8LH1VDBpXzZy--6t_dB2YgyMWvRXVvl-LZ7K6bTarMelTJun0wkASsxxWil/exec';
+function fmtBRL(n){
+  const v = Number(n) || 0;
+  return v.toLocaleString("pt-BR", { style:"currency", currency:"BRL" });
+}
+function getToken(){
+  const u = new URL(location.href);
+  return (u.searchParams.get("t") || u.searchParams.get("token") || "").trim();
+}
 
-    const params = new URLSearchParams(window.location.search);
-    const token = params.get('t') || params.get('token'); // aceita ?t= ou ?token=
+async function loadQRCodeLib(){
+  if (window.QRCode) return;
+  await new Promise((resolve, reject) => {
+    const s = document.createElement("script");
+    s.src = "https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js";
+    s.onload = resolve;
+    s.onerror = () => reject(new Error("Falha ao carregar biblioteca de QR"));
+    document.head.appendChild(s);
+  });
+}
 
-    const infoEl = document.getElementById('info');
-    const downloadBtn = document.getElementById('downloadBtn');
-    const canvas = document.getElementById('cardCanvas');
-    const ctx = canvas.getContext('2d');
+async function makeQRCanvas(text, size){
+  await loadQRCodeLib();
+  const wrap = document.createElement("div");
+  new QRCode(wrap, {
+    text,
+    width: size,
+    height: size,
+    colorDark: "#000000",
+    colorLight: "#ffffff",
+    correctLevel: QRCode.CorrectLevel.M
+  });
+  const c = wrap.querySelector("canvas");
+  if (c) return c;
 
-    let qrHitBox = null;
-    let currentCardUrl = '';
+  const img = wrap.querySelector("img");
+  if (!img) throw new Error("QR não gerado");
+  const out = document.createElement("canvas");
+  out.width = size; out.height = size;
+  const ctx = out.getContext("2d");
+  await new Promise((res, rej) => { img.onload = res; img.onerror = rej; });
+  ctx.drawImage(img, 0, 0, size, size);
+  return out;
+}
 
-    const qrModal = document.getElementById('qrModal');
-    const qrModalBackdrop = document.getElementById('qrModalBackdrop');
-    const qrModalClose = document.getElementById('qrModalClose');
-    const qrBigCanvas = document.getElementById('qrBigCanvas');
-    const qrModalLink = document.getElementById('qrModalLink');
+const cardCanvas = document.getElementById("cardCanvas");
+const ctx = cardCanvas.getContext("2d");
 
-    function isModalOpen() {
-      return qrModal && qrModal.classList.contains('show');
-    }
+const modal = document.getElementById("modal");
+const btnClose = document.getElementById("btnClose");
+const codeCanvas = document.getElementById("codeCanvas");
+const codeCtx = codeCanvas.getContext("2d");
 
-    function openQrModal() {
-      if (!qrModal || !qrBigCanvas) return;
-      qrModal.classList.add('show');
-      qrModal.setAttribute('aria-hidden', 'false');
+let lastQRRect = null;
+let state = {
+  token: "",
+  type: "INFINITY_BLACK",
+  name: "Cliente",
+  balance: 0,
+  cardUrl: ""
+};
 
-      // Gera QR grande
-      if (typeof QRCode !== 'undefined' && currentCardUrl) {
-        QRCode.toCanvas(qrBigCanvas, currentCardUrl, { width: 520, margin: 1 }, function (error) {
-          if (error) console.error(error);
-        });
+function pickArt(type){
+  const t = String(type || "").toUpperCase();
+  if (t.includes("DIAMOND")) return ART_DIAMOND;
+  return ART_INFINITY;
+}
+
+function drawTextShadowed(text, x, y, fontPx, align, baseline){
+  ctx.save();
+  ctx.font = fontPx + "px serif";
+  ctx.fillStyle = "#ffffff";
+  ctx.textAlign = align || "left";
+  ctx.textBaseline = baseline || "alphabetic";
+  ctx.shadowColor = "rgba(0,0,0,.55)";
+  ctx.shadowBlur = 6;
+  ctx.shadowOffsetX = 0;
+  ctx.shadowOffsetY = 2;
+  ctx.fillText(text, x, y);
+  ctx.restore();
+}
+
+async function render(){
+  const artPath = pickArt(state.type);
+
+  const bg = new Image();
+  bg.crossOrigin = "anonymous";
+  const bgLoaded = new Promise((res, rej) => { bg.onload = res; bg.onerror = rej; });
+  bg.src = artPath;
+  await bgLoaded;
+
+  cardCanvas.width = bg.naturalWidth || 1536;
+  cardCanvas.height = bg.naturalHeight || 864;
+
+  ctx.clearRect(0,0,cardCanvas.width, cardCanvas.height);
+  ctx.drawImage(bg, 0, 0, cardCanvas.width, cardCanvas.height);
+
+  const qrSize = Math.round(cardCanvas.width * 0.15);
+  const qrX = Math.round(cardCanvas.width * 0.82);
+  const qrY = Math.round(cardCanvas.height * 0.46);
+
+  const qrCanvas = await makeQRCanvas(state.cardUrl, qrSize);
+
+  const pad = Math.round(qrSize * 0.10);
+  const plateW = qrSize + pad*2;
+  const plateH = qrSize + pad*2;
+  const plateX = qrX - Math.round(plateW/2);
+  const plateY = qrY - Math.round(plateH/2);
+
+  ctx.save();
+  ctx.fillStyle = "rgba(255,255,255,.96)";
+  ctx.strokeStyle = "rgba(0,0,0,.25)";
+  ctx.lineWidth = Math.max(2, Math.round(qrSize * 0.015));
+  roundRect(ctx, plateX, plateY, plateW, plateH, Math.round(qrSize*0.10));
+  ctx.fill();
+  ctx.stroke();
+  ctx.restore();
+
+  ctx.drawImage(qrCanvas, plateX + pad, plateY + pad, qrSize, qrSize);
+  lastQRRect = { x: plateX, y: plateY, w: plateW, h: plateH };
+
+  const name = (state.name || "").trim();
+  if (String(state.type || "").toUpperCase().includes("DIAMOND")){
+    const x = Math.round(cardCanvas.width * 0.73);
+    const y = Math.round(cardCanvas.height * 0.76);
+    drawTextShadowed(name, x, y, Math.round(cardCanvas.height * 0.030), "left", "alphabetic");
+  } else {
+    const x = Math.round(cardCanvas.width * 0.07);
+    const y = Math.round(cardCanvas.height * 0.92);
+    drawTextShadowed(name, x, y, Math.round(cardCanvas.height * 0.030), "left", "alphabetic");
+  }
+
+  const balEl = document.getElementById("balance");
+  const bal = Number(state.balance) || 0;
+  balEl.textContent = fmtBRL(bal);
+  balEl.classList.toggle("zero", bal <= 0);
+
+  await renderModalQR_();
+}
+
+async function renderModalQR_(){
+  const size = Math.min(codeCanvas.width, codeCanvas.height);
+  const qr = await makeQRCanvas(state.cardUrl, size);
+  codeCtx.clearRect(0,0,codeCanvas.width, codeCanvas.height);
+  codeCtx.fillStyle = "#ffffff";
+  codeCtx.fillRect(0,0,codeCanvas.width, codeCanvas.height);
+
+  const s = Math.min(codeCanvas.width, codeCanvas.height);
+  const x = Math.round((codeCanvas.width - s)/2);
+  const y = Math.round((codeCanvas.height - s)/2);
+  codeCtx.drawImage(qr, x, y, s, s);
+}
+
+function roundRect(ctx, x, y, w, h, r){
+  const rr = Math.min(r, w/2, h/2);
+  ctx.beginPath();
+  ctx.moveTo(x+rr, y);
+  ctx.arcTo(x+w, y, x+w, y+h, rr);
+  ctx.arcTo(x+w, y+h, x, y+h, rr);
+  ctx.arcTo(x, y+h, x, y, rr);
+  ctx.arcTo(x, y, x+w, y, rr);
+  ctx.closePath();
+}
+
+function openModal(){ modal.classList.add("on"); }
+function closeModal(){ modal.classList.remove("on"); }
+
+btnClose.addEventListener("click", closeModal);
+modal.addEventListener("click", (ev) => { if (ev.target === modal) closeModal(); });
+document.addEventListener("keydown", (ev) => { if (ev.key === "Escape") closeModal(); });
+
+cardCanvas.addEventListener("click", (ev) => {
+  if (!lastQRRect) return;
+  const rect = cardCanvas.getBoundingClientRect();
+  const mx = (ev.clientX - rect.left) * (cardCanvas.width / rect.width);
+  const my = (ev.clientY - rect.top)  * (cardCanvas.height / rect.height);
+
+  if (mx >= lastQRRect.x && mx <= lastQRRect.x + lastQRRect.w &&
+      my >= lastQRRect.y && my <= lastQRRect.y + lastQRRect.h) {
+    openModal();
+  }
+});
+
+(async function init(){
+  const token = getToken();
+  if (!token){
+    document.getElementById("sub").textContent = "Token ausente na URL. Use ?t=SEU_TOKEN";
+    return;
+  }
+
+  const api = (new URL(location.href)).searchParams.get("api");
+  state.token = token;
+  state.cardUrl = location.origin + location.pathname + "?t=" + encodeURIComponent(token) + (api ? ("&api=" + encodeURIComponent(api)) : "");
+
+  if (api){
+    try{
+      const u = new URL(api);
+      u.searchParams.set("action", "card");
+      u.searchParams.set("token", token);
+      const r = await fetch(u.toString());
+      const j = await r.json();
+      if (j && j.success){
+        state.name = j.name || "Cliente";
+        state.balance = j.balance || 0;
+        state.type = j.type || state.type;
+      } else {
+        document.getElementById("sub").textContent = "Não consegui carregar dados do banco. Mostrando cartão local.";
       }
-      if (qrModalLink) qrModalLink.textContent = currentCardUrl || '';
+    }catch(e){
+      document.getElementById("sub").textContent = "Falha ao consultar o banco. Mostrando cartão local.";
     }
+  } else {
+    document.getElementById("sub").textContent = "Para puxar nome/saldo, abra com ?api=URL_DO_SCRIPT além do ?t=TOKEN";
+  }
 
-    function closeQrModal() {
-      if (!qrModal) return;
-      qrModal.classList.remove('show');
-      qrModal.setAttribute('aria-hidden', 'true');
-    }
-
-    function pointInRect(px, py, r) {
-      return !!(r && px >= r.x && px <= (r.x + r.w) && py >= r.y && py <= (r.y + r.h));
-    }
-
-    // Clique no QR (dentro do canvas) abre/fecha a tela cheia
-    canvas.addEventListener('click', (ev) => {
-      if (!qrHitBox) return;
-      if (isModalOpen()) return; // quando aberto, clique é tratado no backdrop/botão
-
-      const rect = canvas.getBoundingClientRect();
-      const scaleX = canvas.width / rect.width;
-      const scaleY = canvas.height / rect.height;
-      const x = (ev.clientX - rect.left) * scaleX;
-      const y = (ev.clientY - rect.top) * scaleY;
-
-      if (pointInRect(x, y, qrHitBox)) {
-        openQrModal();
-      }
-    });
-
-    if (qrModalBackdrop) qrModalBackdrop.addEventListener('click', closeQrModal);
-    if (qrModalClose) qrModalClose.addEventListener('click', closeQrModal);
-    window.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && isModalOpen()) closeQrModal();
-    });
-
-    let updating = false;
-
-    if (!token) {
-      infoEl.textContent = 'Token não encontrado na URL.';
-    } else {
-      atualizarTudo(true);
-      // atualiza a cada 1 segundo
-      setInterval(() => atualizarTudo(false), 1000);
-    }
-
-    function atualizarTudo(initial) {
-      if (updating || !token) return;
-      updating = true;
-      if (initial) {
-        infoEl.textContent = 'Carregando dados do cartão...';
-      }
-
-      const urlCard = APPS_SCRIPT_URL + '?action=card&token=' + encodeURIComponent(token);
-      const urlStmt = APPS_SCRIPT_URL + '?action=statement&token=' + encodeURIComponent(token) + '&limit=20';
-
-      Promise.all([
-        fetch(urlCard).then(r => r.json()),
-        fetch(urlStmt).then(r => r.json()).catch(() => null)
-      ])
-      .then(([cardData, stmtData]) => {
-        if (!cardData.success) {
-          infoEl.textContent = 'Erro: ' + (cardData.error || 'falha ao carregar cartão');
-          return;
-        }
-        desenharCartao(cardData);
-
-        if (stmtData && stmtData.success) {
-          renderStatement(stmtData);
-        }
-
-        const now = new Date();
-        infoEl.textContent = 'Última atualização: ' + now.toLocaleTimeString('pt-BR');
-        downloadBtn.disabled = false;
-        if (!downloadBtn._initialized) {
-          downloadBtn.addEventListener('click', baixarPNG);
-          downloadBtn._initialized = true;
-        }
-      })
-      .catch(err => {
-        console.error(err);
-        infoEl.textContent = 'Erro de conexão ao carregar o cartão.';
-      })
-      .finally(() => {
-        updating = false;
-      });
-    }
-
-    function desenharCartao(data) {
-      const nome = data.name;
-      const balance = Number(data.balance || 0);
-      const saldoFormatado = balance.toLocaleString('pt-BR', {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2
-      });
-
-      // Background da página (fora do cartão)
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.fillStyle = '#f5f5f5';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-      // Cartão estilo "Black" (cantos arredondados)
-      const cardX = 30;
-      const cardY = 30;
-      const cardW = canvas.width - 60;
-      const cardH = canvas.height - 60;
-      const radius = 32;
-
-      // Sombra
-      ctx.save();
-      ctx.shadowColor = 'rgba(0,0,0,0.35)';
-      ctx.shadowBlur = 24;
-      ctx.shadowOffsetY = 10;
-      roundRect(ctx, cardX, cardY, cardW, cardH, radius);
-      ctx.fillStyle = '#0b0c0f';
-      ctx.fill();
-      ctx.restore();
-
-      // Fundo com gradiente sutil
-      const g = ctx.createLinearGradient(cardX, cardY, cardX + cardW, cardY + cardH);
-      g.addColorStop(0, '#0a0b0f');
-      g.addColorStop(0.55, '#111318');
-      g.addColorStop(1, '#05060a');
-
-      ctx.save();
-      roundRect(ctx, cardX, cardY, cardW, cardH, radius);
-      ctx.clip();
-      ctx.fillStyle = g;
-      ctx.fillRect(cardX, cardY, cardW, cardH);
-
-      // Textura discreta (pontos)
-      ctx.globalAlpha = 0.06;
-      ctx.fillStyle = '#ffffff';
-      for (let y = cardY + 18; y < cardY + cardH; y += 14) {
-        for (let x = cardX + 18; x < cardX + cardW; x += 14) {
-          ctx.fillRect(x, y, 1, 1);
-        }
-      }
-      ctx.globalAlpha = 1;
-
-      // Filete dourado (borda interna)
-      ctx.lineWidth = 2;
-      const goldGrad = ctx.createLinearGradient(cardX, cardY, cardX + cardW, cardY);
-      goldGrad.addColorStop(0, '#d7b76a');
-      goldGrad.addColorStop(0.5, '#f3e5b5');
-      goldGrad.addColorStop(1, '#b88a2f');
-      ctx.strokeStyle = goldGrad;
-      roundRect(ctx, cardX + 6, cardY + 6, cardW - 12, cardH - 12, radius - 6);
-      ctx.stroke();
-
-      // Cabeçalho
-      ctx.fillStyle = '#e7d7a6';
-      ctx.font = '700 34px "Segoe UI", system-ui';
-      ctx.fillText('Banco do IAPE', cardX + 34, cardY + 72);
-
-      // Selo "Infinity Black" no canto superior direito
-      ctx.textAlign = 'right';
-      ctx.fillStyle = '#f3e5b5';
-      ctx.font = 'italic 28px "Brush Script MT", "Segoe Script", "Snell Roundhand", cursive';
-      ctx.fillText('Infinity Black', cardX + cardW - 34, cardY + 72);
-      ctx.textAlign = 'left';
-
-      // Logo (opcional)
-      const logo = new Image();
-      logo.src = 'iape.png?text=IAPE';
-
-      logo.onload = function() {
-        const logoSize = 88;
-        ctx.drawImage(logo, cardX + cardW - logoSize - 34, cardY + 92, logoSize, logoSize);
-        desenharTextoCartao(nome, saldoFormatado, { cardX, cardY, cardW, cardH });
-      };
-
-      logo.onerror = function() {
-        desenharTextoCartao(nome, saldoFormatado, { cardX, cardY, cardW, cardH });
-      };
-
-      ctx.restore();
-    }
-
-    function desenharTextoCartao(nome, saldoFormatado, layout) {
-      const cardX = layout?.cardX ?? 30;
-      const cardY = layout?.cardY ?? 30;
-      const cardW = layout?.cardW ?? (canvas.width - 60);
-      const cardH = layout?.cardH ?? (canvas.height - 60);
-
-      const left = cardX + 34;
-      const topBase = cardY + 160;
-
-      // Nome do responsável
-      ctx.fillStyle = '#ffffff';
-      ctx.font = '700 30px "Segoe UI", system-ui';
-      ctx.fillText('Responsável', left, topBase);
-
-      ctx.fillStyle = 'rgba(255,255,255,0.92)';
-      ctx.font = '26px "Segoe UI", system-ui';
-      wrapText(ctx, nome, left, topBase + 38, cardW - 320, 32);
-
-      // Saldo
-      ctx.fillStyle = '#ffffff';
-      ctx.font = '700 28px "Segoe UI", system-ui';
-      ctx.fillText('Saldo disponível', left, topBase + 140);
-
-      const goldGrad2 = ctx.createLinearGradient(left, 0, left + 380, 0);
-      goldGrad2.addColorStop(0, '#d7b76a');
-      goldGrad2.addColorStop(0.45, '#f3e5b5');
-      goldGrad2.addColorStop(1, '#b88a2f');
-      ctx.fillStyle = goldGrad2;
-      ctx.font = '800 60px "Segoe UI", system-ui';
-      ctx.fillText('R$ ' + saldoFormatado, left, topBase + 220);
-
-      // Texto auxiliar
-      ctx.fillStyle = 'rgba(255,255,255,0.78)';
-      ctx.font = '20px "Segoe UI", system-ui';
-      ctx.fillText('Apresente este cartão na lojinha para pagar suas compras.', left, cardY + cardH - 56);
-
-      // Link deste próprio cartão (vai dentro do QR)
-      const cardUrl = window.location.origin + window.location.pathname + '?t=' + encodeURIComponent(token);
-
-      currentCardUrl = cardUrl;
-
-      gerarQR(cardUrl, function(qrCanvas) {
-        const qrSize = 220;
-        const qrX = cardX + cardW - qrSize - 34;
-        const qrY = cardY + cardH - qrSize - 34;
-
-        // área clicável do QR (inclui o fundo arredondado)
-        qrHitBox = { x: (qrX - 10), y: (qrY - 10), w: (qrSize + 20), h: (qrSize + 20) };
-
-        // fundo do QR
-        ctx.save();
-        ctx.fillStyle = 'rgba(255,255,255,0.95)';
-        roundRect(ctx, qrX - 10, qrY - 10, qrSize + 20, qrSize + 20, 18);
-        ctx.fill();
-        ctx.restore();
-
-        ctx.drawImage(qrCanvas, qrX, qrY, qrSize, qrSize);
-      });
-    }
-
-    // Rounded rectangle helper (canvas 2D)
-    function roundRect(ctx, x, y, w, h, r) {
-      const radius = Math.min(r, w / 2, h / 2);
-      ctx.beginPath();
-      ctx.moveTo(x + radius, y);
-      ctx.arcTo(x + w, y, x + w, y + h, radius);
-      ctx.arcTo(x + w, y + h, x, y + h, radius);
-      ctx.arcTo(x, y + h, x, y, radius);
-      ctx.arcTo(x, y, x + w, y, radius);
-      ctx.closePath();
-    }
-
-    // Gera um QR code em uma canvas temporária e devolve essa canvas no callback
-    function gerarQR(text, callback) {
-      if (typeof QRCode === 'undefined') {
-        console.error('Biblioteca QRCode não carregada.');
-        infoEl.textContent = 'Erro: biblioteca de QR não carregou (QRCode undefined).';
-        return;
-      }
-
-      const qrCanvas = document.createElement('canvas');
-
-      QRCode.toCanvas(qrCanvas, text, {
-        width: 220,
-        margin: 1
-      }, function (error) {
-        if (error) {
-          console.error(error);
-          infoEl.textContent = 'Erro ao gerar QR code.';
-          return;
-        }
-        callback(qrCanvas);
-      });
-    }
-
-    function renderStatement(stmtData) {
-      const container = document.getElementById('statement-list');
-      if (!container) return;
-
-      const items = stmtData.items || [];
-      if (!items.length) {
-        container.innerHTML = '<p class="statement-empty">Nenhuma movimentação registrada ainda.</p>';
-        return;
-      }
-
-      const html = items.map(item => {
-        const ts = new Date(item.timestamp);
-        const hora = ts.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-        const data = ts.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
-        const valor = Number(item.amount || 0);
-        const saldo = Number(item.balanceAfter || 0);
-
-        let tipoLabel = 'Movimentação';
-        let classe = '';
-        if (item.type === 'DEBIT') {
-          tipoLabel = 'Débito';
-          classe = 'debit';
-        } else if (item.type === 'CREDIT' || item.type === 'CREDIT_ADD' || item.type === 'CREDIT_INIT') {
-          tipoLabel = 'Crédito';
-          classe = 'credit';
-        }
-
-        const desc = item.description || tipoLabel;
-
-        return `
-          <div class="statement-row">
-            <div class="statement-desc">
-              <div>${desc}</div>
-              <div style="font-size:0.75rem;color:#6b7280;">${data} • ${hora}</div>
-            </div>
-            <div class="statement-meta">
-              <div class="statement-amount ${classe}">
-                ${valor >= 0 ? '' : '- '}${Math.abs(valor).toLocaleString('pt-BR', {
-                  style: 'currency',
-                  currency: 'BRL'
-                })}
-              </div>
-              <div style="font-size:0.75rem;color:#6b7280;">
-                Saldo: ${saldo.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-              </div>
-            </div>
-          </div>
-        `;
-      }).join('');
-
-      container.innerHTML = html;
-    }
-
-    function baixarPNG() {
-      const dataURL = canvas.toDataURL('image/png');
-      const a = document.createElement('a');
-      a.href = dataURL;
-      a.download = 'iape-card.png';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-    }
-
-    // helper simples pra quebrar texto em múltiplas linhas
-    function wrapText(context, text, x, y, maxWidth, lineHeight) {
-      const words = text.split(' ');
-      let line = '';
-
-      for (let n = 0; n < words.length; n++) {
-        const testLine = line + words[n] + ' ';
-        const metrics = context.measureText(testLine);
-        const testWidth = metrics.width;
-        if (testWidth > maxWidth && n > 0) {
-          context.fillText(line, x, y);
-          line = words[n] + ' ';
-          y += lineHeight;
-        } else {
-          line = testLine;
-        }
-      }
-      context.fillText(line, x, y);
-    }
-  </script>
+  await render();
+})();
+</script>
 </body>
 </html>
