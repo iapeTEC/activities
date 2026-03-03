@@ -1,505 +1,506 @@
 <!doctype html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Cartão – Bank of IAPE</title>
-  <style>
-    :root{
-      --bg:#0b1020;
-      --text:#e8eefc;
-      --muted:rgba(232,238,252,.7);
-      --green:#22c55e;
-    }
-    *{box-sizing:border-box}
-    body{
-      margin:0;
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-      background: radial-gradient(900px 550px at 20% -10%, rgba(34,197,94,.18), transparent 55%),
-                  radial-gradient(900px 550px at 90% 10%, rgba(59,130,246,.18), transparent 55%),
-                  var(--bg);
-      color:var(--text);
-      display:flex;
-      min-height:100vh;
-      align-items:center;
-      justify-content:center;
-      padding:18px 12px;
-    }
-    .wrap{max-width:980px;width:100%}
-    .cardWrap{
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      gap:14px;
-    }
-    canvas{
-      width: min(960px, 100%);
-      height:auto;
-      border-radius:18px;
-      box-shadow: 0 16px 44px rgba(0,0,0,.45);
-      background:#000;
-      cursor:pointer;
-      user-select:none;
-    }
-    .balance{
-      font-weight:800;
-      letter-spacing:.5px;
-      font-size: clamp(34px, 6vw, 64px);
-      line-height:1;
-      color:var(--green);
-      text-align:center;
-    }
-    .balance.zero{color:#000; text-shadow:none}
-    .sub{
-      font-size:12px;
-      color:var(--muted);
-      text-align:center;
-      max-width:860px;
-    }
+  <meta charset="UTF-8">
+  <title>Card IAPE</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    .modal{
-      position:fixed;
-      inset:0;
-      background: rgba(0,0,0,.78);
-      display:none;
-      align-items:center;
-      justify-content:center;
-      padding:20px;
-      z-index:50;
+  <!-- QR Code (client-side, GitHub Pages ok) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode/1.5.0/qrcode.min.js"></script>
+
+  <style>
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #f5f5f5;
+      margin: 0;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
     }
-    .modal.on{display:flex}
-    .modalBox{
-      width:min(820px, 100%);
-      background: rgba(10,14,30,.72);
-      border:1px solid rgba(255,255,255,.14);
-      border-radius:16px;
-      padding:16px;
-      box-shadow: 0 18px 56px rgba(0,0,0,.55);
+    #cardContainer {
+      background: transparent;
+      padding: 12px;
+      border-radius: 16px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.10);
     }
-    .modalHeader{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-      margin-bottom:10px;
-    }
-    .modalHeader b{font-size:13px;letter-spacing:.2px}
-    .modalHeader button{
-      appearance:none;
-      border:1px solid rgba(255,255,255,.18);
-      background: rgba(255,255,255,.06);
-      color:var(--text);
-      padding:8px 10px;
-      border-radius:10px;
-      cursor:pointer;
-      font-size:12px;
-    }
-    #codeCanvas{
-      width:100%;
-      height:auto;
-      background:#fff;
-      border-radius:14px;
+    canvas {
+      max-width: 100%;
+      height: auto;
+      border-radius: 12px;
       display:block;
     }
-    
-    .stmtCard{
-      margin-top: 2px;
-      background:#ffffff;
-      color:#0b1020;
-      border-radius:16px;
-      box-shadow: 0 14px 36px rgba(0,0,0,.25);
-      overflow:hidden;
-      border:1px solid rgba(0,0,0,.08);
+    #info {
+      text-align: center;
+      font-size: 14px;
+      color: #555;
     }
-    .stmtHeader{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:12px;
-      padding:12px 14px;
-      border-bottom:1px solid rgba(0,0,0,.08);
-      background: linear-gradient(180deg, rgba(0,0,0,.02), rgba(0,0,0,.00));
-    }
-    .stmtHeader b{font-size:13px; letter-spacing:.2px}
-    .stmtHeader span{font-size:12px; color: rgba(11,16,32,.65)}
-    .stmtTableWrap{max-height:320px; overflow:auto;}
-    .stmtTable{width:100%; border-collapse:collapse; font-size:12px}
-    .stmtTable th, .stmtTable td{padding:10px 12px; border-bottom:1px solid rgba(0,0,0,.06); vertical-align:top}
-    .stmtTable th{position:sticky; top:0; background:#fff; text-align:left; font-size:11px; letter-spacing:.2px; color: rgba(11,16,32,.70)}
-    .stmtTable tr:last-child td{border-bottom:none}
-    .stmtDesc{color: rgba(11,16,32,.86)}
-    .stmtAmt{font-variant-numeric: tabular-nums}
-    .stmtNeg{color:#b91c1c}
-    .stmtPos{color:#166534}
-    .stmtEmpty{color: rgba(11,16,32,.60); text-align:center}
 
-    .hint{
-      margin-top:10px;
-      font-size:12px;
-      color:var(--muted);
-      text-align:center;
+    /* Saldo grande abaixo do cartão */
+    #bigBalance {
+      font-weight: 900;
+      font-size: clamp(34px, 6vw, 64px);
+      line-height: 1;
+      letter-spacing: .3px;
+      color: #15803d;
+      text-align: center;
+    }
+    #bigBalance.zero {
+      color: #000;
+    }
+
+    .statement-card {
+      background: white;
+      border-radius: 12px;
+      padding: 0.75rem 1rem 1rem;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.05);
+      max-width: 900px;
+      width: 100%;
+    }
+    .statement-title {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #374151;
+      margin-bottom: 0.4rem;
+      text-align: left;
+    }
+    #statement-list {
+      border-radius: 0.75rem;
+      border: 1px solid #e5e7eb;
+      overflow: hidden;
+    }
+    .statement-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.45rem 0.6rem;
+      font-size: 0.85rem;
+    }
+    .statement-row:nth-child(odd) {
+      background: #f9fafb;
+    }
+    .statement-row:nth-child(even) {
+      background: #ffffff;
+    }
+    .statement-desc {
+      flex: 1;
+      margin-right: 0.5rem;
+    }
+    .statement-meta {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      white-space: nowrap;
+      font-variant-numeric: tabular-nums;
+      gap: 2px;
+    }
+    .statement-amount.debit {
+      color: #b91c1c;
+    }
+    .statement-amount.credit {
+      color: #15803d;
+    }
+    .statement-empty {
+      font-size: 0.85rem;
+      color: #6b7280;
+      padding: 0.5rem 0.6rem;
+    }
+
+    /* Modal do código em tela cheia (mantém do antigo) */
+    .qr-modal {
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      padding: 16px;
+    }
+    .qr-modal.show {
+      display: flex;
+    }
+    .qr-modal-backdrop {
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,0.72);
+      backdrop-filter: blur(2px);
+    }
+    .qr-modal-content {
+      position: relative;
+      z-index: 1;
+      width: min(560px, 92vw);
+      background: #0b0c0f;
+      border: 1px solid rgba(215, 183, 106, 0.35);
+      border-radius: 16px;
+      box-shadow: 0 18px 60px rgba(0,0,0,0.6);
+      padding: 14px 14px 16px;
+      color: #ffffff;
+      text-align: center;
+    }
+    .qr-modal-title {
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 0.2px;
+      color: #f3e5b5;
+      margin-bottom: 10px;
+    }
+    .qr-modal-link {
+      margin-top: 10px;
+      font-size: 12px;
+      color: rgba(255,255,255,0.85);
+      word-break: break-all;
+    }
+    #qrModalClose {
+      margin-top: 12px;
+      background: #111827;
+      color: #fff;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 999px;
+      cursor: pointer;
     }
   </style>
 </head>
+
 <body>
-  <div class="wrap">
-    <div class="cardWrap">
-      <canvas id="cardCanvas" width="1536" height="864" aria-label="Cartão do cliente"></canvas>
+  <div id="cardContainer">
+    <canvas id="cardCanvas" width="1536" height="864"></canvas>
+  </div>
 
-      <div id="balance" class="balance">R$ 0,00</div>
-      <div class="sub" id="sub">Toque no código para ampliar e facilitar a leitura na câmera.</div>
+  <div id="bigBalance">R$ 0,00</div>
+  <div id="info">Carregando dados do cartão...</div>
+
+  <div class="statement-card">
+    <div class="statement-title">Extrato recente</div>
+    <div id="statement-list">
+      <p class="statement-empty">Nenhuma movimentação registrada ainda.</p>
     </div>
   </div>
 
-  <div id="modal" class="modal" role="dialog" aria-modal="true">
-    <div class="modalBox">
-      <div class="modalHeader">
-        <b>Código do cartão</b>
-        <button id="btnClose" type="button">Fechar</button>
-      </div>
-      <canvas id="codeCanvas" width="1024" height="1024"></canvas>
-      <div class="hint">Dica: aumente o brilho da tela para ler mais rápido.</div>
+  <div id="qrModal" class="qr-modal" aria-hidden="true">
+    <div class="qr-modal-backdrop" id="qrModalBackdrop"></div>
+    <div class="qr-modal-content" role="dialog" aria-modal="true" aria-label="Código do cartão">
+      <div class="qr-modal-title">Código do cartão</div>
+      <canvas id="qrBigCanvas" width="520" height="520" style="max-width:100%;height:auto;border-radius:14px;background:#ffffff;padding:10px;box-sizing:border-box;"></canvas>
+      <div id="qrModalLink" class="qr-modal-link"></div>
+      <button id="qrModalClose" type="button">Fechar</button>
     </div>
   </div>
 
-<script>
-const DEFAULT_API_URL = "https://script.google.com/macros/s/AKfycbwFspAVfSMZ6LdoHfFq5RDLyW1AzuAxbprTNb6hIBS3Guk8HvjvWJfqLNXmQDRwWdkn/exec";
+  <script>
+    // API fixa do banco
+    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxR7KTYm8LH1VDBpXzZy--6t_dB2YgyMWvRXVvl-LZ7K6bTarMelTJun0wkASsxxWil/exec";
 
-const ART_INFINITY_CANDIDATES = ["Infinity Black.png","Infinity%20Black.png","Infinity%20Black.PNG","Infinity Black.PNG","infinity black.png","InfinityBlack.png"];
-const ART_DIAMOND_CANDIDATES  = ["diamond.png","diamond.PNG","Diamond.png","Diamond.PNG","diamond%20.png"];
+    // Artes (precisam estar na mesma pasta do card.html no GitHub Pages)
+    const ART_INFINITY_CANDIDATES = ["Infinity Black.png","Infinity%20Black.png","Infinity Black.PNG","Infinity%20Black.PNG","infinity black.png","InfinityBlack.png"];
+    const ART_DIAMOND_CANDIDATES  = ["diamond.png","diamond.PNG","Diamond.png","Diamond.PNG"];
 
-function fmtBRL(n){
-  const v = Number(n) || 0;
-  return v.toLocaleString("pt-BR", { style:"currency", currency:"BRL" });
-}
-function getToken(){
-  const u = new URL(location.href);
-  return (u.searchParams.get("t") || u.searchParams.get("token") || "").trim();
-}
+    const params = new URLSearchParams(window.location.search);
+    const token = (params.get('t') || params.get('token') || '').trim();
 
-async function loadQRCodeLib(){
-  if (window.QRCode) return;
-  await new Promise((resolve, reject) => {
-    const s = document.createElement("script");
-    s.src = "https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js";
-    s.onload = resolve;
-    s.onerror = () => reject(new Error("Falha ao carregar biblioteca de QR"));
-    document.head.appendChild(s);
-  });
-}
+    const infoEl = document.getElementById('info');
+    const bigBalanceEl = document.getElementById('bigBalance');
 
-async function makeQRCanvas(text, size){
-  await loadQRCodeLib();
-  const wrap = document.createElement("div");
-  new QRCode(wrap, {
-    text,
-    width: size,
-    height: size,
-    colorDark: "#000000",
-    colorLight: "#ffffff",
-    correctLevel: QRCode.CorrectLevel.M
-  });
-  const c = wrap.querySelector("canvas");
-  if (c) return c;
+    const canvas = document.getElementById('cardCanvas');
+    const ctx = canvas.getContext('2d');
 
-  const img = wrap.querySelector("img");
-  if (!img) throw new Error("QR não gerado");
-  const out = document.createElement("canvas");
-  out.width = size; out.height = size;
-  const ctx = out.getContext("2d");
-  await new Promise((res, rej) => { img.onload = res; img.onerror = rej; });
-  ctx.drawImage(img, 0, 0, size, size);
-  return out;
-}
+    let qrHitBox = null;
+    let currentCardUrl = '';
 
-const cardCanvas = document.getElementById("cardCanvas");
-const ctx = cardCanvas.getContext("2d");
+    const qrModal = document.getElementById('qrModal');
+    const qrModalBackdrop = document.getElementById('qrModalBackdrop');
+    const qrModalClose = document.getElementById('qrModalClose');
+    const qrBigCanvas = document.getElementById('qrBigCanvas');
+    const qrModalLink = document.getElementById('qrModalLink');
 
-const modal = document.getElementById("modal");
-const btnClose = document.getElementById("btnClose");
-const codeCanvas = document.getElementById("codeCanvas");
-const codeCtx = codeCanvas.getContext("2d");
-
-let lastQRRect = null;
-let state = {
-  token: "",
-  type: "INFINITY_BLACK",
-  name: "Cliente",
-  balance: 0,
-  cardUrl: ""
-};
-
-function pickArt(type){
-  const t = String(type || "").toUpperCase();
-  if (t.includes("DIAMOND")) return ART_DIAMOND_CANDIDATES;
-  return ART_INFINITY_CANDIDATES;
-}
-
-async function loadImageWithFallback(candidates){
-  const errs = [];
-  for (const src0 of candidates){
-    const src = src0; // allow already-encoded
-    const img = new Image();
-    img.crossOrigin = "anonymous";
-    const p = new Promise((res, rej) => {
-      img.onload = () => res(img);
-      img.onerror = (ev) => rej({src, ev});
-    });
-    img.src = src;
-    try{
-      const loaded = await p;
-      return loaded;
-    }catch(e){
-      errs.push(e);
+    function isModalOpen() {
+      return qrModal && qrModal.classList.contains('show');
     }
-  }
-  const msg = errs.map(e => e.src).join(", ");
-  throw new Error("Não consegui carregar a arte. Tentei: " + msg);
-}
+    function openQrModal() {
+      if (!qrModal || !qrBigCanvas) return;
+      qrModal.classList.add('show');
+      qrModal.setAttribute('aria-hidden', 'false');
 
-function drawTextShadowed(text, x, y, fontPx, align, baseline){
-  ctx.save();
-  ctx.font = fontPx + "px serif";
-  ctx.fillStyle = "#ffffff";
-  ctx.textAlign = align || "left";
-  ctx.textBaseline = baseline || "alphabetic";
-  ctx.shadowColor = "rgba(0,0,0,.55)";
-  ctx.shadowBlur = 6;
-  ctx.shadowOffsetX = 0;
-  ctx.shadowOffsetY = 2;
-  ctx.fillText(text, x, y);
-  ctx.restore();
-}
-
-async function render(){
-  const artCandidates = pickArt(state.type);
-
-  const bg = await loadImageWithFallback(artCandidates);
-
-  cardCanvas.width = bg.naturalWidth || 1536;
-  cardCanvas.height = bg.naturalHeight || 864;
-
-  ctx.clearRect(0,0,cardCanvas.width, cardCanvas.height);
-  ctx.drawImage(bg, 0, 0, cardCanvas.width, cardCanvas.height);
-
-  const qrSize = Math.round(cardCanvas.width * 0.15);
-
-// posição do código (sem encostar nas bordas)
-// Infinity Black: um pouco mais para o canto superior direito
-// Diamond: mantém no meio-direita
-let qrX, qrY;
-if (String(state.type || "").toUpperCase().includes("DIAMOND")){
-  qrX = Math.round(cardCanvas.width * 0.82);
-  qrY = Math.round(cardCanvas.height * 0.46);
-} else {
-  qrX = Math.round(cardCanvas.width * 0.86);
-  qrY = Math.round(cardCanvas.height * 0.36);
-}
-
-  const qrCanvas = await makeQRCanvas(state.cardUrl, qrSize);
-
-  const pad = Math.round(qrSize * 0.10);
-  const plateW = qrSize + pad*2;
-  const plateH = qrSize + pad*2;
-  const plateX = qrX - Math.round(plateW/2);
-  const plateY = qrY - Math.round(plateH/2);
-
-  ctx.save();
-  ctx.fillStyle = "rgba(255,255,255,.96)";
-  ctx.strokeStyle = "rgba(0,0,0,.25)";
-  ctx.lineWidth = Math.max(2, Math.round(qrSize * 0.015));
-  roundRect(ctx, plateX, plateY, plateW, plateH, Math.round(qrSize*0.10));
-  ctx.fill();
-  ctx.stroke();
-  ctx.restore();
-
-  ctx.drawImage(qrCanvas, plateX + pad, plateY + pad, qrSize, qrSize);
-  lastQRRect = { x: plateX, y: plateY, w: plateW, h: plateH };
-
-  const name = (state.name || "").trim();
-  if (String(state.type || "").toUpperCase().includes("DIAMOND")){
-    // um pouco mais acima para não encostar na logo
-    const x = Math.round(cardCanvas.width * 0.73);
-    const y = Math.round(cardCanvas.height * 0.70);
-    drawTextShadowed(name, x, y, Math.round(cardCanvas.height * 0.030), "left", "alphabetic");
-  } else {
-    const x = Math.round(cardCanvas.width * 0.07);
-    const y = Math.round(cardCanvas.height * 0.92);
-    drawTextShadowed(name, x, y, Math.round(cardCanvas.height * 0.030), "left", "alphabetic");
-  }
-
-  const balEl = document.getElementById("balance");
-  const bal = Number(state.balance) || 0;
-  balEl.textContent = fmtBRL(bal);
-  balEl.classList.toggle("zero", bal <= 0);
-
-  await renderModalQR_();
-}
-
-async function renderModalQR_(){
-  const size = Math.min(codeCanvas.width, codeCanvas.height);
-  const qr = await makeQRCanvas(state.cardUrl, size);
-  codeCtx.clearRect(0,0,codeCanvas.width, codeCanvas.height);
-  codeCtx.fillStyle = "#ffffff";
-  codeCtx.fillRect(0,0,codeCanvas.width, codeCanvas.height);
-
-  const s = Math.min(codeCanvas.width, codeCanvas.height);
-  const x = Math.round((codeCanvas.width - s)/2);
-  const y = Math.round((codeCanvas.height - s)/2);
-  codeCtx.drawImage(qr, x, y, s, s);
-}
-
-function roundRect(ctx, x, y, w, h, r){
-  const rr = Math.min(r, w/2, h/2);
-  ctx.beginPath();
-  ctx.moveTo(x+rr, y);
-  ctx.arcTo(x+w, y, x+w, y+h, rr);
-  ctx.arcTo(x+w, y+h, x, y+h, rr);
-  ctx.arcTo(x, y+h, x, y, rr);
-  ctx.arcTo(x, y, x+w, y, rr);
-  ctx.closePath();
-}
-
-function openModal(){ modal.classList.add("on"); }
-function closeModal(){ modal.classList.remove("on"); }
-
-btnClose.addEventListener("click", closeModal);
-modal.addEventListener("click", (ev) => { if (ev.target === modal) closeModal(); });
-document.addEventListener("keydown", (ev) => { if (ev.key === "Escape") closeModal(); });
-
-cardCanvas.addEventListener("click", (ev) => {
-  if (!lastQRRect) return;
-  const rect = cardCanvas.getBoundingClientRect();
-  const mx = (ev.clientX - rect.left) * (cardCanvas.width / rect.width);
-  const my = (ev.clientY - rect.top)  * (cardCanvas.height / rect.height);
-
-  if (mx >= lastQRRect.x && mx <= lastQRRect.x + lastQRRect.w &&
-      my >= lastQRRect.y && my <= lastQRRect.y + lastQRRect.h) {
-    openModal();
-  }
-});
-
-
-function formatShortDate(isoOrAny){
-  try{
-    const d = new Date(isoOrAny);
-    if (!isFinite(d.getTime())) return String(isoOrAny || '');
-    return d.toLocaleString('pt-BR', { dateStyle:'short', timeStyle:'short' });
-  }catch(_){
-    return String(isoOrAny || '');
-  }
-}
-
-function renderStatement(items){
-  const body = document.getElementById('stmtBody');
-  const hint = document.getElementById('stmtHint');
-  if (!body || !hint) return;
-
-  if (!items || !items.length){
-    body.innerHTML = '<tr><td colspan="4" class="stmtEmpty">Sem movimentos ainda.</td></tr>';
-    hint.textContent = '0 itens';
-    return;
-  }
-
-  hint.textContent = items.length + ' itens';
-  body.innerHTML = '';
-  items.forEach(it => {
-    const amt = Number(it.amount) || 0;
-    const bal = Number(it.balanceAfter) || 0;
-    const tr = document.createElement('tr');
-
-    const td1 = document.createElement('td');
-    td1.textContent = formatShortDate(it.timestamp);
-    tr.appendChild(td1);
-
-    const td2 = document.createElement('td');
-    td2.className = 'stmtDesc';
-    td2.textContent = (it.description || it.type || '').toString();
-    tr.appendChild(td2);
-
-    const td3 = document.createElement('td');
-    td3.className = 'stmtAmt ' + (amt < 0 ? 'stmtNeg' : 'stmtPos');
-    td3.style.textAlign = 'right';
-    td3.textContent = fmtBRL(amt);
-    tr.appendChild(td3);
-
-    const td4 = document.createElement('td');
-    td4.className = 'stmtAmt';
-    td4.style.textAlign = 'right';
-    td4.textContent = fmtBRL(bal);
-    tr.appendChild(td4);
-
-    body.appendChild(tr);
-  });
-}
-
-(async function init(){
-  const token = getToken();
-  if (!token){
-    document.getElementById("sub").textContent = "Token ausente na URL. Use ?t=SEU_TOKEN";
-    return;
-  }
-
-  const apiParam = (new URL(location.href)).searchParams.get("api");
-  const api = (apiParam && apiParam.trim()) ? apiParam.trim() : DEFAULT_API_URL;
-  state.token = token;
-  state.cardUrl = location.origin + location.pathname + "?t=" + encodeURIComponent(token);
-
-  if (api){
-    try{
-      const u = new URL(api);
-      u.searchParams.set("action", "card");
-      u.searchParams.set("token", token);
-      const r = await fetch(u.toString());
-      const j = await r.json();
-      if (j && j.success){
-        state.name = j.name || "Cliente";
-        state.balance = j.balance || 0;
-        state.type = j.type || state.type;
-
-        // histórico (statement)
-        try{
-          const sUrl = new URL(api);
-          sUrl.searchParams.set("action", "statement");
-          sUrl.searchParams.set("token", token);
-          sUrl.searchParams.set("limit", "30");
-          const sr = await fetch(sUrl.toString());
-          const sj = await sr.json();
-          if (sj && sj.success) renderStatement(sj.items || []);
-          else renderStatement([]);
-        }catch(_){
-          renderStatement([]);
-        }
-      } else {
-        document.getElementById("sub").textContent = "Não consegui carregar dados do banco. Mostrando cartão local.";
-        renderStatement([]);
+      if (typeof QRCode !== 'undefined' && currentCardUrl) {
+        QRCode.toCanvas(qrBigCanvas, currentCardUrl, { width: 520, margin: 1 }, function (error) {
+          if (error) console.error(error);
+        });
       }
-    }catch(e){
-      document.getElementById("sub").textContent = "Falha ao consultar o banco. Mostrando cartão local.";
-        renderStatement([]);
+      if (qrModalLink) qrModalLink.textContent = currentCardUrl || '';
     }
-  } else {
-    document.getElementById("sub").textContent = "Para puxar nome/saldo, abra com ?api=URL_DO_SCRIPT além do ?t=TOKEN";
-    renderStatement([]);
-  }
+    function closeQrModal() {
+      if (!qrModal) return;
+      qrModal.classList.remove('show');
+      qrModal.setAttribute('aria-hidden', 'true');
+    }
+    if (qrModalBackdrop) qrModalBackdrop.addEventListener('click', closeQrModal);
+    if (qrModalClose) qrModalClose.addEventListener('click', closeQrModal);
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && isModalOpen()) closeQrModal();
+    });
 
-  try{
-    await render();
-  }catch(err){
-    document.getElementById('sub').textContent = String(err && err.message ? err.message : err);
-    // desenha um placeholder simples
-    const c = document.getElementById('cardCanvas');
-    const x = c.getContext('2d');
-    x.clearRect(0,0,c.width,c.height);
-    x.fillStyle = '#000';
-    x.fillRect(0,0,c.width,c.height);
-    x.fillStyle = '#fff';
-    x.font = '28px system-ui';
-    x.fillText('Arte do cartão não encontrada (404).', 40, 80);
-    x.font = '18px system-ui';
-    x.fillText('Confirme se as imagens estão no mesmo diretório do card.html no GitHub Pages.', 40, 120);
-  }
-})();
-</script>
+    function pointInRect(px, py, r) {
+      return !!(r && px >= r.x && px <= (r.x + r.w) && py >= r.y && py <= (r.y + r.h));
+    }
+
+    canvas.addEventListener('click', (ev) => {
+      if (!qrHitBox) return;
+      if (isModalOpen()) return;
+
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = canvas.width / rect.width;
+      const scaleY = canvas.height / rect.height;
+      const x = (ev.clientX - rect.left) * scaleX;
+      const y = (ev.clientY - rect.top) * scaleY;
+
+      if (pointInRect(x, y, qrHitBox)) {
+        openQrModal();
+      }
+    });
+
+    function fmtBRL(n) {
+      const v = Number(n) || 0;
+      return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    }
+
+    function firstName(full) {
+      const s = String(full || '').trim();
+      if (!s) return '';
+      return s.split(/\s+/)[0];
+    }
+
+    function pickArtCandidates(type) {
+      const t = String(type || '').toUpperCase();
+      return t.includes('DIAMOND') ? ART_DIAMOND_CANDIDATES : ART_INFINITY_CANDIDATES;
+    }
+
+    async function loadImageWithFallback(candidates) {
+      const tried = [];
+      for (const src of candidates) {
+        tried.push(src);
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        const p = new Promise((res, rej) => {
+          img.onload = () => res(img);
+          img.onerror = () => rej(new Error('Falha ao carregar: ' + src));
+        });
+        img.src = src;
+        try {
+          return await p;
+        } catch (e) {}
+      }
+      throw new Error('Não consegui carregar a arte. Verifique se as imagens estão no mesmo diretório. Tentativas: ' + tried.join(', '));
+    }
+
+    function roundRect(ctx, x, y, w, h, r) {
+      const radius = Math.min(r, w / 2, h / 2);
+      ctx.beginPath();
+      ctx.moveTo(x + radius, y);
+      ctx.arcTo(x + w, y, x + w, y + h, radius);
+      ctx.arcTo(x + w, y + h, x, y + h, radius);
+      ctx.arcTo(x, y + h, x, y, radius);
+      ctx.arcTo(x, y, x + w, y, radius);
+      ctx.closePath();
+    }
+
+    function drawName(ctx, type, name) {
+      const nm = firstName(name);
+      if (!nm) return;
+
+      ctx.save();
+      ctx.fillStyle = '#ffffff';
+      ctx.shadowColor = 'rgba(0,0,0,0.55)';
+      ctx.shadowBlur = 6;
+      ctx.shadowOffsetY = 2;
+
+      const fontPx = Math.round(canvas.height * 0.030);
+      ctx.font = fontPx + 'px serif';
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'alphabetic';
+
+      if (String(type || '').toUpperCase().includes('DIAMOND')) {
+        // abaixo do código, um pouco mais acima para não tocar na logo
+        const x = Math.round(canvas.width * 0.73);
+        const y = Math.round(canvas.height * 0.66);
+        ctx.fillText(nm, x, y);
+      } else {
+        const x = Math.round(canvas.width * 0.07);
+        const y = Math.round(canvas.height * 0.92);
+        ctx.fillText(nm, x, y);
+      }
+      ctx.restore();
+    }
+
+    function buildCardUrl() {
+      return window.location.origin + window.location.pathname + '?t=' + encodeURIComponent(token);
+    }
+
+    function gerarQR(text, size) {
+      return new Promise((resolve, reject) => {
+        if (typeof QRCode === 'undefined') {
+          reject(new Error('Biblioteca QRCode não carregada.'));
+          return;
+        }
+        const qrCanvas = document.createElement('canvas');
+        QRCode.toCanvas(qrCanvas, text, { width: size, margin: 1 }, function (error) {
+          if (error) return reject(error);
+          resolve(qrCanvas);
+        });
+      });
+    }
+
+    async function desenharCartao(data) {
+      const type = data.type || 'INFINITY_BLACK';
+      const nome = data.name || 'Cliente';
+
+      const bg = await loadImageWithFallback(pickArtCandidates(type));
+      canvas.width = bg.naturalWidth || canvas.width;
+      canvas.height = bg.naturalHeight || canvas.height;
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(bg, 0, 0, canvas.width, canvas.height);
+
+      // Link do cartão dentro do QR
+      const cardUrl = buildCardUrl();
+      currentCardUrl = cardUrl;
+
+      // QR pequeno: Infinity sobe e vai mais pra direita (sem encostar)
+      const qrSize = Math.round(canvas.width * 0.15);
+      let qrX, qrY;
+      if (String(type).toUpperCase().includes('DIAMOND')) {
+        qrX = Math.round(canvas.width * 0.82);
+        qrY = Math.round(canvas.height * 0.46);
+      } else {
+        qrX = Math.round(canvas.width * 0.86);
+        qrY = Math.round(canvas.height * 0.34);
+      }
+
+      const qrCanvas = await gerarQR(cardUrl, qrSize);
+
+      const pad = Math.round(qrSize * 0.10);
+      const plateW = qrSize + pad*2;
+      const plateH = qrSize + pad*2;
+      const plateX = qrX - Math.round(plateW/2);
+      const plateY = qrY - Math.round(plateH/2);
+
+      // fundo branco do QR
+      ctx.save();
+      ctx.fillStyle = 'rgba(255,255,255,0.96)';
+      ctx.strokeStyle = 'rgba(0,0,0,0.25)';
+      ctx.lineWidth = Math.max(2, Math.round(qrSize * 0.015));
+      roundRect(ctx, plateX, plateY, plateW, plateH, Math.round(qrSize * 0.10));
+      ctx.fill();
+      ctx.stroke();
+      ctx.restore();
+
+      ctx.drawImage(qrCanvas, plateX + pad, plateY + pad, qrSize, qrSize);
+
+      qrHitBox = { x: plateX, y: plateY, w: plateW, h: plateH };
+
+      // Nome (apenas primeiro nome)
+      drawName(ctx, type, nome);
+    }
+
+    function renderStatement(stmtData) {
+      const container = document.getElementById('statement-list');
+      if (!container) return;
+
+      const items = (stmtData && stmtData.items) ? stmtData.items : [];
+      if (!items.length) {
+        container.innerHTML = '<p class="statement-empty">Nenhuma movimentação registrada ainda.</p>';
+        return;
+      }
+
+      const html = items.map(item => {
+        const ts = new Date(item.timestamp);
+        const hora = ts.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+        const dt = ts.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+        const valor = Number(item.amount || 0);
+        const saldo = Number(item.balanceAfter || 0);
+
+        let classe = '';
+        if (item.type === 'DEBIT') classe = 'debit';
+        else if (item.type === 'CREDIT' || item.type === 'CREDIT_ADD' || item.type === 'CREDIT_INIT') classe = 'credit';
+
+        const desc = item.description || item.type || 'Movimentação';
+
+        return `
+          <div class="statement-row">
+            <div class="statement-desc">
+              <div>${desc}</div>
+              <div style="font-size:0.75rem;color:#6b7280;">${dt} • ${hora}</div>
+            </div>
+            <div class="statement-meta">
+              <div class="statement-amount ${classe}">
+                ${valor >= 0 ? '' : '- '}${Math.abs(valor).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+              </div>
+              <div style="font-size:0.75rem;color:#6b7280;">
+                Saldo: ${saldo.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      container.innerHTML = html;
+    }
+
+    let updating = false;
+    if (!token) {
+      infoEl.textContent = 'Token não encontrado na URL.';
+      bigBalanceEl.textContent = 'R$ 0,00';
+      bigBalanceEl.classList.add('zero');
+      renderStatement(null);
+    } else {
+      atualizarTudo(true);
+      setInterval(() => atualizarTudo(false), 1000);
+    }
+
+    function atualizarTudo(initial) {
+      if (updating || !token) return;
+      updating = true;
+      if (initial) infoEl.textContent = 'Carregando dados do cartão...';
+
+      const urlCard = APPS_SCRIPT_URL + '?action=card&token=' + encodeURIComponent(token);
+      const urlStmt = APPS_SCRIPT_URL + '?action=statement&token=' + encodeURIComponent(token) + '&limit=20';
+
+      Promise.all([
+        fetch(urlCard).then(r => r.json()),
+        fetch(urlStmt).then(r => r.json()).catch(() => null)
+      ])
+      .then(async ([cardData, stmtData]) => {
+        if (!cardData || !cardData.success) {
+          infoEl.textContent = 'Erro: ' + ((cardData && cardData.error) ? cardData.error : 'falha ao carregar cartão');
+          return;
+        }
+
+        // saldo grande
+        const bal = Number(cardData.balance || 0);
+        bigBalanceEl.textContent = fmtBRL(bal);
+        bigBalanceEl.classList.toggle('zero', bal <= 0);
+
+        // desenha cartão (com arte + QR + nome)
+        try {
+          await desenharCartao(cardData);
+        } catch (e) {
+          infoEl.textContent = String(e && e.message ? e.message : e);
+        }
+
+        if (stmtData && stmtData.success) renderStatement(stmtData);
+        else renderStatement(null);
+
+        const now = new Date();
+        infoEl.textContent = 'Última atualização: ' + now.toLocaleTimeString('pt-BR');
+      })
+      .catch(err => {
+        console.error(err);
+        infoEl.textContent = 'Erro de conexão ao carregar o cartão.';
+      })
+      .finally(() => {
+        updating = false;
+      });
+    }
+  </script>
 </body>
 </html>
