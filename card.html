@@ -101,6 +101,38 @@
       border-radius:14px;
       display:block;
     }
+    
+    .stmtCard{
+      margin-top: 2px;
+      background:#ffffff;
+      color:#0b1020;
+      border-radius:16px;
+      box-shadow: 0 14px 36px rgba(0,0,0,.25);
+      overflow:hidden;
+      border:1px solid rgba(0,0,0,.08);
+    }
+    .stmtHeader{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      padding:12px 14px;
+      border-bottom:1px solid rgba(0,0,0,.08);
+      background: linear-gradient(180deg, rgba(0,0,0,.02), rgba(0,0,0,.00));
+    }
+    .stmtHeader b{font-size:13px; letter-spacing:.2px}
+    .stmtHeader span{font-size:12px; color: rgba(11,16,32,.65)}
+    .stmtTableWrap{max-height:320px; overflow:auto;}
+    .stmtTable{width:100%; border-collapse:collapse; font-size:12px}
+    .stmtTable th, .stmtTable td{padding:10px 12px; border-bottom:1px solid rgba(0,0,0,.06); vertical-align:top}
+    .stmtTable th{position:sticky; top:0; background:#fff; text-align:left; font-size:11px; letter-spacing:.2px; color: rgba(11,16,32,.70)}
+    .stmtTable tr:last-child td{border-bottom:none}
+    .stmtDesc{color: rgba(11,16,32,.86)}
+    .stmtAmt{font-variant-numeric: tabular-nums}
+    .stmtNeg{color:#b91c1c}
+    .stmtPos{color:#166534}
+    .stmtEmpty{color: rgba(11,16,32,.60); text-align:center}
+
     .hint{
       margin-top:10px;
       font-size:12px;
@@ -251,8 +283,18 @@ async function render(){
   ctx.drawImage(bg, 0, 0, cardCanvas.width, cardCanvas.height);
 
   const qrSize = Math.round(cardCanvas.width * 0.15);
-  const qrX = Math.round(cardCanvas.width * 0.82);
-  const qrY = Math.round(cardCanvas.height * 0.46);
+
+// posição do código (sem encostar nas bordas)
+// Infinity Black: um pouco mais para o canto superior direito
+// Diamond: mantém no meio-direita
+let qrX, qrY;
+if (String(state.type || "").toUpperCase().includes("DIAMOND")){
+  qrX = Math.round(cardCanvas.width * 0.82);
+  qrY = Math.round(cardCanvas.height * 0.46);
+} else {
+  qrX = Math.round(cardCanvas.width * 0.86);
+  qrY = Math.round(cardCanvas.height * 0.36);
+}
 
   const qrCanvas = await makeQRCanvas(state.cardUrl, qrSize);
 
@@ -276,8 +318,9 @@ async function render(){
 
   const name = (state.name || "").trim();
   if (String(state.type || "").toUpperCase().includes("DIAMOND")){
+    // um pouco mais acima para não encostar na logo
     const x = Math.round(cardCanvas.width * 0.73);
-    const y = Math.round(cardCanvas.height * 0.76);
+    const y = Math.round(cardCanvas.height * 0.70);
     drawTextShadowed(name, x, y, Math.round(cardCanvas.height * 0.030), "left", "alphabetic");
   } else {
     const x = Math.round(cardCanvas.width * 0.07);
@@ -336,6 +379,60 @@ cardCanvas.addEventListener("click", (ev) => {
   }
 });
 
+
+function formatShortDate(isoOrAny){
+  try{
+    const d = new Date(isoOrAny);
+    if (!isFinite(d.getTime())) return String(isoOrAny || '');
+    return d.toLocaleString('pt-BR', { dateStyle:'short', timeStyle:'short' });
+  }catch(_){
+    return String(isoOrAny || '');
+  }
+}
+
+function renderStatement(items){
+  const body = document.getElementById('stmtBody');
+  const hint = document.getElementById('stmtHint');
+  if (!body || !hint) return;
+
+  if (!items || !items.length){
+    body.innerHTML = '<tr><td colspan="4" class="stmtEmpty">Sem movimentos ainda.</td></tr>';
+    hint.textContent = '0 itens';
+    return;
+  }
+
+  hint.textContent = items.length + ' itens';
+  body.innerHTML = '';
+  items.forEach(it => {
+    const amt = Number(it.amount) || 0;
+    const bal = Number(it.balanceAfter) || 0;
+    const tr = document.createElement('tr');
+
+    const td1 = document.createElement('td');
+    td1.textContent = formatShortDate(it.timestamp);
+    tr.appendChild(td1);
+
+    const td2 = document.createElement('td');
+    td2.className = 'stmtDesc';
+    td2.textContent = (it.description || it.type || '').toString();
+    tr.appendChild(td2);
+
+    const td3 = document.createElement('td');
+    td3.className = 'stmtAmt ' + (amt < 0 ? 'stmtNeg' : 'stmtPos');
+    td3.style.textAlign = 'right';
+    td3.textContent = fmtBRL(amt);
+    tr.appendChild(td3);
+
+    const td4 = document.createElement('td');
+    td4.className = 'stmtAmt';
+    td4.style.textAlign = 'right';
+    td4.textContent = fmtBRL(bal);
+    tr.appendChild(td4);
+
+    body.appendChild(tr);
+  });
+}
+
 (async function init(){
   const token = getToken();
   if (!token){
@@ -359,14 +456,31 @@ cardCanvas.addEventListener("click", (ev) => {
         state.name = j.name || "Cliente";
         state.balance = j.balance || 0;
         state.type = j.type || state.type;
+
+        // histórico (statement)
+        try{
+          const sUrl = new URL(api);
+          sUrl.searchParams.set("action", "statement");
+          sUrl.searchParams.set("token", token);
+          sUrl.searchParams.set("limit", "30");
+          const sr = await fetch(sUrl.toString());
+          const sj = await sr.json();
+          if (sj && sj.success) renderStatement(sj.items || []);
+          else renderStatement([]);
+        }catch(_){
+          renderStatement([]);
+        }
       } else {
         document.getElementById("sub").textContent = "Não consegui carregar dados do banco. Mostrando cartão local.";
+        renderStatement([]);
       }
     }catch(e){
       document.getElementById("sub").textContent = "Falha ao consultar o banco. Mostrando cartão local.";
+        renderStatement([]);
     }
   } else {
     document.getElementById("sub").textContent = "Para puxar nome/saldo, abra com ?api=URL_DO_SCRIPT além do ?t=TOKEN";
+    renderStatement([]);
   }
 
   try{
