@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <style>
-    :root {
+  :root {
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       background: #f3f4f6;
       color: #111827;
@@ -288,7 +288,7 @@
 </head>
 <body>
   <main class="container">
-    <h1>Chaplain Store</h1>
+    <h1>Bazar – Turma 1º Ano A</h1>
     <p class="subtitle">Controle de vendas e extornos</p>
 
     <div class="toggle-row">
@@ -298,7 +298,7 @@
       </button>
     </div>
     <div class="toggle-hint">
-      Ligado: cobra do cartão IAPE • Desligado: recebe em dinheiro/Pix
+      Desligado: recebe em dinheiro/Pix • Ligado: cobra do cartão IAPE
     </div>
 
     <label for="produto">Produto</label>
@@ -630,37 +630,49 @@
         return;
       }
 
+      // 1) Registra primeiro na planilha (para o banco conseguir puxar o produto correto).
+      let vendaRegistrada = false;
       try {
         setLoading(true);
-        setMensagem("Abrindo câmera. Leia o QR do responsável...", "ok");
+        setMensagem("Registrando na planilha...", "ok");
+        await registrarNaPlanilha("VENDA", produto, numero);
+        vendaRegistrada = true;
 
+        // 2) Agora debita no cartão (modo IAPE).
+        setMensagem("Abrindo câmera. Leia o QR do responsável...", "ok");
         const qrText = await scanQrFromCamera();
         const payerToken = extractTokenFromText(qrText);
 
         if (!payerToken) {
           setMensagem("QR lido não contém token válido.", "erro");
+          // rollback na planilha
+          await registrarNaPlanilha("EXTORNO", produto, numero);
           return;
         }
 
         const ok = await fazerTransferenciaIape(payerToken, numero);
         if (!ok) {
-          // mensagem já foi mostrada
+          // rollback na planilha se o banco falhar
+          await registrarNaPlanilha("EXTORNO", produto, numero);
           return;
         }
+
+        setMensagem("Venda concluída (planilha + cartão).", "ok");
       } catch (erro) {
         console.error(erro);
         if (erro.message === "SCAN_CANCELLED") {
           setMensagem("Leitura do QR cancelada.", "erro");
         } else {
-          setMensagem("Erro na leitura do QR: " + erro.message, "erro");
+          setMensagem("Erro: " + erro.message, "erro");
+        }
+        // se a venda foi registrada e algo falhou depois, tenta rollback
+        if (vendaRegistrada) {
+          try { await registrarNaPlanilha("EXTORNO", produto, numero); } catch (e) {}
         }
         return;
       } finally {
         setLoading(false);
       }
-
-      // Se deu tudo certo no IAPE, registra venda normalmente na planilha
-      await registrarNaPlanilha("VENDA", produto, numero);
     }
 
     // 🔹 Toggle Modo IAPE
@@ -685,20 +697,21 @@
     }
 
     function carregarEstadoToggle() {
-      // Default: cartão IAPE ligado. Se o vendedor preferir Pix, ele desliga no botão.
-      iapeEnabled = true;
-
       try {
         const chave = "iape_mode_" + TURMA;
         const v = localStorage.getItem(chave);
-
-        // Se existir preferência salva, ela manda.
-        if (v === "0") iapeEnabled = false;
-        if (v === "1") iapeEnabled = true;
+        if (v === null) {
+          // padrão: Cartão IAPE ligado
+          iapeEnabled = true;
+        } else if (v === "1") {
+          iapeEnabled = true;
+        } else {
+          iapeEnabled = false;
+        }
       } catch (e) {
-        // mantém o default (ligado)
+        // se não houver localStorage, mantém padrão ligado
+        iapeEnabled = true;
       }
-
       aplicarEstadoToggle();
     }
 
