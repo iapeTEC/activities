@@ -211,10 +211,7 @@
 
   <script>
     // API fixa do banco
-    const DEFAULT_API_URL = "https://script.google.com/macros/s/AKfycbwFspAVfSMZ6LdoHfFq5RDLyW1AzuAxbprTNb6hIBS3Guk8HvjvWJfqLNXmQDRwWdkn/exec";
-
-    // Permite sobrescrever a API via ?api=... (útil se você tiver mais de um deployment)
-    const APPS_SCRIPT_URL = (params.get("api") || "").trim() || DEFAULT_API_URL;
+    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwFspAVfSMZ6LdoHfFq5RDLyW1AzuAxbprTNb6hIBS3Guk8HvjvWJfqLNXmQDRwWdkn/exec";
 
     // Artes (precisam estar na mesma pasta do card.html no GitHub Pages)
     const ART_INFINITY_CANDIDATES = ["Infinity Black.png","Infinity%20Black.png","Infinity Black.PNG","Infinity%20Black.PNG","infinity black.png","InfinityBlack.png"];
@@ -527,7 +524,7 @@
         else renderStatement(null);
 
         const now = new Date();
-        infoEl.textContent = 'Última atualização: ' + now.toLocaleTimeString('pt-BR') + (cardData.type ? (' • Tipo: ' + cardData.type) : ' • Tipo: (vazio)');
+        infoEl.textContent = 'Última atualização: ' + now.toLocaleTimeString('pt-BR');
       })
       .catch(err => {
         console.error(err);
