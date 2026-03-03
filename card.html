@@ -131,8 +131,10 @@
   </div>
 
 <script>
-const ART_INFINITY = "Infinity Black.png";
-const ART_DIAMOND  = "diamond.png";
+const DEFAULT_API_URL = "https://script.google.com/macros/s/AKfycbwFspAVfSMZ6LdoHfFq5RDLyW1AzuAxbprTNb6hIBS3Guk8HvjvWJfqLNXmQDRwWdkn/exec";
+
+const ART_INFINITY_CANDIDATES = ["Infinity Black.png","Infinity%20Black.png","Infinity%20Black.PNG","Infinity Black.PNG","infinity black.png","InfinityBlack.png"];
+const ART_DIAMOND_CANDIDATES  = ["diamond.png","diamond.PNG","Diamond.png","Diamond.PNG","diamond%20.png"];
 
 function fmtBRL(n){
   const v = Number(n) || 0;
@@ -197,8 +199,30 @@ let state = {
 
 function pickArt(type){
   const t = String(type || "").toUpperCase();
-  if (t.includes("DIAMOND")) return ART_DIAMOND;
-  return ART_INFINITY;
+  if (t.includes("DIAMOND")) return ART_DIAMOND_CANDIDATES;
+  return ART_INFINITY_CANDIDATES;
+}
+
+async function loadImageWithFallback(candidates){
+  const errs = [];
+  for (const src0 of candidates){
+    const src = src0; // allow already-encoded
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    const p = new Promise((res, rej) => {
+      img.onload = () => res(img);
+      img.onerror = (ev) => rej({src, ev});
+    });
+    img.src = src;
+    try{
+      const loaded = await p;
+      return loaded;
+    }catch(e){
+      errs.push(e);
+    }
+  }
+  const msg = errs.map(e => e.src).join(", ");
+  throw new Error("Não consegui carregar a arte. Tentei: " + msg);
 }
 
 function drawTextShadowed(text, x, y, fontPx, align, baseline){
@@ -216,13 +240,9 @@ function drawTextShadowed(text, x, y, fontPx, align, baseline){
 }
 
 async function render(){
-  const artPath = pickArt(state.type);
+  const artCandidates = pickArt(state.type);
 
-  const bg = new Image();
-  bg.crossOrigin = "anonymous";
-  const bgLoaded = new Promise((res, rej) => { bg.onload = res; bg.onerror = rej; });
-  bg.src = artPath;
-  await bgLoaded;
+  const bg = await loadImageWithFallback(artCandidates);
 
   cardCanvas.width = bg.naturalWidth || 1536;
   cardCanvas.height = bg.naturalHeight || 864;
@@ -323,9 +343,10 @@ cardCanvas.addEventListener("click", (ev) => {
     return;
   }
 
-  const api = (new URL(location.href)).searchParams.get("api");
+  const apiParam = (new URL(location.href)).searchParams.get("api");
+  const api = (apiParam && apiParam.trim()) ? apiParam.trim() : DEFAULT_API_URL;
   state.token = token;
-  state.cardUrl = location.origin + location.pathname + "?t=" + encodeURIComponent(token) + (api ? ("&api=" + encodeURIComponent(api)) : "");
+  state.cardUrl = location.origin + location.pathname + "?t=" + encodeURIComponent(token);
 
   if (api){
     try{
@@ -348,7 +369,22 @@ cardCanvas.addEventListener("click", (ev) => {
     document.getElementById("sub").textContent = "Para puxar nome/saldo, abra com ?api=URL_DO_SCRIPT além do ?t=TOKEN";
   }
 
-  await render();
+  try{
+    await render();
+  }catch(err){
+    document.getElementById('sub').textContent = String(err && err.message ? err.message : err);
+    // desenha um placeholder simples
+    const c = document.getElementById('cardCanvas');
+    const x = c.getContext('2d');
+    x.clearRect(0,0,c.width,c.height);
+    x.fillStyle = '#000';
+    x.fillRect(0,0,c.width,c.height);
+    x.fillStyle = '#fff';
+    x.font = '28px system-ui';
+    x.fillText('Arte do cartão não encontrada (404).', 40, 80);
+    x.font = '18px system-ui';
+    x.fillText('Confirme se as imagens estão no mesmo diretório do card.html no GitHub Pages.', 40, 120);
+  }
 })();
 </script>
 </body>
