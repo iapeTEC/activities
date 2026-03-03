@@ -107,6 +107,27 @@
       padding: 0.5rem 0.6rem;
     }
 
+
+    .qr-big-wrap{
+      width: min(520px, 92vw);
+      aspect-ratio: 1 / 1;
+      margin: 0 auto;
+      background:#ffffff;
+      border-radius:14px;
+      padding:10px;
+      box-sizing:border-box;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+    #qrBigCanvas{
+      width:100%;
+      height:100%;
+      display:block;
+      border-radius:10px;
+      background:#ffffff;
+    }
+
     /* Modal do código em tela cheia (mantém do antigo) */
     .qr-modal {
       position: fixed;
@@ -182,7 +203,7 @@
     <div class="qr-modal-backdrop" id="qrModalBackdrop"></div>
     <div class="qr-modal-content" role="dialog" aria-modal="true" aria-label="Código do cartão">
       <div class="qr-modal-title">Código do cartão</div>
-      <canvas id="qrBigCanvas" width="520" height="520" style="max-width:100%;height:auto;border-radius:14px;background:#ffffff;padding:10px;box-sizing:border-box;"></canvas>
+      <div class="qr-big-wrap"><canvas id="qrBigCanvas" width="520" height="520"></canvas></div>
       <div id="qrModalLink" class="qr-modal-link"></div>
       <button id="qrModalClose" type="button">Fechar</button>
     </div>
@@ -262,6 +283,13 @@
     function fmtBRL(n) {
       const v = Number(n) || 0;
       return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    }
+
+
+    function inferTypeFromAccountId(cardData){
+      const id = String((cardData && cardData.accountId) || '').toUpperCase();
+      if (id.startsWith('DIAMOND_') || id.startsWith('DIAMOND')) return 'DIAMOND';
+      return '';
     }
 
     function firstName(full) {
@@ -476,6 +504,11 @@
         }
 
         // saldo grande
+        if (!cardData.type){
+          const t = inferTypeFromAccountId(cardData);
+          if (t) cardData.type = t;
+        }
+
         const bal = Number(cardData.balance || 0);
         bigBalanceEl.textContent = fmtBRL(bal);
         bigBalanceEl.classList.toggle('zero', bal <= 0);
