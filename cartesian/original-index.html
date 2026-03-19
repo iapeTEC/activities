@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Plano Cartesiano Interativo</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="page">
+    <header class="hero">
+      <h1>Plano Cartesiano Interativo</h1>
+      <p>Arraste cada objeto escolar para a coordenada correta.</p>
+    </header>
+
+    <section class="layout">
+      <aside class="sidebar card">
+        <h2>Objetos</h2>
+        <p class="muted"> </p>
+
+        <div class="legend" id="legend"></div>
+
+        <div class="actions">
+          <button id="checkBtn" class="btn btn-primary">Verificar</button>
+          <button id="resetBtn" class="btn">Resetar</button>
+        </div>
+
+        <div id="globalStatus" class="global-status neutral">Aguardando posicionamento.</div>
+      </aside>
+
+      <section class="board-area card">
+        <div class="board-shell">
+          <div id="board" class="board" aria-label="Plano cartesiano interativo"></div>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>

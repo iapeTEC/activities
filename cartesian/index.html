@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Coordinate Treasure Game</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="page" id="gamePage">
+    <header class="hero">
+      <h1>Coordinate Treasure Game</h1>
+      <p>Drag each object to the correct coordinate on the coordinate plane.</p>
+    </header>
+
+    <section class="layout">
+      <aside class="sidebar card">
+        <h2>Objects</h2>
+        <p class="muted">Place every object in the correct point.</p>
+
+        <div class="legend" id="legend"></div>
+
+        <div class="actions">
+          <button id="checkBtn" class="btn btn-primary">Check answers</button>
+          <button id="resetBtn" class="btn">New positions</button>
+        </div>
+
+        <div id="globalStatus" class="global-status neutral">Waiting for the student.</div>
+      </aside>
+
+      <section class="board-area card">
+        <div class="board-shell">
+          <div id="board" class="board" aria-label="Interactive coordinate plane"></div>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <section class="success-screen hidden" id="successScreen">
+    <div class="success-card">
+      <h1>Congratulations!</h1>
+      <p>Tell your teacher:</p>
+      <blockquote>"Teacher, do you have the map? We need it."</blockquote>
+      <p>If you say that, your teacher will give you the map.</p>
+      <button id="teacherOnlyBtn" class="btn btn-dark">Teacher only</button>
+    </div>
+  </section>
+
+  <section class="teacher-screen hidden" id="teacherScreen">
+    <div class="teacher-card card">
+      <h2>Teacher area</h2>
+      <p class="muted center">Enter the group name to open the treasure box.</p>
+
+      <div class="treasure-box" id="treasureBox">
+        <div class="group-name" id="groupNameDisplay">GROUP</div>
+        <div class="code-stars" id="codeStars">***</div>
+      </div>
+
+      <label class="input-label" for="codeInput">Type the 3 letters:</label>
+      <input id="codeInput" class="code-input" type="text" maxlength="3" autocomplete="off" />
+
+      <div class="actions center-actions">
+        <button id="openBtn" class="btn btn-primary">Open it</button>
+      </div>
+
+      <div id="treasureStatus" class="global-status neutral">Waiting for the code.</div>
+    </div>
+  </section>
+
+  <div class="modal hidden" id="groupModal" aria-hidden="true">
+    <div class="modal-card">
+      <h3>Teacher only</h3>
+      <p>Enter the group name:</p>
+      <input id="groupInput" class="group-input" type="text" placeholder="Group name" autocomplete="off" />
+      <div class="actions modal-actions">
+        <button id="groupCancelBtn" class="btn">Cancel</button>
+        <button id="groupConfirmBtn" class="btn btn-primary">Enter</button>
+      </div>
+    </div>
+  </div>
+
+  <canvas id="confettiCanvas" class="confetti-canvas hidden"></canvas>
+
+  <script src="script.js"></script>
+</body>
+</html>
