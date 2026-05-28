@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <title>Bank of IAPE</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
   <style>
     body {
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -69,6 +70,9 @@
     button:disabled {
       opacity: 0.6;
       cursor: default;
+    }
+    .btn-danger {
+      background: #b91c1c;
     }
     .result {
       margin-top: 8px;
@@ -169,6 +173,9 @@
     .small-btn.secondary {
       background: #10b981;
     }
+    .small-btn.btn-danger {
+      background: #b91c1c;
+    }
     .small-btn:disabled {
       opacity: 0.5;
       cursor: default;
@@ -194,10 +201,119 @@
       background: #f9fafb;
       color: #111827;
     }
+    .login-screen {
+      min-height: calc(100vh - 32px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      margin: -16px;
+    }
+    .login-header {
+      width: 100%;
+      min-height: clamp(120px, 24vw, 220px);
+      background: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+    .login-header img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .login-main {
+      flex: 1;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px 16px;
+      box-sizing: border-box;
+    }
+    .login-card {
+      width: min(420px, 100%);
+      background: #ffffff;
+      border-radius: 14px;
+      box-shadow: 0 12px 30px rgba(0,0,0,0.12);
+      padding: 22px;
+      box-sizing: border-box;
+      text-align: center;
+    }
+    .login-card h1 {
+      margin: 0 0 6px;
+      font-size: 21px;
+    }
+    .login-card p {
+      margin: 0 0 14px;
+      color: #4b5563;
+      font-size: 14px;
+    }
+    .login-actions {
+      margin-top: 14px;
+      display: grid;
+      gap: 10px;
+      justify-items: center;
+    }
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    .topbar h1 {
+      margin: 0;
+    }
+    .user-pill {
+      font-size: 12px;
+      color: #374151;
+      background: #e5e7eb;
+      border-radius: 999px;
+      padding: 5px 10px;
+    }
+    #appRoot {
+      display: none;
+    }
 
   </style>
 </head>
-<body>Bank of IAPE</h1>
+<body>
+  <div id="loginScreen" class="login-screen">
+    <header class="login-header">
+      <img src="bankiape.png" alt="Bank IAPE" onerror="this.style.display='none'">
+    </header>
+    <main class="login-main">
+      <div class="login-card">
+        <h1>Bank of IAPE</h1>
+        <p>Entre com um Gmail autorizado para acessar a plataforma.</p>
+        <label>
+          Gmail autorizado
+          <input type="email" id="loginEmail" autocomplete="email" placeholder="seuemail@gmail.com">
+        </label>
+        <label>
+          Senha
+          <input type="password" id="loginPassword" autocomplete="current-password" placeholder="Digite sua senha na tela segura do Google" disabled>
+        </label>
+        <small>A senha não é recebida por este site. O login acontece pelo Google.</small>
+        <div class="login-actions">
+          <div id="googleSignInButton"></div>
+          <div id="loginStatus" class="result"></div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <div id="appRoot">
+  <div class="topbar">
+    <h1>Bank of IAPE</h1>
+    <div>
+      <span id="loggedUser" class="user-pill"></span>
+      <button id="btnLogout" type="button" class="btn-neutral">Sair</button>
+    </div>
+  </div>
 
   <div class="layout">
     <!-- Coluna esquerda: criação e crédito -->
@@ -272,6 +388,44 @@
         <div id="cardLinkStatus" class="result"></div>
       </div>
 
+      <div class="card">
+        <h2>Editar cliente selecionado</h2>
+        <small>Selecione um cliente na lista para alterar dados ou excluir a conta.</small>
+        <input type="hidden" id="editTokenOrId">
+        <label>
+          Nome
+          <input type="text" id="editName" placeholder="Selecione um cliente">
+        </label>
+        <label>
+          Número/WhatsApp
+          <input type="text" id="editPhone">
+        </label>
+        <label>
+          Série/Classe
+          <input type="text" id="editClass">
+        </label>
+        <label>
+          Data de nascimento
+          <input type="date" id="editDob">
+        </label>
+        <label>
+          Tipo de conta
+          <select id="editType">
+            <option value="INFINITY_BLACK">Infinity Black</option>
+            <option value="DIAMOND">Diamond</option>
+          </select>
+        </label>
+        <label>
+          Saldo
+          <input type="number" step="0.01" id="editBalance">
+        </label>
+        <div class="btn-row">
+          <button id="btnSaveClient" type="button" disabled>Salvar alterações</button>
+          <button id="btnDeleteClient" type="button" class="btn-danger" disabled>Excluir cliente</button>
+        </div>
+        <div id="editResult" class="result"></div>
+      </div>
+
     </div>
 
     <!-- Coluna direita: lista de clientes -->
@@ -292,12 +446,20 @@
       </div>
     </div>
   </div>
+  </div>
 
   <script>
     // CONFIGURAÇÕES:
-    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwFspAVfSMZ6LdoHfFq5RDLyW1AzuAxbprTNb6hIBS3Guk8HvjvWJfqLNXmQDRwWdkn/exec';
+    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzw-cR1EzwL401oSfuFVLWNQgL231hcaTMn3S0ksGaSb7cLlJ8lkr4n2ulcPQVBDKzl/exec';
     const CARD_BASE_URL   = 'https://iapetec.github.io/activities/card.html'; // cartão do cliente
     const QRCODE_PAGE_URL = 'https://iapetec.github.io/activities/qrcode.html'; // nova página que vamos criar
+    const GOOGLE_CLIENT_ID = '433057640119-o2trlpqs7lac8kt2lbseitnm372em89b.apps.googleusercontent.com';
+
+    const loginScreen = document.getElementById('loginScreen');
+    const appRoot = document.getElementById('appRoot');
+    const loginStatus = document.getElementById('loginStatus');
+    const loggedUser = document.getElementById('loggedUser');
+    const btnLogout = document.getElementById('btnLogout');
 
     const btnCreate = document.getElementById('btnCreate');
     const createResult = document.getElementById('createResult');
@@ -312,11 +474,87 @@
     const cardLinkStatus = document.getElementById('cardLinkStatus');
     const btnCopyCardLink = document.getElementById('btnCopyCardLink');
     const btnOpenCardLink = document.getElementById('btnOpenCardLink');
+    const btnSaveClient = document.getElementById('btnSaveClient');
+    const btnDeleteClient = document.getElementById('btnDeleteClient');
+    const editResult = document.getElementById('editResult');
 
 
     let qrWindow = null;
     let accountsCache = [];
     let accountsAll = [];
+    let googleIdToken = sessionStorage.getItem('bankGoogleIdToken') || '';
+    let googleUserEmail = sessionStorage.getItem('bankGoogleEmail') || '';
+
+    function parseJwtPayload(token) {
+      try {
+        const part = token.split('.')[1] || '';
+        const json = atob(part.replace(/-/g, '+').replace(/_/g, '/'));
+        return JSON.parse(decodeURIComponent(Array.from(json).map(c => {
+          return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+        }).join('')));
+      } catch (e) {
+        return {};
+      }
+    }
+
+    function showApp() {
+      loginScreen.style.display = 'none';
+      appRoot.style.display = 'block';
+      loggedUser.textContent = googleUserEmail || 'Logado';
+      setCardLinkFromAccount(null);
+      loadAccounts();
+    }
+
+    function showLogin(message) {
+      appRoot.style.display = 'none';
+      loginScreen.style.display = 'flex';
+      if (loginStatus) loginStatus.textContent = message || '';
+    }
+
+    function handleGoogleCredential(response) {
+      googleIdToken = response && response.credential ? response.credential : '';
+      const payload = parseJwtPayload(googleIdToken);
+      googleUserEmail = payload.email || '';
+      sessionStorage.setItem('bankGoogleIdToken', googleIdToken);
+      sessionStorage.setItem('bankGoogleEmail', googleUserEmail);
+      const loginEmail = document.getElementById('loginEmail');
+      if (loginEmail && googleUserEmail) loginEmail.value = googleUserEmail;
+      showApp();
+    }
+
+    function initGoogleLogin() {
+      if (!window.google || !google.accounts || !google.accounts.id) {
+        showLogin('Google Login ainda está carregando. Aguarde alguns segundos.');
+        return;
+      }
+      google.accounts.id.initialize({
+        client_id: GOOGLE_CLIENT_ID,
+        callback: handleGoogleCredential
+      });
+      google.accounts.id.renderButton(
+        document.getElementById('googleSignInButton'),
+        { theme: 'outline', size: 'large', width: 360, text: 'signin_with' }
+      );
+
+      if (googleIdToken) showApp();
+      else showLogin('');
+    }
+
+    function apiUrl(action, params) {
+      const search = new URLSearchParams({ action, idToken: googleIdToken });
+      Object.keys(params || {}).forEach(key => search.set(key, params[key]));
+      return APPS_SCRIPT_URL + '?' + search.toString();
+    }
+
+    function handleAuthError(data) {
+      if (!data || (data.code !== 'AUTH_REQUIRED' && data.code !== 'AUTH_INVALID' && data.code !== 'AUTH_FORBIDDEN')) return false;
+      sessionStorage.removeItem('bankGoogleIdToken');
+      sessionStorage.removeItem('bankGoogleEmail');
+      googleIdToken = '';
+      googleUserEmail = '';
+      showLogin(data.error || 'Entre novamente com Google.');
+      return true;
+    }
 
     function formatBRL(value) {
       const n = Number(value || 0);
@@ -400,19 +638,20 @@
         return;
       }
 
-      const url = APPS_SCRIPT_URL
-        + '?action=createAccount'
-        + '&name=' + encodeURIComponent(name)
-        + '&type=' + encodeURIComponent(type)
-        + '&initialBalance=' + encodeURIComponent(initialBalance)
-        + '&phone=' + encodeURIComponent(phone)
-        + '&class=' + encodeURIComponent(classStr)
-        + '&dob=' + encodeURIComponent(dob);
+      const url = apiUrl('createAccount', {
+        name,
+        type,
+        initialBalance,
+        phone,
+        class: classStr,
+        dob
+      });
 
       try {
         const res = await fetch(url);
         const data = await res.json();
 
+        if (handleAuthError(data)) return;
         if (!data.success) {
           createResult.textContent = 'Erro: ' + (data.error || 'Falha ao criar conta.');
         } else {
@@ -466,16 +705,17 @@
       }
 
 
-      const url = APPS_SCRIPT_URL
-        + '?action=addCredit'
-        + '&tokenOrId=' + encodeURIComponent(tokenOrId)
-        + '&amount=' + encodeURIComponent(amountStr)
-        + '&description=' + encodeURIComponent(desc);
+      const url = apiUrl('addCredit', {
+        tokenOrId,
+        amount: amountStr,
+        description: desc
+      });
 
       try {
         const res = await fetch(url);
         const data = await res.json();
 
+        if (handleAuthError(data)) return;
         if (!data.success) {
           creditResult.textContent = 'Erro: ' + (data.error || 'Falha ao adicionar crédito.');
         } else {
@@ -503,10 +743,11 @@
       clientsListEl.innerHTML = '<small>Carregando clientes...</small>';
 
       try {
-        const url = APPS_SCRIPT_URL + '?action=listAccounts';
+        const url = apiUrl('listAccounts', {});
         const res = await fetch(url);
         const data = await res.json();
 
+        if (handleAuthError(data)) return;
         if (!data.success) {
           clientsListEl.innerHTML = '<small>Erro ao carregar clientes: ' + (data.error || 'Erro desconhecido') + '</small>';
           return;
@@ -593,6 +834,27 @@
         }
         actions.appendChild(btnQr);
 
+        const btnEdit = document.createElement('button');
+        btnEdit.type = 'button';
+        btnEdit.className = 'small-btn';
+        btnEdit.textContent = 'Editar';
+        btnEdit.addEventListener('click', (ev) => {
+          ev.stopPropagation();
+          fillEditForm(acc);
+        });
+        actions.appendChild(btnEdit);
+
+        const btnDelete = document.createElement('button');
+        btnDelete.type = 'button';
+        btnDelete.className = 'small-btn btn-danger';
+        btnDelete.textContent = 'Excluir';
+        btnDelete.addEventListener('click', (ev) => {
+          ev.stopPropagation();
+          fillEditForm(acc);
+          deleteSelectedClient();
+        });
+        actions.appendChild(btnDelete);
+
         row.addEventListener('click', () => {
           selectAccount(acc);
         });
@@ -613,6 +875,114 @@
       `;
           
       setCardLinkFromAccount(acc);
+      fillEditForm(acc);
+    }
+
+    function fillEditForm(acc) {
+      document.getElementById('editTokenOrId').value = acc.token || acc.accountId || '';
+      document.getElementById('editName').value = acc.name || '';
+      document.getElementById('editPhone').value = acc.phone || '';
+      document.getElementById('editClass').value = acc.class || '';
+      document.getElementById('editDob').value = normalizeDateInput(acc.dob || '');
+      document.getElementById('editType').value = String(acc.type || '').toUpperCase() === 'DIAMOND' ? 'DIAMOND' : 'INFINITY_BLACK';
+      document.getElementById('editBalance').value = Number(acc.balance || 0);
+      btnSaveClient.disabled = false;
+      btnDeleteClient.disabled = false;
+      editResult.innerHTML = 'Editando: <span class="highlight">' + (acc.name || '(sem nome)') + '</span>';
+    }
+
+    function normalizeDateInput(value) {
+      const s = String(value || '').trim();
+      if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+      const m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+      if (m) return m[3] + '-' + String(m[2]).padStart(2, '0') + '-' + String(m[1]).padStart(2, '0');
+      return '';
+    }
+
+    async function saveSelectedClient() {
+      const tokenOrId = document.getElementById('editTokenOrId').value.trim();
+      const name = document.getElementById('editName').value.trim();
+      const phone = document.getElementById('editPhone').value.trim();
+      const classStr = document.getElementById('editClass').value.trim();
+      const dob = document.getElementById('editDob').value.trim();
+      const type = document.getElementById('editType').value;
+      const balance = document.getElementById('editBalance').value.trim();
+
+      if (!tokenOrId) {
+        editResult.textContent = 'Selecione um cliente antes de salvar.';
+        return;
+      }
+      if (!name) {
+        editResult.textContent = 'Informe o nome do cliente.';
+        return;
+      }
+
+      btnSaveClient.disabled = true;
+      editResult.textContent = 'Salvando alterações...';
+
+      try {
+        const res = await fetch(apiUrl('updateAccount', {
+          tokenOrId,
+          name,
+          phone,
+          class: classStr,
+          dob,
+          type,
+          balance
+        }));
+        const data = await res.json();
+        if (handleAuthError(data)) return;
+        if (!data.success) {
+          editResult.textContent = 'Erro: ' + (data.error || 'Falha ao salvar cliente.');
+          return;
+        }
+        editResult.innerHTML = 'Cliente atualizado: <span class="highlight">' + (data.name || name) + '</span>';
+        await loadAccounts();
+      } catch (err) {
+        console.error(err);
+        editResult.textContent = 'Erro de conexão ao salvar cliente.';
+      } finally {
+        btnSaveClient.disabled = false;
+      }
+    }
+
+    async function deleteSelectedClient() {
+      const tokenOrId = document.getElementById('editTokenOrId').value.trim();
+      const name = document.getElementById('editName').value.trim();
+      if (!tokenOrId) {
+        editResult.textContent = 'Selecione um cliente antes de excluir.';
+        return;
+      }
+      if (!confirm('Excluir definitivamente o cliente "' + (name || tokenOrId) + '"?')) return;
+
+      btnDeleteClient.disabled = true;
+      editResult.textContent = 'Excluindo cliente...';
+
+      try {
+        const res = await fetch(apiUrl('deleteAccount', { tokenOrId }));
+        const data = await res.json();
+        if (handleAuthError(data)) return;
+        if (!data.success) {
+          editResult.textContent = 'Erro: ' + (data.error || 'Falha ao excluir cliente.');
+          return;
+        }
+        editResult.textContent = 'Cliente excluído.';
+        document.getElementById('editTokenOrId').value = '';
+        document.getElementById('editName').value = '';
+        document.getElementById('editPhone').value = '';
+        document.getElementById('editClass').value = '';
+        document.getElementById('editDob').value = '';
+        document.getElementById('editBalance').value = '';
+        btnSaveClient.disabled = true;
+        btnDeleteClient.disabled = true;
+        setCardLinkFromAccount(null);
+        await loadAccounts();
+      } catch (err) {
+        console.error(err);
+        editResult.textContent = 'Erro de conexão ao excluir cliente.';
+      } finally {
+        btnDeleteClient.disabled = false;
+      }
     }
 
     function openQrForAccount(acc) {
@@ -657,10 +1027,41 @@
       });
     }
 
-    // Carrega lista ao abrir a página
+    if (btnSaveClient) {
+      btnSaveClient.addEventListener('click', saveSelectedClient);
+    }
+
+    if (btnDeleteClient) {
+      btnDeleteClient.addEventListener('click', deleteSelectedClient);
+    }
+
+    if (btnLogout) {
+      btnLogout.addEventListener('click', () => {
+        sessionStorage.removeItem('bankGoogleIdToken');
+        sessionStorage.removeItem('bankGoogleEmail');
+        googleIdToken = '';
+        googleUserEmail = '';
+        if (window.google && google.accounts && google.accounts.id) google.accounts.id.disableAutoSelect();
+        showLogin('');
+      });
+    }
+
+    // Inicializa login ao abrir a página
     window.addEventListener('DOMContentLoaded', () => {
       setCardLinkFromAccount(null);
-      loadAccounts();
+      showLogin('Carregando Google Login...');
+      const waitForGoogle = setInterval(() => {
+        if (window.google && google.accounts && google.accounts.id) {
+          clearInterval(waitForGoogle);
+          initGoogleLogin();
+        }
+      }, 100);
+      setTimeout(() => {
+        if (!window.google || !google.accounts || !google.accounts.id) {
+          clearInterval(waitForGoogle);
+          showLogin('Não foi possível carregar o Google Login. Verifique a conexão.');
+        }
+      }, 8000);
     });
   
     
