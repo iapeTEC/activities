@@ -289,15 +289,6 @@
       <div class="login-card">
         <h1>Bank of IAPE</h1>
         <p>Entre com um Gmail autorizado para acessar a plataforma.</p>
-        <label>
-          Gmail autorizado
-          <input type="email" id="loginEmail" autocomplete="email" placeholder="seuemail@gmail.com">
-        </label>
-        <label>
-          Senha
-          <input type="password" id="loginPassword" autocomplete="current-password" placeholder="Digite sua senha na tela segura do Google" disabled>
-        </label>
-        <small>A senha não é recebida por este site. O login acontece pelo Google.</small>
         <div class="login-actions">
           <div id="googleSignInButton"></div>
           <div id="loginStatus" class="result"></div>
@@ -517,8 +508,6 @@
       googleUserEmail = payload.email || '';
       sessionStorage.setItem('bankGoogleIdToken', googleIdToken);
       sessionStorage.setItem('bankGoogleEmail', googleUserEmail);
-      const loginEmail = document.getElementById('loginEmail');
-      if (loginEmail && googleUserEmail) loginEmail.value = googleUserEmail;
       showApp();
     }
 
