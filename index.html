@@ -1,180 +1,123 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Árvore Genealógica – Fase 1</title>
-  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap" rel="stylesheet">
-  <style>
-    :root{
-      --ink:#111827; --muted:#6b7280; --line:#e5e7eb; --accent:#2563eb;
-      --ok:#16a34a; --bad:#ff7a7a; --radius:16px;
-    }
-    *{box-sizing:border-box}
-    body{margin:0;background:#fff;color:var(--ink);font-family:"Fredoka",system-ui,Segoe UI,Arial,sans-serif}
-    header{padding:18px 20px;border-bottom:1px solid var(--line);text-align:center}
-    h1{margin:0;font-weight:800}
-    .wrap{max-width:980px;margin:0 auto;padding:20px}
-    .note{margin:10px 0 18px;padding:12px 16px;border:1px dashed var(--line);border-radius:var(--radius);color:#374151;background:#f9fafb}
-
-    /* imagem + hotspots */
-    .board{position:relative;max-width:980px;margin:0 auto;border:1px solid var(--line);border-radius:18px;overflow:hidden;background:#e6f3ff}
-    .board img{width:100%;height:auto;display:block}
-
-    .hotspot{
-      position:absolute; transform:translate(-50%,-50%);
-      width:180px; max-width:36vw; background:#fff;
-      border:2px solid var(--line); border-radius:14px; padding:8px 10px;
-      box-shadow:0 8px 24px rgba(2,6,23,.08); text-align:center;
-    }
-    .hotspot label{display:block;font-size:.9rem;color:var(--muted);margin-top:6px}
-    .hotspot input{
-      width:100%; padding:10px 12px; border-radius:10px;
-      border:1px solid var(--line); outline:none; font-size:1rem;
-    }
-    .hotspot input:focus{border-color:#93c5fd; box-shadow:0 0 0 4px rgba(147,197,253,.30)}
-
-    /* ===== Posicoes da arvore, nao mexer agora ===== */
-    
-     .hotspot--5{ left:15.0%;  top:65.8%;  }  /* 5 — Grandfather (materno)        */
-    .hotspot--6{ left:34.0%;  top:65.8%;  }  /* 6 — Grandmother (materno)        */
-    .hotspot--7t{ left:28.4%; top:41.0%; }  /* 7 (superior) — Mother            */
-    .hotspot--7b{ left:53.0%;  top:65.8%;  }  /* 7 (inferior) — Grandmother (pat) */
-    .hotspot--9{ left:72.0%; top:65.8%; }  /* 9 — Grandfather (paterno)        */
-    .hotspot--10{ left:64.0%; top:41.4%; }  /* 10 — Father                       */
-    .hotspot--17{ left:46.8%; top:14.0%; }  /* 17 — Me                           */
-
-    .actions{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-top:16px}
-    .btn{border:none;padding:12px 16px;border-radius:12px;cursor:pointer;font-weight:800}
-    .primary{background:var(--accent);color:#fff}
-    .ghost{background:#fff;border:1px solid var(--line)}
-    .story{margin-top:18px;padding:16px;border:1px solid var(--line);border-radius:16px;background:#fff}
-    .story h3{margin:0 0 8px}
-  </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cleaning Match Game</title>
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <header><h1>Árvore Genealógica — Fase 1</h1></header>
+  <main class="app-shell">
+    <header class="topbar" aria-label="Game status">
+      <div>
+        <p class="eyebrow">Cleaning Vocabulary</p>
+        <h1>Cleaning Match Game</h1>
+      </div>
 
-  <div class="wrap">
-    <div class="note"><b>Aviso:</b> Esta fase usa apenas <b>avós</b>, <b>pais</b> e <b>Me</b>. Se faltar nome de avós, a história mostrará <i>“pessoa que não lembro o nome”</i>.</div>
+      <div class="stats">
+        <div class="stat">
+          <span>Phase</span>
+          <strong id="phaseStat">1/3</strong>
+        </div>
+        <div class="stat">
+          <span>Done</span>
+          <strong id="progressStat">0/16</strong>
+        </div>
+        <div class="stat timer-stat">
+          <span>Time</span>
+          <strong id="timerStat">00:00</strong>
+        </div>
+      </div>
+    </header>
 
-    <figure class="board">
-      <!-- Coloque familytree.png na mesma pasta -->
-      <img src="familytree.png" alt="Mapa da árvore com círculos numerados">
-
-      <!-- hotspots -->
-      <div class="hotspot hotspot--5">
-        <input id="mgf" placeholder="Nome">
-        <label>5 — Grandfather (materno)</label>
+    <section class="stage-card intro" id="introPanel">
+      <div>
+        <h2>Match, write, record.</h2>
+        <p>Finish all three phases. The timer at the top decides the winner.</p>
       </div>
-      <div class="hotspot hotspot--6">
-        <input id="mgm" placeholder="Nome">
-        <label>6 — Grandmother (materno)</label>
-      </div>
-      <div class="hotspot hotspot--7t">
-        <input id="mother" placeholder="Nome">
-        <label>7 — Mother</label>
-      </div>
-      <div class="hotspot hotspot--7b">
-        <input id="pgm" placeholder="Nome">
-        <label>7 — Grandmother (paterno)</label>
-      </div>
-      <div class="hotspot hotspot--9">
-        <input id="pgf" placeholder="Nome">
-        <label>9 — Grandfather (paterno)</label>
-      </div>
-      <div class="hotspot hotspot--10">
-        <input id="father" placeholder="Nome">
-        <label>10 — Father</label>
-      </div>
-      <div class="hotspot hotspot--17">
-        <input id="me" placeholder="Seu nome">
-        <label>17 — Me</label>
-      </div>
-    </figure>
-
-    <div class="actions">
-      <button class="btn primary" id="submit">Submeter</button>
-      <button class="btn ghost" id="redo" hidden>Refazer</button>
-      <button class="btn" id="next" hidden onclick="location.href='page2.html'">Ir para Fase 2</button>
-    </div>
-
-    <section id="storyBox" class="story" hidden>
-      <h3>História</h3>
-      <p id="ptStory"></p>
-      <hr style="border:none;border-top:1px solid #e5e7eb;margin:12px 0">
-      <h3>Story (English)</h3>
-      <p id="enStory"></p>
+      <button id="startGameButton" type="button">Start Game</button>
     </section>
-  </div>
 
-  <script>
-    const $ = s => document.querySelector(s);
-    const g = id => ($("#"+id).value||"").trim();
-    const missing = v => v ? v : '"pessoa que não lembro o nome"';
+    <section class="stage-card" id="phaseOne" hidden>
+      <div class="phase-heading">
+        <div>
+          <p class="phase-kicker">Phase 1</p>
+          <h2>Find this item: <span id="targetWord">brush</span></h2>
+        </div>
+        <p id="matchFeedback" aria-live="polite">Drag the correct cleaning item to the answer box.</p>
+      </div>
 
-    // 8 historinhas fofas com placeholders
-    const stories = [
-      v => ({
-        pt: `Numa linda tarde, ${v.MGF} e ${v.MGM} recordavam memórias da infância, enquanto ${v.PGF} e ${v.PGM} preparavam um lanche cheio de histórias. Anos depois, ${v.mother} conheceu ${v.father}, eles se apaixonaram e decidiram construir uma família. Foi assim que ${v.me} chegou para iluminar tudo!`,
-        en: `On a lovely afternoon, ${v.MGF} and ${v.MGM} were recalling childhood memories, while ${v.PGF} and ${v.PGM} prepared a snack full of stories. Years later, ${v.mother} met ${v.father}; they fell in love and decided to build a family. That’s how ${v.me} arrived to brighten everything!`
-      }),
-      v => ({
-        pt: `Num piquenique no parque, ${v.MGF} trouxe uma toalha xadrez e ${v.MGM} trouxe frutas docinhas. Do outro lado, ${v.PGF} e ${v.PGM} chegaram com suco geladinho. ${v.mother} e ${v.father} sorriram, e ${v.me} correu para brincar na grama. Foi um dia perfeito para guardar no coração!`,
-        en: `At a picnic in the park, ${v.MGF} brought a checkered blanket and ${v.MGM} brought sweet fruits. Meanwhile, ${v.PGF} and ${v.PGM} arrived with cold juice. ${v.mother} and ${v.father} smiled, and ${v.me} ran to play on the grass. It was a perfect day to keep in the heart!`
-      }),
-      v => ({
-        pt: `Era dia de empinar pipa! ${v.PGF} segurou a linha com cuidado, ${v.PGM} batia palmas, e lá do outro lado ${v.MGF} e ${v.MGM} ensinavam truques do vento. ${v.mother} e ${v.father} riam com ${v.me}, que pulava de alegria. A pipa colorida parecia desenhar sorrisos no céu.`,
-        en: `It was kite-flying day! ${v.PGF} held the line carefully, ${v.PGM} clapped, and on the other side ${v.MGF} and ${v.MGM} taught wind tricks. ${v.mother} and ${v.father} laughed with ${v.me}, who jumped with joy. The colorful kite seemed to draw smiles in the sky.`
-      }),
-      v => ({
-        pt: `No jardim da família, ${v.MGM} plantou flores e ${v.MGF} regou com carinho. ${v.PGM} e ${v.PGF} trouxeram vasinhos pintados. ${v.mother} e ${v.father} mostraram a ${v.me} como cuidar das plantinhas. Logo os botões viraram flores, e o jardim ficou tão bonito quanto um abraço!`,
-        en: `In the family garden, ${v.MGM} planted flowers and ${v.MGF} watered them with care. ${v.PGM} and ${v.PGF} brought painted pots. ${v.mother} and ${v.father} showed ${v.me} how to take care of the little plants. Soon the buds turned into flowers, and the garden looked as beautiful as a hug!`
-      }),
-      v => ({
-        pt: `Na cozinha, ${v.PGM} misturou a massa e ${v.PGF} contou histórias antigas. ${v.MGM} checou o forno, ${v.MGF} arrumou a mesa. ${v.mother} e ${v.father} ajudaram ${v.me} a cortar biscoitos em forma de estrela. Quando ficaram prontos, a casa inteira cheirava a carinho!`,
-        en: `In the kitchen, ${v.PGM} mixed the dough and ${v.PGF} told old stories. ${v.MGM} checked the oven, ${v.MGF} set the table. ${v.mother} and ${v.father} helped ${v.me} cut star-shaped cookies. When they were ready, the whole house smelled like affection!`
-      }),
-      v => ({
-        pt: `Era noite de música! ${v.MGF} batucava na mesa, ${v.MGM} fazia um coral baixinho. ${v.PGF} batia o pé marcando o ritmo, e ${v.PGM} balançava as mãos no ar. ${v.mother} e ${v.father} cantavam com ${v.me}. A sala virou palco e os aplausos viraram chuva de alegria!`,
-        en: `It was music night! ${v.MGF} drummed on the table, ${v.MGM} sang a soft choir. ${v.PGF} tapped a foot to keep the beat, and ${v.PGM} waved hands in the air. ${v.mother} and ${v.father} sang with ${v.me}. The living room became a stage and the applause turned into a shower of joy!`
-      }),
-      v => ({
-        pt: `Na biblioteca do bairro, ${v.PGF} escolheu um livro de aventuras, ${v.PGM} pegou um de poesia. ${v.MGF} encontrou um conto engraçado e ${v.MGM} um livro de bichinhos. ${v.mother} e ${v.father} leram para ${v.me}, que viajou sem sair do lugar. As páginas pareciam janelas para a imaginação!`,
-        en: `At the neighborhood library, ${v.PGF} chose an adventure book, ${v.PGM} picked a poetry one. ${v.MGF} found a funny tale and ${v.MGM} a book about animals. ${v.mother} and ${v.father} read to ${v.me}, who traveled without leaving the spot. The pages felt like windows to imagination!`
-      }),
-      v => ({
-        pt: `Sob o céu estrelado, ${v.MGF} apontou constelações, ${v.MGM} contou uma lenda. ${v.PGF} disse que cada estrela guarda um desejo, e ${v.PGM} ensinou a fazer um pedido. ${v.mother} e ${v.father} abraçaram ${v.me}, que fechou os olhos e desejou mais dias assim: cheios de família e brilho no coração.`,
-        en: `Under the starry sky, ${v.MGF} pointed out constellations, ${v.MGM} told a legend. ${v.PGF} said every star keeps a wish, and ${v.PGM} taught how to make one. ${v.mother} and ${v.father} hugged ${v.me}, who closed their eyes and wished for more days like this: full of family and sparkle in the heart.`
-      })
-    ];
+      <div class="drop-zone" id="dropZone">
+        <span>Drop the correct item here</span>
+      </div>
 
-    function buildStory(){
-      const v = {
-        MGF: missing(g('mgf')),
-        MGM: missing(g('mgm')),
-        PGF: missing(g('pgf')),
-        PGM: missing(g('pgm')),
-        mother: g('mother') || 'alguém muito querida',
-        father: g('father') || 'alguém especial',
-        me: g('me') || 'Você'
-      };
+      <div class="item-grid" id="itemGrid" aria-label="Cleaning items"></div>
+    </section>
 
-      const pick = stories[Math.floor(Math.random() * stories.length)];
-      const { pt, en } = pick(v);
+    <section class="stage-card writing-stage" id="phaseTwo" hidden>
+      <div class="phase-heading">
+        <div>
+          <p class="phase-kicker">Phase 2</p>
+          <h2>Rewrite the sentence with the cleaning item.</h2>
+        </div>
+        <p id="sentenceProgress">Sentence 1 of 3</p>
+      </div>
 
-      $('#ptStory').textContent = pt;
-      $('#enStory').textContent = en;
-      $('#storyBox').hidden = false; $('#redo').hidden = false; $('#next').hidden = false;
-      $('#storyBox').scrollIntoView({behavior:'smooth'});
-    }
+      <div class="model-box">
+        <span>Model</span>
+        <p id="modelSentence">I'm going to sweep the house, I need a _____ to do that.</p>
+      </div>
 
-    $('#submit').addEventListener('click', buildStory);
-    $('#redo').addEventListener('click', ()=>{
-      ['mgf','mgm','pgf','pgm','mother','father','me'].forEach(id=> $("#"+id).value='');
-      $('#storyBox').hidden = true; $('#redo').hidden = true; $('#next').hidden = true;
-      window.scrollTo({top:0,behavior:'smooth'});
-    });
-  </script>
+      <label class="answer-field">
+        <span>Your sentence</span>
+        <input id="sentenceInput" type="text" autocomplete="off" spellcheck="false">
+      </label>
+
+      <div class="writing-actions">
+        <button id="checkSentenceButton" type="button">Check</button>
+        <button id="skipHintButton" type="button">Show Hint</button>
+      </div>
+
+      <p class="sentence-feedback" id="sentenceFeedback" aria-live="polite"></p>
+      <div class="hint-box" id="hintBox" aria-live="polite"></div>
+    </section>
+
+    <section class="stage-card recording-stage" id="phaseThree" hidden>
+      <div class="phase-heading">
+        <div>
+          <p class="phase-kicker">Phase 3</p>
+          <h2>Record and send your audio.</h2>
+        </div>
+        <p id="recordingProgress">Recording 1 of 2</p>
+      </div>
+
+      <div class="record-card">
+        <span id="recordPromptLabel">Read this sentence</span>
+        <p id="recordPrompt">I need a sponge to clean the table.</p>
+      </div>
+
+      <label class="answer-field" id="ownSentenceField" hidden>
+        <span>Create a simple sentence</span>
+        <input id="ownSentenceInput" type="text" autocomplete="off" placeholder="Example: I need a mop.">
+      </label>
+
+      <div class="record-controls">
+        <button id="recordButton" type="button">Record</button>
+        <button id="stopRecordButton" type="button" disabled>Stop</button>
+        <button id="sendAudioButton" type="button" disabled>Send Audio</button>
+      </div>
+
+      <p class="sentence-feedback" id="recordFeedback" aria-live="polite"></p>
+      <div class="audio-list" id="audioList"></div>
+    </section>
+
+    <section class="stage-card finish-stage" id="finishPanel" hidden>
+      <h2>Game complete</h2>
+      <p>Your final time is <strong id="finalTime">00:00</strong>.</p>
+      <button id="restartButton" type="button">Play Again</button>
+    </section>
+  </main>
+
+  <script src="script.js"></script>
 </body>
 </html>
