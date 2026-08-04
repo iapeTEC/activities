@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Laboratório seguro para aprender a instalar e usar o Codex CLI." />
+  <title>Codex Lab — Terminal de Treinamento</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="#top" aria-label="Codex Lab, início"><span class="brand-mark">&gt;_</span><span>Codex Lab</span></a>
+    <div class="safe-pill"><span></span> Ambiente seguro de simulação</div>
+  </header>
+
+  <main id="top">
+    <section class="hero">
+      <div class="eyebrow">AULA PRÁTICA • PRIMEIROS PASSOS</div>
+      <h1>Aprenda Codex.<br><em>Sem instalar nada.</em></h1>
+      <p>Treine o processo completo em um terminal simulado. Nada será baixado, instalado ou alterado neste computador.</p>
+      <a class="primary-button" href="#laboratorio">Começar laboratório <span>↓</span></a>
+    </section>
+
+    <section class="safety" aria-label="Aviso de segurança">
+      <div class="safety-icon">✓</div>
+      <div><strong>Você está em um ambiente de teste</strong><p>Todos os comandos abaixo são apenas simulados no navegador. Nenhum deles será executado no computador da escola.</p></div>
+    </section>
+
+    <section class="lab" id="laboratorio">
+      <aside class="lesson-panel">
+        <div class="lesson-heading">
+          <span class="lesson-label">GUIA DE INSTALAÇÃO</span>
+          <span class="progress-label"><b id="completed-count">0</b>/4</span>
+        </div>
+        <h2>Prepare seu computador</h2>
+        <p class="subtitle">Escolha seu sistema e siga cada etapa no terminal ao lado.</p>
+
+        <div class="os-tabs" role="tablist">
+          <button class="os-tab active" data-os="windows" role="tab">⊞ Windows</button>
+          <button class="os-tab" data-os="mac" role="tab">● macOS</button>
+          <button class="os-tab" data-os="linux" role="tab">◆ Linux</button>
+        </div>
+
+        <div id="steps" class="steps"></div>
+        <div class="tip"><span>i</span><p><strong>Dica para quando estiver em casa</strong><br>Faça a instalação em um computador onde você tenha permissão. Em caso de dúvida, peça ajuda a um adulto ou professor.</p></div>
+      </aside>
+
+      <section class="terminal-wrap" aria-label="Terminal simulado">
+        <div class="terminal-top">
+          <div class="traffic"><i></i><i></i><i></i></div>
+          <div class="terminal-title"><span>&gt;_</span> <b id="terminal-name">Prompt de Comando</b> <small>SIMULAÇÃO</small></div>
+          <button id="reset" title="Reiniciar laboratório">↻</button>
+        </div>
+        <div class="terminal" id="terminal" aria-live="polite">
+          <div class="welcome">
+            <pre class="ascii"> ██████╗ ██████╗ ██████╗ ███████╗██╗  ██╗
+██╔════╝██╔═══██╗██╔══██╗██╔════╝╚██╗██╔╝
+██║     ██║   ██║██║  ██║█████╗   ╚███╔╝
+╚██████╗╚██████╔╝██████╔╝███████╗██╔╝ ██╗
+ ╚═════╝ ╚═════╝ ╚═════╝ ╚══════╝╚═╝  ╚═╝</pre>
+            <p class="muted">Terminal de treinamento v1.0</p>
+            <p><span class="green">●</span> Ambiente isolado — nenhum comando será executado de verdade.</p>
+            <p class="hint">Siga os passos ao lado ou digite <b>ajuda</b>.</p>
+          </div>
+          <div id="output"></div>
+          <form id="command-form" autocomplete="off">
+            <label for="command"><span id="prompt-label">C:\Alunos\codex-aula&gt;</span></label>
+            <input id="command" name="command" autofocus spellcheck="false" aria-label="Digite um comando" placeholder="digite um comando aqui..." />
+          </form>
+        </div>
+        <div class="terminal-footer"><span><kbd>Enter</kbd> executar</span><span><kbd>↑</kbd><kbd>↓</kbd> histórico</span><span class="simulation-note">● SIMULAÇÃO ATIVA</span></div>
+      </section>
+    </section>
+
+    <section class="after">
+      <span class="eyebrow">DEPOIS DA INSTALAÇÃO</span>
+      <h2>Converse com seu código</h2>
+      <p>Quando o Codex estiver instalado de verdade, abra a pasta de um projeto, execute <code>codex</code> e descreva sua tarefa em linguagem natural.</p>
+      <div class="examples">
+        <div><span>01</span><p>“Explique como este projeto está organizado.”</p></div>
+        <div><span>02</span><p>“Encontre e corrija o erro nesta página.”</p></div>
+        <div><span>03</span><p>“Crie um jogo simples de adivinhação.”</p></div>
+      </div>
+    </section>
+  </main>
+
+  <footer><span>&gt;_ Codex Lab</span><p>Feito para aprender com segurança.</p><a href="https://developers.openai.com/codex/cli/" target="_blank" rel="noreferrer">Documentação oficial ↗</a></footer>
+  <script src="script.js"></script>
+</body>
+</html>
