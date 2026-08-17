@@ -50,7 +50,7 @@
   }
 
   *{box-sizing:border-box}
-  html,body{height:100%; margin:0; padding:0; overflow-anchor:none}
+  html,body{margin:0; padding:0; overflow-anchor:none}
   body{
     background:
       radial-gradient(ellipse at 15% -10%, rgba(255,179,0,.25) 0%, transparent 55%),
@@ -68,8 +68,7 @@
 
   .app{
     width:100%; max-width:var(--maxw); padding:16px 0 22px;
-    display:grid; gap:12px;
-    align-content:start; align-items:start;
+    display:flex; flex-direction:column; gap:12px;
   }
 
   h1,p{margin:0}
@@ -335,7 +334,7 @@
 <body>
   <div class="app">
     <header>
-      <img class="mascot" src="bee-mascot.png" alt="" aria-hidden="true" />
+      <img class="mascot" src="bee-mascot.png" alt="" aria-hidden="true" width="56" height="56" />
       <div class="title-wrap">
         <h1 class="app-title">Spelling Bee</h1>
         <p class="app-subtitle">
@@ -381,11 +380,11 @@
       <section class="board" aria-live="polite">
         <div class="nav-row">
           <button id="prevBtn" class="nav-btn" title="Palavra anterior" aria-label="Palavra anterior">
-            <img src="esquerda.png" alt="" aria-hidden="true" />
+            <img src="esquerda.png" alt="" aria-hidden="true" width="22" height="22" />
           </button>
           <span class="word-counter" id="wordCounter">Palavra 1</span>
           <button id="nextBtn" class="nav-btn" title="Próxima palavra" aria-label="Próxima palavra">
-            <img src="direita.png" alt="" aria-hidden="true" />
+            <img src="direita.png" alt="" aria-hidden="true" width="22" height="22" />
           </button>
         </div>
 
@@ -414,7 +413,7 @@
     </main>
 
     <footer class="global-footer">
-      <img src="honey-drop.png" alt="" aria-hidden="true" />
+      <img src="honey-drop.png" alt="" aria-hidden="true" width="22" height="22" />
       <span>Feito com carinho para o IAPE</span>
     </footer>
   </div>
