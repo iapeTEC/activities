@@ -76,9 +76,9 @@
   /* ===== HEADER ===== */
   header{
     background:linear-gradient(135deg, var(--honey) 0%, var(--amber) 65%, var(--amber-dark) 100%);
-    border:3px solid var(--brown);
+    border:1.5px solid rgba(107,59,10,.35);
     border-radius:var(--radius);
-    box-shadow:var(--shadow), inset 0 2px 0 rgba(255,255,255,.35), inset 0 -3px 0 rgba(0,0,0,.12);
+    box-shadow:var(--shadow), inset 0 2px 0 rgba(255,255,255,.35), inset 0 -3px 0 rgba(0,0,0,.08);
     padding:12px 16px;
     display:flex; align-items:center; gap:12px;
     position:relative; overflow:hidden;
@@ -110,7 +110,7 @@
   }
   .stars-badge{
     margin-left:auto; flex:none; position:relative; z-index:1;
-    background:rgba(74,38,0,.28); border:2px solid rgba(255,255,255,.4); border-radius:999px;
+    background:rgba(74,38,0,.28); border:1.5px solid rgba(255,255,255,.35); border-radius:999px;
     padding:6px 12px; display:flex; align-items:center; gap:5px;
     font-weight:800; font-size:14px; color:#fff;
     text-shadow:1px 1px 0 rgba(0,0,0,.2);
@@ -121,7 +121,7 @@
 
   .pill{
     background:linear-gradient(135deg,#8A4A17 0%, var(--brown-deep) 100%);
-    border:2px solid var(--brown);
+    border:1.5px solid rgba(107,59,10,.4);
     border-radius:999px; padding:8px 8px 8px 16px;
     display:flex; align-items:center; gap:8px; justify-content:space-between;
     box-shadow:var(--shadow-sm), inset 0 1px 0 rgba(255,255,255,.15);
@@ -131,7 +131,7 @@
 
   select{
     appearance:none; -webkit-appearance:none;
-    border:2px solid var(--amber-dark); border-radius:14px;
+    border:1.5px solid rgba(200,100,0,.45); border-radius:14px;
     background:linear-gradient(135deg, var(--comb), var(--honey));
     background-image:linear-gradient(135deg, var(--comb), var(--honey)),
       url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M7 10l5 5 5-5' stroke='%234A2600' stroke-width='2.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
@@ -141,12 +141,12 @@
     box-shadow:0 3px 8px rgba(107,59,10,.22), inset 0 1px 0 rgba(255,255,255,.5);
     cursor:pointer; touch-action:manipulation;
   }
-  select:focus-visible{outline:3px solid #fff; outline-offset:2px}
+  select:focus-visible{outline:2px solid #fff; outline-offset:2px}
 
   .status{
     display:flex; align-items:center; justify-content:space-between; gap:10px;
     background:linear-gradient(135deg, var(--cream), var(--comb));
-    border:2px solid var(--amber);
+    border:1.5px solid rgba(240,138,0,.4);
     border-radius:999px; padding:8px 16px;
     box-shadow:var(--shadow-sm);
   }
@@ -163,7 +163,7 @@
   /* ===== DIFFICULTY NAV ===== */
   .difficulty{
     background:linear-gradient(180deg, var(--cream) 0%, var(--comb) 100%);
-    border:2px solid var(--amber); border-radius:var(--radius);
+    border:1.5px solid rgba(240,138,0,.4); border-radius:var(--radius);
     box-shadow:var(--shadow); padding:12px;
     display:flex; gap:8px; justify-content:space-between; flex-wrap:nowrap;
     animation:drop-in .5s .1s ease both;
@@ -177,26 +177,30 @@
   .diff-btn .chip{
     width:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px;
     padding:9px 4px; border-radius:16px;
-    border:2px solid var(--amber-dark);
+    border:1.5px solid rgba(200,100,0,.4);
     background:linear-gradient(160deg, var(--comb) 0%, var(--honey) 100%);
-    box-shadow:0 4px 10px rgba(107,59,10,.2), inset 0 1px 0 rgba(255,255,255,.5);
+    box-shadow:0 4px 10px rgba(107,59,10,.16), inset 0 1px 0 rgba(255,255,255,.5);
     transition:transform .15s ease, box-shadow .15s ease;
   }
-  .diff-btn .emoji{font-size:18px; line-height:1}
+  .diff-btn .dot{width:12px; height:12px; border-radius:50%; border:1.5px solid rgba(74,38,0,.25); box-shadow:inset 0 1px 0 rgba(255,255,255,.5)}
+  .dot-easy{background:#3FA34D}
+  .dot-medium{background:#E2A400}
+  .dot-hard{background:#E2574C}
+  .dot-auto{background:var(--brown-deep)}
   .diff-btn .label{font-weight:800; font-size:10px; letter-spacing:.4px; color:var(--brown-deep); text-transform:uppercase}
   .diff-btn:hover .chip{transform:translateY(-2px)}
   .diff-btn:active .chip{transform:translateY(1px) scale(.97)}
   .diff-btn.active .chip{
-    outline:3px solid var(--brown-deep); outline-offset:2px;
+    outline:2px solid rgba(74,38,0,.55); outline-offset:2px;
     background:linear-gradient(160deg,#FFF3C4 0%, var(--honey) 100%);
     transform:translateY(-1px) scale(1.03);
   }
-  .diff-btn:focus-visible .chip{outline:3px solid var(--brown-deep); outline-offset:2px}
+  .diff-btn:focus-visible .chip{outline:2px solid rgba(74,38,0,.55); outline-offset:2px}
 
   /* ===== BOARD ===== */
   .board{
     background:linear-gradient(180deg, var(--card) 0%, #FFF2C2 100%);
-    border:3px solid var(--amber);
+    border:2px solid rgba(240,138,0,.4);
     border-radius:var(--radius);
     box-shadow:var(--shadow), inset 0 1px 0 rgba(255,255,255,.7);
     padding:18px; display:grid; gap:14px;
@@ -212,9 +216,9 @@
   .nav-row{display:flex; align-items:center; justify-content:center; gap:16px}
   .nav-btn{
     flex:none; width:56px; height:56px; border-radius:50%; padding:0; cursor:pointer;
-    border:3px solid var(--amber-dark);
+    border:2px solid rgba(200,100,0,.4);
     background:linear-gradient(145deg, var(--honey) 0%, var(--amber) 100%);
-    box-shadow:0 5px 12px rgba(107,59,10,.28), inset 0 2px 0 rgba(255,255,255,.4);
+    box-shadow:0 4px 10px rgba(107,59,10,.22), inset 0 2px 0 rgba(255,255,255,.4);
     display:flex; align-items:center; justify-content:center;
     touch-action:manipulation; -webkit-tap-highlight-color:transparent;
     transition:transform .13s ease, box-shadow .13s ease, opacity .15s ease;
@@ -223,12 +227,12 @@
   .nav-btn:hover:not(:disabled){transform:translateY(-2px)}
   .nav-btn:active:not(:disabled){transform:translateY(1px)}
   .nav-btn:disabled{opacity:.4; cursor:not-allowed; box-shadow:none}
-  .nav-btn:focus-visible{outline:3px solid var(--brown-deep); outline-offset:2px}
+  .nav-btn:focus-visible{outline:2px solid rgba(74,38,0,.55); outline-offset:2px}
   .word-counter{font-weight:700; font-size:13px; color:var(--muted); min-width:70px; text-align:center}
 
   .bigbox{
     position:relative;
-    border:3px dashed var(--amber);
+    border:2px dashed rgba(240,138,0,.5);
     border-radius:20px;
     background:
       linear-gradient(145deg, #FFFDF3 0%, #FFF6D2 100%);
@@ -257,24 +261,23 @@
 
   .controls{display:flex; gap:8px; flex-wrap:wrap}
   .btn-pill{
-    flex:1; min-width:104px; min-height:56px; border:2px solid var(--amber-dark);
+    flex:1; min-width:104px; min-height:56px; border:1.5px solid rgba(200,100,0,.4);
     border-radius:999px; cursor:pointer; touch-action:manipulation; -webkit-tap-highlight-color:transparent;
     background:linear-gradient(160deg, var(--honey) 0%, var(--amber) 100%);
-    box-shadow:0 5px 12px rgba(107,59,10,.25), inset 0 2px 0 rgba(255,255,255,.4);
+    box-shadow:0 4px 10px rgba(107,59,10,.2), inset 0 2px 0 rgba(255,255,255,.4);
     display:flex; align-items:center; justify-content:center; gap:6px;
     font-family:inherit; font-weight:800; font-size:13.5px; color:var(--brown-deep);
     letter-spacing:.2px;
     transition:transform .13s ease, box-shadow .13s ease;
   }
-  .btn-pill .emoji{font-size:17px}
   .btn-pill:hover{transform:translateY(-2px)}
   .btn-pill:active{transform:translateY(1px)}
-  .btn-pill:focus-visible{outline:3px solid var(--brown-deep); outline-offset:2px}
+  .btn-pill:focus-visible{outline:2px solid rgba(74,38,0,.55); outline-offset:2px}
   .btn-pill.ghost{background:linear-gradient(160deg, var(--cream) 0%, var(--comb) 100%)}
 
   .voice-panel{display:grid; gap:8px}
   .voice-btn{
-    width:100%; min-height:56px; border:2px solid var(--brown);
+    width:100%; min-height:56px; border:1.5px solid rgba(107,59,10,.35);
     border-radius:16px; cursor:pointer; touch-action:manipulation; -webkit-tap-highlight-color:transparent;
     background:linear-gradient(160deg, var(--amber) 0%, var(--amber-dark) 100%);
     color:var(--cream); font-family:inherit; font-weight:800; font-size:15.5px; letter-spacing:.3px;
@@ -286,19 +289,19 @@
   .voice-btn:hover:not(:disabled){transform:translateY(-2px)}
   .voice-btn:active:not(:disabled){transform:translateY(1px)}
   .voice-btn:disabled{opacity:.65; cursor:not-allowed; transform:none}
-  .voice-btn .mic{font-size:18px}
-  .voice-btn.listening .mic{animation:pulse-mic 1s ease-in-out infinite}
+  .mic-dot{width:11px; height:11px; border-radius:50%; background:var(--cream); box-shadow:0 0 0 2px rgba(255,255,255,.4)}
+  .voice-btn.listening .mic-dot{animation:pulse-mic 1s ease-in-out infinite; background:#FF6B57}
 
   .voice-feedback{
     min-height:46px; border-radius:14px; padding:10px 14px;
-    background:var(--info-bg); border:2px solid #9BCBEA; color:var(--info-ink);
+    background:var(--info-bg); border:1.5px solid #B9DCF0; color:var(--info-ink);
     font-weight:700; font-size:14px; line-height:1.35;
     display:flex; align-items:center; gap:8px;
   }
-  .voice-feedback.correct{background:var(--good-bg); border-color:#9BD9A3; color:var(--good-ink)}
-  .voice-feedback.incorrect{background:var(--bad-bg); border-color:#F0AFA6; color:var(--bad-ink)}
-  .voice-feedback.error{background:#FFE9B0; border-color:var(--amber); color:var(--brown-deep)}
-  .voice-feedback.listening{background:#E1F0FE; border-color:#79B8EA; color:#175C93}
+  .voice-feedback.correct{background:var(--good-bg); border-color:#BFE6C4; color:var(--good-ink)}
+  .voice-feedback.incorrect{background:var(--bad-bg); border-color:#F5C7C0; color:var(--bad-ink)}
+  .voice-feedback.error{background:#FFE9B0; border-color:rgba(240,138,0,.45); color:var(--brown-deep)}
+  .voice-feedback.listening{background:#E1F0FE; border-color:#A9D2ED; color:#175C93}
 
   footer.small{
     color:var(--muted); font-weight:700; font-size:13px; text-align:center; padding:2px 4px 0;
@@ -306,7 +309,7 @@
 
   .global-footer{
     background:linear-gradient(135deg, var(--honey) 0%, var(--amber) 100%);
-    border:2px solid var(--brown); border-radius:var(--radius);
+    border:1.5px solid rgba(107,59,10,.35); border-radius:var(--radius);
     box-shadow:var(--shadow); padding:10px 14px;
     display:flex; align-items:center; justify-content:center; gap:8px;
     color:var(--cream); font-weight:700; font-size:12.5px;
@@ -349,14 +352,14 @@
         <p class="app-subtitle"><img src="honey-drop.png" alt="" aria-hidden="true" width="14" height="17" /> Treino de Soletração</p>
       </div>
       <div class="stars-badge" title="Estrelas conquistadas">
-        <span aria-hidden="true">⭐</span>
+        <span>Estrelas:</span>
         <span id="starsCount">0</span>
       </div>
     </header>
 
     <section class="toolbar">
       <div class="pill">
-        <label for="gradeSelect">🎒 Série:</label>
+        <label for="gradeSelect">Série:</label>
         <select id="gradeSelect" aria-label="Escolher série">
           <option value="3rd">3rd Grade</option>
           <option value="4th">4th Grade</option>
@@ -372,16 +375,16 @@
 
     <nav class="difficulty" aria-label="Nível de dificuldade">
       <button class="diff-btn" data-diff="easy" id="btnEasy" aria-label="Fácil">
-        <span class="chip"><span class="emoji" aria-hidden="true">🟢</span><span class="label">Easy</span></span>
+        <span class="chip"><span class="dot dot-easy" aria-hidden="true"></span><span class="label">Easy</span></span>
       </button>
       <button class="diff-btn" data-diff="medium" id="btnMedium" aria-label="Médio">
-        <span class="chip"><span class="emoji" aria-hidden="true">🟡</span><span class="label">Medium</span></span>
+        <span class="chip"><span class="dot dot-medium" aria-hidden="true"></span><span class="label">Medium</span></span>
       </button>
       <button class="diff-btn" data-diff="hard" id="btnHard" aria-label="Difícil">
-        <span class="chip"><span class="emoji" aria-hidden="true">🔴</span><span class="label">Hard</span></span>
+        <span class="chip"><span class="dot dot-hard" aria-hidden="true"></span><span class="label">Hard</span></span>
       </button>
       <button class="diff-btn" data-diff="auto" id="btnAuto" aria-label="Automático">
-        <span class="chip"><span class="emoji" aria-hidden="true">🔀</span><span class="label">Auto</span></span>
+        <span class="chip"><span class="dot dot-auto" aria-hidden="true"></span><span class="label">Auto</span></span>
       </button>
     </nav>
 
@@ -403,23 +406,17 @@
         </div>
 
         <div class="controls">
-          <button id="hearBtn" class="btn-pill ghost" aria-label="Ouvir novamente a palavra">
-            <span class="emoji" aria-hidden="true">🔊</span> Ouvir
-          </button>
-          <button id="revealBtn" class="btn-pill" aria-label="Revelar a palavra">
-            <span class="emoji" aria-hidden="true">👀</span> Revelar
-          </button>
-          <button id="spellBtn" class="btn-pill" aria-label="Soletrar a palavra em voz alta">
-            <span class="emoji" aria-hidden="true">🔤</span> Soletrar
-          </button>
+          <button id="hearBtn" class="btn-pill ghost" aria-label="Ouvir novamente a palavra">Ouvir</button>
+          <button id="revealBtn" class="btn-pill" aria-label="Revelar a palavra">Revelar</button>
+          <button id="spellBtn" class="btn-pill" aria-label="Soletrar a palavra em voz alta">Soletrar</button>
         </div>
 
         <div class="voice-panel">
           <button id="voiceSpellBtn" class="voice-btn" type="button">
-            <span class="mic" aria-hidden="true">🎤</span> <span id="voiceBtnLabel">Soletrar com a voz</span>
+            <span class="mic-dot" id="micDot" aria-hidden="true"></span> <span id="voiceBtnLabel">Soletrar com a voz</span>
           </button>
           <div id="voiceFeedback" class="voice-feedback" aria-live="polite">
-            <span aria-hidden="true">🐝</span> Toque no microfone e fale as letras em inglês.
+            Toque no microfone e fale as letras em inglês.
           </div>
         </div>
 
@@ -429,7 +426,7 @@
 
     <footer class="global-footer">
       <img src="honey-drop.png" alt="" aria-hidden="true" />
-      <span>Feito com carinho para o IAPE 🐝</span>
+      <span>Feito com carinho para o IAPE</span>
     </footer>
   </div>
 
@@ -583,7 +580,7 @@
 
     function speak(text, {rate=0.9, pitch=1.0}={}){
       if(!('speechSynthesis' in window)){
-        warn('Seu navegador não suporta síntese de voz. 😕');
+        warn('Seu navegador não suporta síntese de voz.');
         return;
       }
       window.speechSynthesis.cancel();
@@ -681,9 +678,9 @@
 
     function getSpeechErrorMessage(error){
       const messages = {
-        'not-allowed': 'O microfone foi bloqueado. Permita o acesso ao microfone e tente de novo. 🎤',
+        'not-allowed': 'O microfone foi bloqueado. Permita o acesso ao microfone e tente de novo.',
         'service-not-allowed': 'O reconhecimento de voz está bloqueado neste navegador. Permita o acesso ao microfone.',
-        'no-speech': 'Não ouvi nada. Tente falar as letras bem devagar. 👂',
+        'no-speech': 'Não ouvi nada. Tente falar as letras bem devagar.',
         audio_capture: 'Nenhum microfone foi encontrado. Verifique o microfone e tente de novo.',
         network: 'O reconhecimento de voz precisa de conexão com a internet. Verifique sua rede.'
       };
@@ -792,8 +789,8 @@
       if(!expected) return;
 
       if(!SpeechRecognitionConstructor){
-        const message = 'A soletração por voz não está disponível neste navegador. Use Chrome ou Edge. 💻';
-        setVoiceFeedback(`🐝 ${message}`, 'error');
+        const message = 'A soletração por voz não está disponível neste navegador. Use Chrome ou Edge.';
+        setVoiceFeedback(message, 'error');
         warn(message);
         return;
       }
@@ -801,26 +798,26 @@
       els.voiceSpell.disabled = true;
       els.voiceSpell.classList.add('listening');
       els.voiceBtnLabel.textContent = 'Ouvindo...';
-      setVoiceFeedback('🎧 Ouvindo... fale as letras em inglês.', 'listening');
+      setVoiceFeedback('Ouvindo... fale as letras em inglês.', 'listening');
 
       try{
         const result = await checkSpellingByVoice(expected);
         els.voiceBtnLabel.textContent = 'Verificando...';
-        setVoiceFeedback('🔎 Verificando...', 'listening');
+        setVoiceFeedback('Verificando...', 'listening');
         await new Promise(resolve => setTimeout(resolve, 200));
 
         if(result.correct){
           addStar();
           fireStarBurst();
-          setVoiceFeedback(`🎉 ${pick(CHEER_MESSAGES)} Você soletrou "<strong>${expected}</strong>" certinho!`, 'correct');
+          setVoiceFeedback(`${pick(CHEER_MESSAGES)} Você soletrou "<strong>${expected}</strong>" certinho!`, 'correct');
           speak('Correct! Great job!', {rate:1});
         } else {
           shakeBox();
           const heard = result.normalizedSpelling ? `"${result.normalizedSpelling}"` : 'nada';
-          setVoiceFeedback(`💛 ${pick(RETRY_MESSAGES)} Eu ouvi ${heard}.`, 'incorrect');
+          setVoiceFeedback(`${pick(RETRY_MESSAGES)} Eu ouvi ${heard}.`, 'incorrect');
         }
       } catch(error){
-        setVoiceFeedback(`🐝 ${error.message}`, 'error');
+        setVoiceFeedback(error.message, 'error');
         warn(error.message);
       } finally {
         els.voiceSpell.disabled = false;
@@ -854,7 +851,7 @@
     }
 
     function resetVoicePanel(){
-      setVoiceFeedback('🐝 Toque no microfone e fale as letras em inglês.', '');
+      setVoiceFeedback('Toque no microfone e fale as letras em inglês.', '');
     }
 
     // ============================
